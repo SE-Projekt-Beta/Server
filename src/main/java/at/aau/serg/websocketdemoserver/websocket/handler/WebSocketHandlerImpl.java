@@ -13,7 +13,7 @@ public class WebSocketHandlerImpl implements WebSocketHandler {
     @Override
     public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) throws Exception {
         // TODO handle the messages here
-        session.sendMessage(new TextMessage("echo from server: " + message.getPayload()));
+        session.sendMessage(new TextMessage("echo from server hi: " + message.getPayload()));
     }
 
     @Override
