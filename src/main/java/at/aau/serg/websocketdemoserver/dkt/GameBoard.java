@@ -51,6 +51,11 @@ public class GameBoard {
         tiles.add(new Street(39, "Stephansplatz", 500, 125, 250));
     }
 
+    // getters
+    public List<Tile> getTiles() {
+        return tiles;
+    }
+
     public Tile getTileAt(int position) {
         return tiles.get(position % tiles.size());
     }

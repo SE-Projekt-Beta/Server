@@ -126,4 +126,8 @@ public class GameHandler {
                 return new GameMessage("skipped", payload.toString());
         }
     }
+
+    public GameBoard getGameBoard() {
+        return board;
+    }
 }
