@@ -84,9 +84,11 @@ public class GameHandler {
             ownership.put(tilePos, playerId);
             System.out.println("Besitz gespeichert: " + playerId + " → Feld " + tilePos);
 
+            Tile tile = board.getTileAt(tilePos);
             JSONObject response = new JSONObject();
             response.put("playerId", playerId);
             response.put("tilePos", tilePos);
+            response.put("tileName", tile.getName());
 
             return new GameMessage("property_bought", response.toString());
 
@@ -94,6 +96,7 @@ public class GameHandler {
             return new GameMessage("error", "Fehler beim Kauf: " + e.getMessage());
         }
     }
+
 
     GameMessage decideAction(String playerId, Tile tile) {
         JSONObject payload = new JSONObject();
