@@ -13,6 +13,8 @@ public class GameHandler {
     private final GameBoard board = new GameBoard();
     private final List<GameMessage> extraMessages = new ArrayList<>();
     private final Map<Integer, String> ownership = new HashMap<>(); // Besitzverwaltung
+    private final EventCardService eventCardService = new EventCardService();
+
 
     public List<GameMessage> getExtraMessages() {
         return extraMessages;
@@ -32,7 +34,7 @@ public class GameHandler {
     private final List<EventCardBank> eventCardsBank = List.of(
             new EventCardBank("Für Unfallversicherung bezahlst du 200,-", -200),
             new EventCardBank("Für eine Autoreparatur bezahlst du 140,-", -140),
-            new EventCardBank("Für die Auswertung einer Erfindung erhälst du 140,- aus öffentlichen Mitteln", 140),
+            new EventCardBank("Für die Auswertung einer Erfindung erhältst du 140,- aus öffentlichen Mitteln", 140),
             new EventCardBank("Die Bank zahlt dir an Dividenden 60,-", 60)
     );
     public String getOwner(int tilePos) {
@@ -67,9 +69,9 @@ public class GameHandler {
             movePayload.put("pos", newPos);
             movePayload.put("dice", dice);
             movePayload.put("tileName", tile.getName());
-            movePayload.put("tileType", tile.getType());
+            movePayload.put("tileType", tile.getTileType());
 
-            System.out.println("Server: " + playerId + " ist auf " + tile.getName() + " (" + tile.getType() + ")");
+            System.out.println("Server: " + playerId + " ist auf " + tile.getName() + " (" + tile.getTileType() + ")");
 
             // Aktion ermitteln
             GameMessage actionMsg = decideAction(playerId, tile);
@@ -115,7 +117,7 @@ public class GameHandler {
         payload.put("tilePos", tile.getPosition());
         payload.put("tileName", tile.getName());
 
-        switch (tile.getType()) {
+        switch (tile.getTileType()) {
             case "street":
             case "station":
                 String owner = ownership.get(tile.getPosition());
