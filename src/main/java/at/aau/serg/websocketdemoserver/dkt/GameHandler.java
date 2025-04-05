@@ -1,5 +1,6 @@
 package at.aau.serg.websocketdemoserver.dkt;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.*;
@@ -11,6 +12,9 @@ public class GameHandler {
     private final List<GameMessage> extraMessages = new ArrayList<>();
     private final Map<Integer, String> ownership = new HashMap<>(); // Besitzverwaltung
     private final EventCardService eventCardService = new EventCardService();
+    private final List<String> lobbyPlayers = new ArrayList<>();
+
+
 
 
     public List<GameMessage> getExtraMessages() {
@@ -31,6 +35,8 @@ public class GameHandler {
                 return handleRollDice(msg.getPayload());
             case "buy_property":
                 return handleBuyProperty(msg.getPayload());
+            case "join_lobby":
+                return handleJoinLobby(msg.getPayload());
             default:
                 return new GameMessage("error", "Unbekannter Typ: " + msg.getType());
         }
@@ -129,4 +135,27 @@ public class GameHandler {
                 return new GameMessage("skipped", payload.toString());
         }
     }
+
+    private GameMessage handleJoinLobby(String payload) {
+        try {
+            JSONObject obj = new JSONObject(payload);
+            String playerName = obj.getString("playerName");
+
+            if (!lobbyPlayers.contains(playerName)) {
+                lobbyPlayers.add(playerName);
+            }
+
+            // Erstelle Antwort an alle Spieler
+            JSONObject lobbyPayload = new JSONObject();
+            lobbyPayload.put("players", new JSONArray(lobbyPlayers));
+
+            return new GameMessage("lobby_update", lobbyPayload.toString());
+
+        } catch (Exception e) {
+            return new GameMessage("error", "Fehler beim Lobby-Beitritt: " + e.getMessage());
+        }
+    }
+
+
+
 }
