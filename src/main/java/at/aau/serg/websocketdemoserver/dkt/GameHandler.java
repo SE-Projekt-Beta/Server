@@ -1,5 +1,6 @@
 package at.aau.serg.websocketdemoserver.dkt;
 
+import at.aau.serg.websocketdemoserver.dkt.lobby.Lobby;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -12,7 +13,8 @@ public class GameHandler {
     private final List<GameMessage> extraMessages = new ArrayList<>();
     private final Map<Integer, String> ownership = new HashMap<>(); // Besitzverwaltung
     private final EventCardService eventCardService = new EventCardService();
-    private final List<String> lobbyPlayers = new ArrayList<>();
+    private final Lobby lobby = new Lobby();
+
 
 
 
@@ -138,23 +140,17 @@ public class GameHandler {
 
     private GameMessage handleJoinLobby(String payload) {
         try {
-            JSONObject obj = new JSONObject(payload);
-            String playerName = obj.getString("playerName");
+            String playerName = lobby.addPlayer();
+            System.out.println("Neuer Spieler beigetreten: " + playerName);
 
-            if (!lobbyPlayers.contains(playerName)) {
-                lobbyPlayers.add(playerName);
-            }
-
-            // Erstelle Antwort an alle Spieler
-            JSONObject lobbyPayload = new JSONObject();
-            lobbyPayload.put("players", new JSONArray(lobbyPlayers));
-
-            return new GameMessage("lobby_update", lobbyPayload.toString());
+            // Antwort an alle Spieler
+            return new GameMessage("lobby_update", lobby.toJson().toString());
 
         } catch (Exception e) {
             return new GameMessage("error", "Fehler beim Lobby-Beitritt: " + e.getMessage());
         }
     }
+
 
 
 
