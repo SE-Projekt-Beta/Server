@@ -39,10 +39,13 @@ public class GameHandler {
                 return handleBuyProperty(msg.getPayload());
             case "join_lobby":
                 return handleJoinLobby(msg.getPayload());
+            case "start_game":
+                return handleStartGame();
             default:
                 return new GameMessage("error", "Unbekannter Typ: " + msg.getType());
         }
     }
+
 
     private GameMessage handleRollDice(String payload) {
         try {
@@ -149,6 +152,11 @@ public class GameHandler {
         } catch (Exception e) {
             return new GameMessage("error", "Fehler beim Lobby-Beitritt: " + e.getMessage());
         }
+    }
+
+    private GameMessage handleStartGame() {
+        System.out.println("Spiel startet!");
+        return new GameMessage("start_game", ""); // Leere Payload reicht
     }
 
 
