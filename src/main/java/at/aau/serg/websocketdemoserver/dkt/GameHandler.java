@@ -156,8 +156,15 @@ public class GameHandler {
 
     private GameMessage handleStartGame() {
         System.out.println("Spiel startet!");
-        return new GameMessage("start_game", ""); // Leere Payload reicht
+
+        // Schicke an ALLE Clients die Nachricht "start_game"
+        extraMessages.clear();
+        extraMessages.add(new GameMessage("start_game", ""));
+
+        // return dummy (wird eh nicht verwendet direkt)
+        return new GameMessage("info", "Startsignal gesendet");
     }
+
 
 
 
