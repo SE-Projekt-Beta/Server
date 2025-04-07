@@ -138,7 +138,9 @@ public class GameHandler {
 
             case "tax":
                 return new GameMessage("pay_tax", payload.toString());
-
+            case "event":
+                String card = eventCardService.drawCard();
+                return new GameMessage("event_card", card);
             case "event_risiko":
                 EventCardRisiko risikoCard = eventCardsRisiko.get(new Random().nextInt(eventCardsRisiko.size()));
                 payload.put("eventTitle", risikoCard.getTitle());
