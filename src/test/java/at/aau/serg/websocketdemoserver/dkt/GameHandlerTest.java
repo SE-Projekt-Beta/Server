@@ -1,6 +1,7 @@
 package at.aau.serg.websocketdemoserver.dkt;
 
 import at.aau.serg.websocketdemoserver.dkt.tiles.*;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -153,6 +154,21 @@ public class GameHandlerTest {
 
         assertEquals("property_bought", result.getType());
         assertEquals("player1", handler.getOwner(5), "Feld 5 sollte nun player1 gehören");
+    }
+
+    @Test
+    void testHandleJoinLobby() throws JSONException {
+        GameHandler handler = new GameHandler();
+        String payload = "{\"playerName\":\"player1\"}";
+
+        GameMessage result = handler.handle(new GameMessage("join_lobby", payload));
+
+        assertNotNull(result);
+        assertEquals("lobby_update", result.getType());
+
+        JSONObject obj = new JSONObject(result.getPayload());
+        JSONArray players = obj.getJSONArray("players");
+        assertTrue(players.toString().contains("player1"), "Lobby sollte player1 enthalten");
     }
 
 }
