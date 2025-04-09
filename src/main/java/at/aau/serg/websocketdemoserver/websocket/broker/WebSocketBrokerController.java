@@ -1,5 +1,6 @@
 package at.aau.serg.websocketdemoserver.websocket.broker;
 
+import at.aau.serg.websocketdemoserver.messaging.dtos.EventCard;
 import at.aau.serg.websocketdemoserver.messaging.dtos.StompMessage;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -20,6 +21,13 @@ public class WebSocketBrokerController {
     public StompMessage handleObject(StompMessage msg) {
 
        return msg;
+    }
+
+    @MessageMapping("/sendEventCards")
+    @SendTo("/topic/event-cards")
+    public EventCard sendEventCard(EventCard eventCard){
+
+        return eventCard;
     }
 
 }
