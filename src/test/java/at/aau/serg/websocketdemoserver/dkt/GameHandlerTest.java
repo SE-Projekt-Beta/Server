@@ -120,7 +120,7 @@ public class GameHandlerTest {
     @Test
     void testDecdeActionForBankEvent() {
         GameHandler handler = new GameHandler();
-        Event tile = new Event(2, "event_banke");
+        Event tile = new Event(2, "event_bank");
 
         GameMessage msg = handler.decideAction("player1", tile);
         assertEquals("draw_event_bank_card", msg.getType());
