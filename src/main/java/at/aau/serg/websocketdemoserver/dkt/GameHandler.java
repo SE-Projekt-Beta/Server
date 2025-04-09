@@ -1,9 +1,8 @@
 package at.aau.serg.websocketdemoserver.dkt;
 
-import at.aau.serg.websocketdemoserver.messaging.dtos.EventCard;
-import at.aau.serg.websocketdemoserver.messaging.dtos.EventCardBank;
-import at.aau.serg.websocketdemoserver.messaging.dtos.EventCardRisiko;
 import at.aau.serg.websocketdemoserver.dkt.EventCardService;
+import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardBank;
+import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardRisiko;
 import org.json.JSONObject;
 
 import java.util.*;
@@ -126,7 +125,7 @@ public class GameHandler {
                 return new GameMessage("draw_event_risiko_card", payload.toString());
 
             case "event_bank":
-                EventCardBank bankCard = eventCardService1.drawBankCard();
+                EventCardBank bankCard = eventCardService.drawBankCard();
                 payload.put("eventTitle", bankCard.getTitle());
                 payload.put("eventDescription", bankCard.getDescription());
                 payload.put("eventAmount", bankCard.getAmount());
