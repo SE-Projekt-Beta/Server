@@ -17,6 +17,8 @@ public class GameHandler {
     private final EventCardService eventCardService = new EventCardService();
     private final Lobby lobby = new Lobby();
 
+    private Random random = new Random();
+
 
 
 
@@ -55,7 +57,7 @@ public class GameHandler {
             JSONObject obj = new JSONObject(payload);
             String playerId = obj.getString("playerId");
 
-            int dice = new Random().nextInt(6) + 1;
+            int dice = random.nextInt(6) + 1;
             int currentPos = gameState.getPosition(playerId);
             int newPos = (currentPos + dice) % 40;
             gameState.updatePosition(playerId, newPos);
