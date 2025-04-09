@@ -49,7 +49,7 @@ public class GameHandlerTest {
 
         // Anpassen der erlaubten Typen
         assertTrue(
-                type.matches("start|street|station|event|tax|jail|goto_jail|free"),
+                type.matches("start|street|station|event|event_risiko|event_bank|tax|jail|goto_jail|free"),
                 "tileType ist kein gültiger Typ: " + type
         );
     }

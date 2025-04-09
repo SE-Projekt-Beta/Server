@@ -4,8 +4,6 @@ public class GameMessage {
     private String type;
     private String payload;
 
-    public GameMessage() {}
-
     public GameMessage(String type, String payload) {
         this.type = type;
         this.payload = payload;
