@@ -1,6 +1,7 @@
 package at.aau.serg.websocketdemoserver.dkt;
 
 import at.aau.serg.websocketdemoserver.dkt.tiles.*;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -136,7 +137,7 @@ public class GameHandlerTest {
 
         GameMessage action = extras.get(0);
         assertNotNull(action.getType(), "Aktionstyp darf nicht null sein");
-        assertTrue(action.getType().matches("can_buy_property|pay_tax|draw_event_card|go_to_jail|skipped"),
+        assertTrue(action.getType().matches("can_buy_property|pay_tax|event_card|go_to_jail|skipped"),
                 "Unerwarteter Aktionstyp: " + action.getType());
     }
 
@@ -153,6 +154,22 @@ public class GameHandlerTest {
 
         assertEquals("property_bought", result.getType());
         assertEquals("player1", handler.getOwner(5), "Feld 5 sollte nun player1 gehören");
+    }
+
+    @Test
+    void testHandleJoinLobby() throws JSONException {
+        GameHandler handler = new GameHandler();
+        String payload = "{\"playerName\":\"player1\"}";
+
+        GameMessage result = handler.handle(new GameMessage("join_lobby", payload));
+
+        assertNotNull(result);
+        assertEquals("lobby_update", result.getType());
+
+        JSONObject obj = new JSONObject(result.getPayload());
+        JSONArray players = obj.getJSONArray("players");
+
+        assertEquals("Player1", players.getString(0), "Lobby sollte player1 enthalten");
     }
 
 }

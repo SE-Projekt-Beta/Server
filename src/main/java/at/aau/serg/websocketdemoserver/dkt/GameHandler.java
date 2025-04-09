@@ -1,5 +1,7 @@
 package at.aau.serg.websocketdemoserver.dkt;
 
+import at.aau.serg.websocketdemoserver.dkt.lobby.Lobby;
+import org.json.JSONArray;
 import at.aau.serg.websocketdemoserver.messaging.dtos.EventCard;
 import at.aau.serg.websocketdemoserver.messaging.dtos.EventCardBank;
 import at.aau.serg.websocketdemoserver.messaging.dtos.EventCardRisiko;
@@ -14,6 +16,10 @@ public class GameHandler {
     private final List<GameMessage> extraMessages = new ArrayList<>();
     private final Map<Integer, String> ownership = new HashMap<>(); // Besitzverwaltung
     private final EventCardService eventCardService = new EventCardService();
+    private final Lobby lobby = new Lobby();
+
+
+
 
 
     public List<GameMessage> getExtraMessages() {
@@ -47,10 +53,15 @@ public class GameHandler {
                 return handleRollDice(msg.getPayload());
             case "buy_property":
                 return handleBuyProperty(msg.getPayload());
+            case "join_lobby":
+                return handleJoinLobby(msg.getPayload());
+            case "start_game":
+                return handleStartGame();
             default:
                 return new GameMessage("error", "Unbekannter Typ: " + msg.getType());
         }
     }
+
 
     private GameMessage handleRollDice(String payload) {
         try {
@@ -100,9 +111,11 @@ public class GameHandler {
             ownership.put(tilePos, playerId);
             System.out.println("Besitz gespeichert: " + playerId + " → Feld " + tilePos);
 
+            Tile tile = board.getTileAt(tilePos);
             JSONObject response = new JSONObject();
             response.put("playerId", playerId);
             response.put("tilePos", tilePos);
+            response.put("tileName", tile.getName());
 
             return new GameMessage("property_bought", response.toString());
 
@@ -110,6 +123,7 @@ public class GameHandler {
             return new GameMessage("error", "Fehler beim Kauf: " + e.getMessage());
         }
     }
+
 
     GameMessage decideAction(String playerId, Tile tile) {
         JSONObject payload = new JSONObject();
@@ -129,7 +143,9 @@ public class GameHandler {
 
             case "tax":
                 return new GameMessage("pay_tax", payload.toString());
-
+            case "event":
+                String card = eventCardService.drawCard();
+                return new GameMessage("event_card", card);
             case "event_risiko":
                 EventCardRisiko risikoCard = eventCardsRisiko.get(new Random().nextInt(eventCardsRisiko.size()));
                 payload.put("eventTitle", risikoCard.getTitle());
@@ -151,4 +167,33 @@ public class GameHandler {
                 return new GameMessage("skipped", payload.toString());
         }
     }
+
+    private GameMessage handleJoinLobby(String payload) {
+        try {
+            String playerName = lobby.addPlayer();
+            System.out.println("Neuer Spieler beigetreten: " + playerName);
+
+            // Antwort an alle Spieler
+            return new GameMessage("lobby_update", lobby.toJson().toString());
+
+        } catch (Exception e) {
+            return new GameMessage("error", "Fehler beim Lobby-Beitritt: " + e.getMessage());
+        }
+    }
+
+    private GameMessage handleStartGame() {
+        System.out.println("Spiel startet!");
+
+        // Schicke an ALLE Clients die Nachricht "start_game"
+        extraMessages.clear();
+        extraMessages.add(new GameMessage("start_game", ""));
+
+        // return dummy (wird eh nicht verwendet direkt)
+        return new GameMessage("info", "Startsignal gesendet");
+    }
+
+
+
+
+
 }
