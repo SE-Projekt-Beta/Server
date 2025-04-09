@@ -18,7 +18,7 @@ public class GameHandler {
     private final EventCardService eventCardService = new EventCardService();
     private final Lobby lobby = new Lobby();
 
-
+    private Random random = new Random();
 
 
 
@@ -68,7 +68,7 @@ public class GameHandler {
             JSONObject obj = new JSONObject(payload);
             String playerId = obj.getString("playerId");
 
-            int dice = new Random().nextInt(6) + 1;
+            int dice = random.nextInt(6) + 1;
             int currentPos = gameState.getPosition(playerId);
             int newPos = (currentPos + dice) % 40;
             gameState.updatePosition(playerId, newPos);
@@ -146,21 +146,7 @@ public class GameHandler {
             case "event":
                 String card = eventCardService.drawCard();
                 return new GameMessage("event_card", card);
-            case "event_risiko":
-                EventCardRisiko risikoCard = eventCardsRisiko.get(new Random().nextInt(eventCardsRisiko.size()));
-                payload.put("eventTitle", risikoCard.getTitle());
-                payload.put("eventDescription", risikoCard.getDescription());
-                payload.put("eventAmount", risikoCard.getAmount());
-                return new GameMessage("draw_event_risiko_card", payload.toString());
-
-            case "event_bank":
-                EventCardBank bankCard = eventCardsBank.get(new Random().nextInt(eventCardsBank.size()));
-                payload.put("eventTitle", bankCard.getTitle());
-                payload.put("eventDescription", bankCard.getDescription());
-                payload.put("eventAmount", bankCard.getAmount());
-                return new GameMessage("draw_event_bank_card", payload.toString());
-
-            case "goto_jail":
+            case "gotojail":
                 return new GameMessage("go_to_jail", payload.toString());
 
             default:

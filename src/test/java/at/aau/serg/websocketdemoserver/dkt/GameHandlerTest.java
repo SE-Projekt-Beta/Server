@@ -118,6 +118,15 @@ public class GameHandlerTest {
     }
 
     @Test
+    void testDecideActionForGoToJail() {
+        GameHandler handler = new GameHandler();
+        GoToJail tile = new GoToJail(30, "Gehe ins Gefängnis");
+
+        GameMessage msg = handler.decideAction("player1", tile);
+        assertEquals("go_to_jail", msg.getType());
+    }
+
+    @Test
     void testDecideActionForFreeField() {
         GameHandler handler = new GameHandler();
         Free tile = new Free(20, "Frei Parken");
