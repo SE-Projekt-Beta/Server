@@ -1,11 +1,10 @@
 package at.aau.serg.websocketdemoserver.dkt;
 
-import at.aau.serg.websocketdemoserver.dkt.lobby.Lobby;
-import org.json.JSONArray;
-import at.aau.serg.websocketdemoserver.messaging.dtos.EventCard;
-import at.aau.serg.websocketdemoserver.messaging.dtos.EventCardBank;
-import at.aau.serg.websocketdemoserver.messaging.dtos.EventCardRisiko;
+import at.aau.serg.websocketdemoserver.dkt.EventCardService;
+import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardBank;
+import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardRisiko;
 import org.json.JSONObject;
+import at.aau.serg.websocketdemoserver.dkt.lobby.Lobby;
 
 import java.util.*;
 
@@ -21,7 +20,6 @@ public class GameHandler {
 
 
 
-
     public List<GameMessage> getExtraMessages() {
         return extraMessages;
     }
@@ -30,19 +28,8 @@ public class GameHandler {
         return gameState;
     }
 
-    private final List<EventCardRisiko> eventCardsRisiko = List.of(
-            new EventCardRisiko("Gehe 3 Felder zurück", -3),
-            new EventCardRisiko("Gehe 2 Felder vor", 2),
-            new EventCardRisiko("Gehe 4 Felder zurück", -4),
-            new EventCardRisiko("Gehe 4 Felder vor", 4)
-    );
 
-    private final List<EventCardBank> eventCardsBank = List.of(
-            new EventCardBank("Für Unfallversicherung bezahlst du 200,-", -200),
-            new EventCardBank("Für eine Autoreparatur bezahlst du 140,-", -140),
-            new EventCardBank("Für die Auswertung einer Erfindung erhältst du 140,- aus öffentlichen Mitteln", 140),
-            new EventCardBank("Die Bank zahlt dir an Dividenden 60,-", 60)
-    );
+
     public String getOwner(int tilePos) {
         return ownership.get(tilePos);
     }
@@ -143,21 +130,20 @@ public class GameHandler {
 
             case "tax":
                 return new GameMessage("pay_tax", payload.toString());
-            case "event":
-                String card = eventCardService.drawCard();
-                return new GameMessage("event_card", card);
             case "event_risiko":
-                EventCardRisiko risikoCard = eventCardsRisiko.get(new Random().nextInt(eventCardsRisiko.size()));
+                EventCardRisiko risikoCard = eventCardService.drawRisikoCard();
                 payload.put("eventTitle", risikoCard.getTitle());
                 payload.put("eventDescription", risikoCard.getDescription());
                 payload.put("eventAmount", risikoCard.getAmount());
+                payload.put("eventType", "risiko");
                 return new GameMessage("draw_event_risiko_card", payload.toString());
 
             case "event_bank":
-                EventCardBank bankCard = eventCardsBank.get(new Random().nextInt(eventCardsBank.size()));
+                EventCardBank bankCard = eventCardService.drawBankCard();
                 payload.put("eventTitle", bankCard.getTitle());
                 payload.put("eventDescription", bankCard.getDescription());
                 payload.put("eventAmount", bankCard.getAmount());
+                payload.put("eventType", "bank");
                 return new GameMessage("draw_event_bank_card", payload.toString());
 
             case "goto_jail":
@@ -192,8 +178,5 @@ public class GameHandler {
         return new GameMessage("info", "Startsignal gesendet");
     }
 
-
-
-
-
 }
+
