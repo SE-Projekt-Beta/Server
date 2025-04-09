@@ -168,7 +168,8 @@ public class GameHandlerTest {
 
         JSONObject obj = new JSONObject(result.getPayload());
         JSONArray players = obj.getJSONArray("players");
-        assertTrue(players.toString().contains("player1"), "Lobby sollte player1 enthalten");
+
+        assertEquals("Player1", players.getString(0), "Lobby sollte player1 enthalten");
     }
 
 }
