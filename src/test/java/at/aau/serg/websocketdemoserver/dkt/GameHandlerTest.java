@@ -109,12 +109,21 @@ public class GameHandlerTest {
     }
 
     @Test
-    void testDecideActionForEvent() {
+    void testDecideActionForRisikoEvent() {
         GameHandler handler = new GameHandler();
-        Event tile = new Event(2, "Ereignisfeld");
+        Event tile = new Event(2, "event_risiko");
 
         GameMessage msg = handler.decideAction("player1", tile);
-        assertEquals("event_card", msg.getType());
+        assertEquals("draw_event_risiko_card", msg.getType());
+    }
+
+    @Test
+    void testDecdeActionForBankEvent() {
+        GameHandler handler = new GameHandler();
+        Event tile = new Event(2, "event_banke");
+
+        GameMessage msg = handler.decideAction("player1", tile);
+        assertEquals("draw_event_bank_card", msg.getType());
     }
 
     @Test
@@ -146,7 +155,8 @@ public class GameHandlerTest {
 
         GameMessage action = extras.get(0);
         assertNotNull(action.getType(), "Aktionstyp darf nicht null sein");
-        assertTrue(action.getType().matches("can_buy_property|pay_tax|event_card|go_to_jail|skipped"),
+        assertTrue(action.getType().matches("can_buy_property|pay_tax|draw_event_risiko_card|draw_event_bank_card|go_to_jail|skipped"),
+
                 "Unerwarteter Aktionstyp: " + action.getType());
     }
 
