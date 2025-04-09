@@ -10,12 +10,9 @@ public abstract class EventCard {
     @Getter
     private int amount;
 
-    public EventCard(String description, int amount){
+    public EventCard(String title, String description, int amount){
+        this.title = title;
         this.description = description;
         this.amount = amount;
     }
-    public void setTitle(String title){
-        this.title = title;
-    }
-
 }
