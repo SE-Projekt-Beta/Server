@@ -1,7 +1,9 @@
 package at.aau.serg.websocketdemoserver.dkt;
 
-import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardBank;
-import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardRisiko;
+import at.aau.serg.websocketdemoserver.messaging.dtos.EventCard;
+import at.aau.serg.websocketdemoserver.messaging.dtos.EventCardBank;
+import at.aau.serg.websocketdemoserver.messaging.dtos.EventCardRisiko;
+import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardService;
 import org.json.JSONObject;
 
 import java.util.*;
@@ -12,6 +14,7 @@ public class GameHandler {
     private final GameBoard board = new GameBoard();
     private final List<GameMessage> extraMessages = new ArrayList<>();
     private final Map<Integer, String> ownership = new HashMap<>(); // Besitzverwaltung
+    private final EventCardService eventCardService = new EventCardService();
 
     public List<GameMessage> getExtraMessages() {
         return extraMessages;
@@ -20,6 +23,7 @@ public class GameHandler {
     public GameState getGameState() {
         return gameState;
     }
+
     public String getOwner(int tilePos) {
         return ownership.get(tilePos);
     }
@@ -114,7 +118,6 @@ public class GameHandler {
                 return new GameMessage("pay_tax", payload.toString());
 
             case "event_risiko":
-                EventCardService eventCardService = new EventCardService();
                 EventCardRisiko risikoCard = eventCardService.drawRisikoCard();
                 payload.put("eventTitle", risikoCard.getTitle());
                 payload.put("eventDescription", risikoCard.getDescription());
@@ -123,7 +126,6 @@ public class GameHandler {
                 return new GameMessage("draw_event_risiko_card", payload.toString());
 
             case "event_bank":
-                EventCardService eventCardService1 = new EventCardService();
                 EventCardBank bankCard = eventCardService1.drawBankCard();
                 payload.put("eventTitle", bankCard.getTitle());
                 payload.put("eventDescription", bankCard.getDescription());
