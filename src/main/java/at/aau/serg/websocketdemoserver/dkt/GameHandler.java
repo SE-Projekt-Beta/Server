@@ -4,6 +4,7 @@ import at.aau.serg.websocketdemoserver.dkt.EventCardService;
 import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardBank;
 import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardRisiko;
 import org.json.JSONObject;
+import at.aau.serg.websocketdemoserver.dkt.lobby.Lobby;
 
 import java.util.*;
 
@@ -129,9 +130,6 @@ public class GameHandler {
 
             case "tax":
                 return new GameMessage("pay_tax", payload.toString());
-            case "event":
-                String card = eventCardService.drawCard();
-                return new GameMessage("event_card", card);
             case "event_risiko":
                 EventCardRisiko risikoCard = eventCardService.drawRisikoCard();
                 payload.put("eventTitle", risikoCard.getTitle());
