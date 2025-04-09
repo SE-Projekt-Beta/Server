@@ -1,5 +1,6 @@
 package at.aau.serg.websocketdemoserver.dkt;
 
+import at.aau.serg.websocketdemoserver.dkt.EventCardService;
 import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardBank;
 import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardRisiko;
 import org.json.JSONObject;
@@ -12,6 +13,7 @@ public class GameHandler {
     private final GameBoard board = new GameBoard();
     private final List<GameMessage> extraMessages = new ArrayList<>();
     private final Map<Integer, String> ownership = new HashMap<>(); // Besitzverwaltung
+    private final EventCardService eventCardService = new EventCardService();
 
     public List<GameMessage> getExtraMessages() {
         return extraMessages;
@@ -20,6 +22,9 @@ public class GameHandler {
     public GameState getGameState() {
         return gameState;
     }
+
+
+
     public String getOwner(int tilePos) {
         return ownership.get(tilePos);
     }
@@ -114,7 +119,6 @@ public class GameHandler {
                 return new GameMessage("pay_tax", payload.toString());
 
             case "event_risiko":
-                EventCardService eventCardService = new EventCardService();
                 EventCardRisiko risikoCard = eventCardService.drawRisikoCard();
                 payload.put("eventTitle", risikoCard.getTitle());
                 payload.put("eventDescription", risikoCard.getDescription());
@@ -123,8 +127,7 @@ public class GameHandler {
                 return new GameMessage("draw_event_risiko_card", payload.toString());
 
             case "event_bank":
-                EventCardService eventCardService1 = new EventCardService();
-                EventCardBank bankCard = eventCardService1.drawBankCard();
+                EventCardBank bankCard = eventCardService.drawBankCard();
                 payload.put("eventTitle", bankCard.getTitle());
                 payload.put("eventDescription", bankCard.getDescription());
                 payload.put("eventAmount", bankCard.getAmount());
