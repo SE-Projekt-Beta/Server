@@ -155,7 +155,6 @@ public class GameHandler {
                 return new GameMessage("skipped", payload.toString());
         }
     }
-}
 
     private GameMessage handleJoinLobby(String payload) {
         try {
@@ -180,10 +179,6 @@ public class GameHandler {
         // return dummy (wird eh nicht verwendet direkt)
         return new GameMessage("info", "Startsignal gesendet");
     }
-
-
-
-
 
 }
 
