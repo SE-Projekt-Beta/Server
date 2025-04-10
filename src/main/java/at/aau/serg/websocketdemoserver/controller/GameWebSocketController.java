@@ -12,10 +12,11 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 @Controller
 public class GameWebSocketController {
     private final SimpMessagingTemplate messagingTemplate;
-    private final GameHandler gameHandler = new GameHandler();
+    private final GameHandler gameHandler;
 
-    public GameWebSocketController(SimpMessagingTemplate messagingTemplate) {
+    public GameWebSocketController(SimpMessagingTemplate messagingTemplate, GameHandler gameHandler) {
         this.messagingTemplate = messagingTemplate;
+        this.gameHandler = gameHandler;
     }
 
     @MessageMapping("/dkt")
@@ -32,5 +33,4 @@ public class GameWebSocketController {
 
         return result;
     }
-
 }

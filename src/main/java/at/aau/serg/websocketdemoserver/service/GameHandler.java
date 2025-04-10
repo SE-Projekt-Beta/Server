@@ -2,6 +2,7 @@ package at.aau.serg.websocketdemoserver.service;
 
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.model.GameState;
+import at.aau.serg.websocketdemoserver.model.Player;
 import at.aau.serg.websocketdemoserver.model.tiles.EventCardBank;
 import at.aau.serg.websocketdemoserver.model.tiles.EventCardRisiko;
 import at.aau.serg.websocketdemoserver.model.GameBoard;
@@ -160,7 +161,8 @@ public class GameHandler {
 
     private GameMessage handleJoinLobby(String payload) {
         try {
-            String playerName = lobby.addPlayer();
+            Player player = lobby.addPlayer();
+            String playerName = player.getId();
             System.out.println("Neuer Spieler beigetreten: " + playerName);
 
             // Antwort an alle Spieler
