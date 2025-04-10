@@ -1,4 +1,4 @@
-package at.aau.serg.websocketdemoserver.dkt;
+package at.aau.serg.websocketdemoserver.model;
 
 import java.util.HashMap;
 import java.util.Map;

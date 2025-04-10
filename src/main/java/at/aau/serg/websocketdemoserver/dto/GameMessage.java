@@ -1,4 +1,4 @@
-package at.aau.serg.websocketdemoserver.dkt;
+package at.aau.serg.websocketdemoserver.dto;
 
 public class GameMessage {
     private String type;

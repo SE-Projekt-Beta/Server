@@ -1,11 +1,12 @@
-package at.aau.serg.websocketdemoserver.dkt;
+package at.aau.serg.websocketdemoserver.controller;
 
+import at.aau.serg.websocketdemoserver.service.GameHandler;
+import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import java.util.List;
 
 
 @Controller

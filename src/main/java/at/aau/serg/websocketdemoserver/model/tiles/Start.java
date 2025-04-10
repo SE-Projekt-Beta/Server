@@ -1,6 +1,6 @@
-package at.aau.serg.websocketdemoserver.dkt.tiles;
+package at.aau.serg.websocketdemoserver.model.tiles;
 
-import at.aau.serg.websocketdemoserver.dkt.Tile;
+import at.aau.serg.websocketdemoserver.model.Tile;
 
 public class Start extends Tile {
 

@@ -1,6 +1,11 @@
 package at.aau.serg.websocketdemoserver.dkt;
 
-import at.aau.serg.websocketdemoserver.dkt.tiles.*;
+import at.aau.serg.websocketdemoserver.dto.GameMessage;
+import at.aau.serg.websocketdemoserver.model.tiles.Event;
+import at.aau.serg.websocketdemoserver.model.tiles.Free;
+import at.aau.serg.websocketdemoserver.model.tiles.Street;
+import at.aau.serg.websocketdemoserver.model.tiles.Tax;
+import at.aau.serg.websocketdemoserver.service.GameHandler;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.junit.jupiter.api.Test;

@@ -1,9 +1,9 @@
-package at.aau.serg.websocketdemoserver.dkt;
+package at.aau.serg.websocketdemoserver.model;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import at.aau.serg.websocketdemoserver.dkt.tiles.*;
+import at.aau.serg.websocketdemoserver.model.tiles.*;
 
 public class GameBoard {
     private final List<Tile> tiles = new ArrayList<>();

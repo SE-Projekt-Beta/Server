@@ -1,4 +1,4 @@
-package at.aau.serg.websocketdemoserver.dkt.lobby;
+package at.aau.serg.websocketdemoserver.service;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

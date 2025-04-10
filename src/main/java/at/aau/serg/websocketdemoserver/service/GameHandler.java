@@ -1,10 +1,12 @@
-package at.aau.serg.websocketdemoserver.dkt;
+package at.aau.serg.websocketdemoserver.service;
 
-import at.aau.serg.websocketdemoserver.dkt.EventCardService;
-import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardBank;
-import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardRisiko;
+import at.aau.serg.websocketdemoserver.dto.GameMessage;
+import at.aau.serg.websocketdemoserver.model.GameState;
+import at.aau.serg.websocketdemoserver.model.tiles.EventCardBank;
+import at.aau.serg.websocketdemoserver.model.tiles.EventCardRisiko;
+import at.aau.serg.websocketdemoserver.model.GameBoard;
+import at.aau.serg.websocketdemoserver.model.Tile;
 import org.json.JSONObject;
-import at.aau.serg.websocketdemoserver.dkt.lobby.Lobby;
 
 import java.util.*;
 

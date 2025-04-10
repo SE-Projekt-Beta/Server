@@ -1,6 +1,6 @@
-package at.aau.serg.websocketdemoserver.dkt.tiles;
+package at.aau.serg.websocketdemoserver.model.tiles;
 
-import at.aau.serg.websocketdemoserver.dkt.Tile;
+import at.aau.serg.websocketdemoserver.model.Tile;
 
 public class Event extends Tile {
         // What does this do?

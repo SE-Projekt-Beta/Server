@@ -1,4 +1,4 @@
-package at.aau.serg.websocketdemoserver.dkt.tiles;
+package at.aau.serg.websocketdemoserver.model.tiles;
 
 public class EventCardRisiko extends EventCard {
 
