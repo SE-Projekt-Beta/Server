@@ -1,16 +1,14 @@
-package at.aau.serg.websocketdemoserver.dkt;
+package at.aau.serg.websocketdemoserver.gamehandler;
 
-import at.aau.serg.websocketdemoserver.dto.GameMessage;
+import at.aau.serg.websocketdemoserver.dto.*;
 import at.aau.serg.websocketdemoserver.model.tiles.Event;
 import at.aau.serg.websocketdemoserver.model.tiles.Free;
 import at.aau.serg.websocketdemoserver.model.tiles.Street;
 import at.aau.serg.websocketdemoserver.model.tiles.Tax;
 import at.aau.serg.websocketdemoserver.service.GameHandler;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import org.json.JSONObject;
 
 import java.util.List;
 
@@ -19,14 +17,15 @@ public class GameHandlerTest {
     void testHandleRollDiceReturnsPlayerMoved() {
         GameHandler handler = new GameHandler();
         String payload = "{\"playerId\": \"player1\"}";
-        GameMessage input = new GameMessage("roll_dice", payload);
+        GameMessage input = new GameMessage(MessageType.ROLL_DICE, payload);
 
         GameMessage result = handler.handle(input);
 
         assertNotNull(result);
-        assertEquals("player_moved", result.getType());
-        assertTrue(result.getPayload().contains("player1"));
-        assertTrue(result.getPayload().contains("pos"));
+        assertEquals(MessageType.PLAYER_MOVED, result.getType());
+        assertTrue(result.getPayload() instanceof PlayerMovePayload);
+        PlayerMovePayload movePayload = (PlayerMovePayload) result.getPayload();
+        assertEquals("player1", movePayload.getPlayerId());
     }
 
     @Test
@@ -34,25 +33,24 @@ public class GameHandlerTest {
         GameHandler handler = new GameHandler();
         String payload = "{\"playerId\":\"player1\"}";
 
-        GameMessage result = handler.handle(new GameMessage("roll_dice", payload));
+        GameMessage result = handler.handle(new GameMessage(MessageType.ROLL_DICE, payload));
 
-        assertEquals("player_moved", result.getType());
+        assertEquals(MessageType.PLAYER_MOVED, result.getType());
 
-        JSONObject obj = new JSONObject(result.getPayload());
-        assertTrue(obj.has("tileName"), "tileName fehlt im Payload");
-        assertTrue(obj.has("tileType"), "tileType fehlt im Payload");
+        PlayerMovePayload movePayload = (PlayerMovePayload) result.getPayload();
+        assertNotNull(movePayload.getTileName());
+        assertNotNull(movePayload.getTileType());
     }
 
     @Test
     void testTileTypeIsValid() throws JSONException {
         GameHandler handler = new GameHandler();
         String payload = "{\"playerId\":\"test\"}";
-        GameMessage result = handler.handle(new GameMessage("roll_dice", payload));
+        GameMessage result = handler.handle(new GameMessage(MessageType.ROLL_DICE, payload));
 
-        JSONObject obj = new JSONObject(result.getPayload());
-        String type = obj.getString("tileType").toLowerCase();
+        PlayerMovePayload movePayload = (PlayerMovePayload) result.getPayload();
+        String type = movePayload.getTileType().toLowerCase();
 
-        // Anpassen der erlaubten Typen
         assertTrue(
                 type.matches("start|street|station|event|event_risiko|event_bank|tax|jail|goto_jail|free"),
                 "tileType ist kein gültiger Typ: " + type
@@ -62,10 +60,10 @@ public class GameHandlerTest {
     @Test
     void testPlayerPositionIsStored() {
         GameHandler handler = new GameHandler();
-        String payload = "{\"playerId\":\"p1\"}";
-        handler.handle(new GameMessage("roll_dice", payload));
+        String payload = "{\"playerId\":\"testPlayer\"}";
+        handler.handle(new GameMessage(MessageType.ROLL_DICE, payload));
 
-        int pos = handler.getGameState().getPosition("p1");
+        int pos = handler.getGameState().getPosition("testPlayer");
         assertTrue(pos >= 0 && pos < 40, "Position liegt nicht im gültigen Bereich");
     }
 
@@ -75,8 +73,8 @@ public class GameHandlerTest {
 
         for (int i = 0; i < 10; i++) {
             String payload = "{\"playerId\":\"multi\"}";
-            GameMessage result = handler.handle(new GameMessage("roll_dice", payload));
-            assertEquals("player_moved", result.getType());
+            GameMessage result = handler.handle(new GameMessage(MessageType.ROLL_DICE, payload));
+            assertEquals(MessageType.PLAYER_MOVED, result.getType());
         }
 
         int pos = handler.getGameState().getPosition("multi");
@@ -101,7 +99,8 @@ public class GameHandlerTest {
         Street tile = new Street(5, "Opernring", 220, 55, 110);
 
         GameMessage msg = handler.decideAction("player1", tile);
-        assertEquals("can_buy_property", msg.getType());
+        assertEquals(MessageType.CAN_BUY_PROPERTY, msg.getType());
+
     }
 
     @Test
@@ -110,7 +109,7 @@ public class GameHandlerTest {
         Tax tile = new Tax(4, "Einkommenssteuer", 100);
 
         GameMessage msg = handler.decideAction("player1", tile);
-        assertEquals("pay_tax", msg.getType());
+        assertEquals(MessageType.PAY_TAX, msg.getType());
     }
 
     @Test
@@ -119,7 +118,7 @@ public class GameHandlerTest {
         Event tile = new Event(2, "event_risiko");
 
         GameMessage msg = handler.decideAction("player1", tile);
-        assertEquals("draw_event_risiko_card", msg.getType());
+        assertEquals(MessageType.DRAW_EVENT_RISIKO_CARD, msg.getType());
     }
 
     @Test
@@ -128,7 +127,7 @@ public class GameHandlerTest {
         Event tile = new Event(2, "event_bank");
 
         GameMessage msg = handler.decideAction("player1", tile);
-        assertEquals("draw_event_bank_card", msg.getType());
+        assertEquals(MessageType.DRAW_EVENT_BANK_CARD, msg.getType());
     }
 
     @Test
@@ -137,23 +136,32 @@ public class GameHandlerTest {
         Free tile = new Free(20, "Frei Parken");
 
         GameMessage msg = handler.decideAction("player1", tile);
-        assertEquals("skipped", msg.getType());
+        assertEquals(MessageType.SKIPPED, msg.getType());
     }
 
     @Test
     void testExtraActionGeneratedAfterRoll() {
         GameHandler handler = new GameHandler();
         String payload = "{\"playerId\":\"player1\"}";
-        handler.handle(new GameMessage("roll_dice", payload));
+        handler.handle(new GameMessage(MessageType.ROLL_DICE, payload));
 
         List<GameMessage> extras = handler.getExtraMessages();
         assertEquals(1, extras.size(), "Es sollte genau eine Aktionsnachricht geben");
 
         GameMessage action = extras.get(0);
         assertNotNull(action.getType(), "Aktionstyp darf nicht null sein");
-        assertTrue(action.getType().matches("can_buy_property|pay_tax|draw_event_risiko_card|draw_event_bank_card|go_to_jail|skipped"),
 
-                "Unerwarteter Aktionstyp: " + action.getType());
+        assertTrue(
+                List.of(
+                        MessageType.CAN_BUY_PROPERTY,
+                        MessageType.PAY_TAX,
+                        MessageType.DRAW_EVENT_RISIKO_CARD,
+                        MessageType.DRAW_EVENT_BANK_CARD,
+                        MessageType.GO_TO_JAIL,
+                        MessageType.SKIPPED
+                ).contains(action.getType()),
+                "Unerwarteter Aktionstyp: " + action.getType()
+        );
     }
 
     @Test
@@ -161,30 +169,11 @@ public class GameHandlerTest {
         GameHandler handler = new GameHandler();
 
         // Spieler "player1" kauft Feld Nr. 5
-        JSONObject payload = new JSONObject();
-        payload.put("playerId", "player1");
-        payload.put("tilePos", 5);
+        BuyPropertyPayload payload = new BuyPropertyPayload("player1", 5);
 
-        GameMessage result = handler.handle(new GameMessage("buy_property", payload.toString()));
+        GameMessage result = handler.handle(new GameMessage(MessageType.BUY_PROPERTY, payload));
 
-        assertEquals("property_bought", result.getType());
+        assertEquals(MessageType.PROPERTY_BOUGHT, result.getType());
         assertEquals("player1", handler.getOwner(5), "Feld 5 sollte nun player1 gehören");
     }
-
-    @Test
-    void testHandleJoinLobby() throws JSONException {
-        GameHandler handler = new GameHandler();
-        String payload = "{\"playerName\":\"player1\"}";
-
-        GameMessage result = handler.handle(new GameMessage("join_lobby", payload));
-
-        assertNotNull(result);
-        assertEquals("lobby_update", result.getType());
-
-        JSONObject obj = new JSONObject(result.getPayload());
-        JSONArray players = obj.getJSONArray("players");
-
-        assertEquals("Player1", players.getString(0), "Lobby sollte player1 enthalten");
-    }
-
 }

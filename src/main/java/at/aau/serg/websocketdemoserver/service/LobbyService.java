@@ -1,6 +1,7 @@
 package at.aau.serg.websocketdemoserver.service;
 
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
+import at.aau.serg.websocketdemoserver.dto.MessageType;
 import at.aau.serg.websocketdemoserver.model.Player;
 import org.json.JSONObject;
 
@@ -15,15 +16,15 @@ public class LobbyService {
             Player player = lobby.addPlayer(username);
             System.out.println("Neuer Spieler beigetreten: " + player.getId());
 
-            return new GameMessage("lobby_update", lobby.toJson().toString());
+            return new GameMessage(MessageType.LOBBY_UPDATE, lobby.toJson().toString());
         } catch (Exception e) {
-            return new GameMessage("error", "Fehler beim Lobby-Beitritt: " + e.getMessage());
+            return new GameMessage(MessageType.ERROR, "Fehler beim Lobby-Beitritt: " + e.getMessage());
         }
     }
 
     public GameMessage handleStartGame() {
         System.out.println("Spiel startet!");
-        return new GameMessage("start_game", "");
+        return new GameMessage(MessageType.START_GAME, "");
     }
 
     public boolean isLobbyFull() {

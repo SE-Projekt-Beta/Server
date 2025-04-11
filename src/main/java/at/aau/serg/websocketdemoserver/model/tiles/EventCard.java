@@ -1,18 +1,25 @@
 package at.aau.serg.websocketdemoserver.model.tiles;
 
-import lombok.Getter;
 
 public abstract class EventCard {
-    @Getter
     private String title;
-    @Getter
     private String description;
-    @Getter
     private int amount;
 
     public EventCard(String title, String description, int amount){
         this.title = title;
         this.description = description;
         this.amount = amount;
+    }
+    public String getTitle() {
+        return title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public int getAmount() {
+        return amount;
     }
 }
