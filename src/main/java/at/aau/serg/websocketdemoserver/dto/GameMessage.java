@@ -1,27 +1,30 @@
 package at.aau.serg.websocketdemoserver.dto;
 
 public class GameMessage {
-    private String type;
-    private String payload;
+    private MessageType type;
+    private Object payload;
 
-    public GameMessage(String type, String payload) {
+    public GameMessage() {
+    }
+
+    public GameMessage(MessageType type, Object payload) {
         this.type = type;
         this.payload = payload;
     }
 
-    public String getType() {
+    public MessageType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(MessageType type) {
         this.type = type;
     }
 
-    public String getPayload() {
+    public Object getPayload() {
         return payload;
     }
 
-    public void setPayload(String payload) {
+    public void setPayload(Object payload) {
         this.payload = payload;
     }
 }
