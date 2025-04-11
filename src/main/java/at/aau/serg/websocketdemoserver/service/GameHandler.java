@@ -1,8 +1,10 @@
 package at.aau.serg.websocketdemoserver.service;
 
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
+import at.aau.serg.websocketdemoserver.dto.MessageType;
+import at.aau.serg.websocketdemoserver.dto.PlayerMovePayload;
+import at.aau.serg.websocketdemoserver.dto.PropertyBoughtPayload;
 import at.aau.serg.websocketdemoserver.model.GameState;
-import at.aau.serg.websocketdemoserver.model.Player;
 import at.aau.serg.websocketdemoserver.model.tiles.EventCardBank;
 import at.aau.serg.websocketdemoserver.model.tiles.EventCardRisiko;
 import at.aau.serg.websocketdemoserver.model.GameBoard;
@@ -11,19 +13,15 @@ import org.json.JSONObject;
 
 import java.util.*;
 
+
 public class GameHandler {
 
     private final GameState gameState = new GameState();
     private final GameBoard board = new GameBoard();
     private final List<GameMessage> extraMessages = new ArrayList<>();
-    private final Map<Integer, String> ownership = new HashMap<>(); // Besitzverwaltung
+    private final Map<Integer, String> ownership = new HashMap<>();
     private final EventCardService eventCardService = new EventCardService();
-    private final Lobby lobby = new Lobby();
-
-    private Random random = new Random();
-
-
-
+    private final Random random = new Random();
 
     public List<GameMessage> getExtraMessages() {
         return extraMessages;
@@ -33,31 +31,30 @@ public class GameHandler {
         return gameState;
     }
 
-
-
     public String getOwner(int tilePos) {
         return ownership.get(tilePos);
     }
 
+    /**
+     * Hauptmethode, die eingehende GameMessages behandelt
+     */
     public GameMessage handle(GameMessage msg) {
         switch (msg.getType()) {
-            case "roll_dice":
-                return handleRollDice(msg.getPayload());
-            case "buy_property":
-                return handleBuyProperty(msg.getPayload());
-            case "join_lobby":
-                return handleJoinLobby(msg.getPayload());
-            case "start_game":
-                return handleStartGame();
+            case ROLL_DICE:
+                return handleRollDice((String) msg.getPayload());
+            case BUY_PROPERTY:
+                return handleBuyProperty((String) msg.getPayload());
             default:
-                return new GameMessage("error", "Unbekannter Typ: " + msg.getType());
+                return new GameMessage(MessageType.ERROR, "Unbekannter Nachrichtentyp: " + msg.getType());
         }
     }
 
-
+    /**
+     * Würfelt und bewegt einen Spieler
+     */
     private GameMessage handleRollDice(String payload) {
         try {
-            JSONObject obj = new JSONObject(payload);
+            org.json.JSONObject obj = new org.json.JSONObject(payload);
             String playerId = obj.getString("playerId");
 
             int dice = random.nextInt(6) + 1;
@@ -67,29 +64,30 @@ public class GameHandler {
 
             Tile tile = board.getTileAt(newPos);
 
-            JSONObject movePayload = new JSONObject();
-            movePayload.put("playerId", playerId);
-            movePayload.put("pos", newPos);
-            movePayload.put("dice", dice);
-            movePayload.put("tileName", tile.getName());
-            movePayload.put("tileType", tile.getTileType());
+            // Payload-Objekt erstellen
+            PlayerMovePayload movePayload = new PlayerMovePayload(
+                    playerId, newPos, dice, tile.getName(), tile.getTileType()
+            );
 
             System.out.println("Server: " + playerId + " ist auf " + tile.getName() + " (" + tile.getTileType() + ")");
 
-            // Aktion ermitteln
+            // Aktion auf dem Tile ermitteln
             GameMessage actionMsg = decideAction(playerId, tile);
 
-            // Aktion zur Extraschlange hinzufügen
+            // Extraschlange aktualisieren
             extraMessages.clear();
             extraMessages.add(actionMsg);
 
-            return new GameMessage("player_moved", movePayload.toString());
+            return new GameMessage(MessageType.PLAYER_MOVED, movePayload);
 
         } catch (Exception e) {
-            return new GameMessage("error", "Fehler: " + e.getMessage());
+            return new GameMessage(MessageType.ERROR, "Fehler beim Würfeln: " + e.getMessage());
         }
     }
 
+    /**
+     * Spieler kauft ein Feld
+     */
     private GameMessage handleBuyProperty(String payload) {
         try {
             JSONObject obj = new JSONObject(payload);
@@ -97,28 +95,30 @@ public class GameHandler {
             int tilePos = obj.getInt("tilePos");
 
             if (ownership.containsKey(tilePos)) {
-                return new GameMessage("error", "Feld gehört schon jemandem!");
+                return new GameMessage(MessageType.ERROR, "Feld gehört bereits jemandem!");
             }
 
             ownership.put(tilePos, playerId);
             System.out.println("Besitz gespeichert: " + playerId + " → Feld " + tilePos);
 
             Tile tile = board.getTileAt(tilePos);
-            JSONObject response = new JSONObject();
-            response.put("playerId", playerId);
-            response.put("tilePos", tilePos);
-            response.put("tileName", tile.getName());
 
-            return new GameMessage("property_bought", response.toString());
+            PropertyBoughtPayload boughtPayload = new PropertyBoughtPayload(
+                    playerId, tilePos, tile.getName()
+            );
+
+            return new GameMessage(MessageType.PROPERTY_BOUGHT, boughtPayload);
 
         } catch (Exception e) {
-            return new GameMessage("error", "Fehler beim Kauf: " + e.getMessage());
+            return new GameMessage(MessageType.ERROR, "Fehler beim Kauf: " + e.getMessage());
         }
     }
 
-
-    GameMessage decideAction(String playerId, Tile tile) {
-        JSONObject payload = new JSONObject();
+    /**
+     * Entscheidet basierend auf Tile-Typ, was passieren muss
+     */
+    private GameMessage decideAction(String playerId, Tile tile) {
+        Map<String, Object> payload = new HashMap<>();
         payload.put("playerId", playerId);
         payload.put("tilePos", tile.getPosition());
         payload.put("tileName", tile.getName());
@@ -129,19 +129,20 @@ public class GameHandler {
                 String owner = ownership.get(tile.getPosition());
                 if (owner != null && !owner.equals(playerId)) {
                     payload.put("ownerId", owner);
-                    return new GameMessage("must_pay_rent", payload.toString());
+                    return new GameMessage(MessageType.MUST_PAY_RENT, payload);
                 }
-                return new GameMessage("can_buy_property", payload.toString());
+                return new GameMessage(MessageType.CAN_BUY_PROPERTY, payload);
 
             case "tax":
-                return new GameMessage("pay_tax", payload.toString());
+                return new GameMessage(MessageType.PAY_TAX, payload);
+
             case "event_risiko":
                 EventCardRisiko risikoCard = eventCardService.drawRisikoCard();
                 payload.put("eventTitle", risikoCard.getTitle());
                 payload.put("eventDescription", risikoCard.getDescription());
                 payload.put("eventAmount", risikoCard.getAmount());
                 payload.put("eventType", "risiko");
-                return new GameMessage("draw_event_risiko_card", payload.toString());
+                return new GameMessage(MessageType.DRAW_EVENT_RISIKO_CARD, payload);
 
             case "event_bank":
                 EventCardBank bankCard = eventCardService.drawBankCard();
@@ -149,40 +150,14 @@ public class GameHandler {
                 payload.put("eventDescription", bankCard.getDescription());
                 payload.put("eventAmount", bankCard.getAmount());
                 payload.put("eventType", "bank");
-                return new GameMessage("draw_event_bank_card", payload.toString());
+                return new GameMessage(MessageType.DRAW_EVENT_BANK_CARD, payload);
 
             case "goto_jail":
-                return new GameMessage("go_to_jail", payload.toString());
+                return new GameMessage(MessageType.GO_TO_JAIL, payload);
 
             default:
-                return new GameMessage("skipped", payload.toString());
+                return new GameMessage(MessageType.SKIPPED, payload);
         }
     }
-
-    private GameMessage handleJoinLobby(String payload) {
-        try {
-            Player player = lobby.addPlayer();
-            String playerName = player.getId();
-            System.out.println("Neuer Spieler beigetreten: " + playerName);
-
-            // Antwort an alle Spieler
-            return new GameMessage("lobby_update", lobby.toJson().toString());
-
-        } catch (Exception e) {
-            return new GameMessage("error", "Fehler beim Lobby-Beitritt: " + e.getMessage());
-        }
-    }
-
-    private GameMessage handleStartGame() {
-        System.out.println("Spiel startet!");
-
-        // Schicke an ALLE Clients die Nachricht "start_game"
-        extraMessages.clear();
-        extraMessages.add(new GameMessage("start_game", ""));
-
-        // return dummy (wird eh nicht verwendet direkt)
-        return new GameMessage("info", "Startsignal gesendet");
-    }
-
 }
 

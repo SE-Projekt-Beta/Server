@@ -11,11 +11,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Lobby {
 
     private final List<Player> players = new ArrayList<>();
-    private final AtomicInteger playerCounter = new AtomicInteger(1);
 
-    public synchronized Player addPlayer() {
-        String playerName = "Player" + playerCounter.getAndIncrement();
-        Player player = new Player(playerName);
+    public synchronized Player addPlayer(String username) {
+        Player player = new Player(username);
         players.add(player);
         return player;
     }
@@ -44,6 +42,5 @@ public class Lobby {
 
     public synchronized void clear() {
         players.clear();
-        playerCounter.set(1);
     }
 }
