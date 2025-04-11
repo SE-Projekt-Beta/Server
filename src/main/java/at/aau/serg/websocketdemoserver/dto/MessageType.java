@@ -14,6 +14,6 @@ public enum MessageType {
     SKIPPED,
     LOBBY_UPDATE,
     START_GAME,
-    INFO,
+    JOIN_LOBBY,
     ERROR
 }
