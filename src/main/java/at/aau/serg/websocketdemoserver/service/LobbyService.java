@@ -5,10 +5,12 @@ import at.aau.serg.websocketdemoserver.dto.LobbyUpdatePayload;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
 import at.aau.serg.websocketdemoserver.model.Player;
 import org.json.JSONObject;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Service
 public class LobbyService {
     private final Lobby lobby = new Lobby();
 
