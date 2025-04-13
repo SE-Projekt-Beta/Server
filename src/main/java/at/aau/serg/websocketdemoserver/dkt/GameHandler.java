@@ -134,10 +134,10 @@ public class GameHandler {
             case "tax":
                 return new GameMessage("pay_tax", payload.toString());
             case "event_risiko":
-                return createEventCardMessage("risiko", "draw_event_risiko_card", playerId);
+                return createEventCardMessage("risiko", "event_card_risiko", playerId);
 
             case "event_bank":
-                return createEventCardMessage("bank", "draw_event_bank_card", playerId);
+                return createEventCardMessage("bank", "event_card_bank", playerId);
             case "goto_jail":
                 return new GameMessage("go_to_jail", payload.toString());
 
