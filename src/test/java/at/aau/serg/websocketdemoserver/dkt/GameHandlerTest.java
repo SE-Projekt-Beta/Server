@@ -114,7 +114,7 @@ public class GameHandlerTest {
         RisikoEvent tile = new RisikoEvent(2, "event_risiko");
 
         GameMessage msg = handler.decideAction("player1", tile);
-        assertEquals("draw_event_risiko_card", msg.getType());
+        assertEquals("event_card_risiko", msg.getType());
     }
 
     @Test
@@ -123,7 +123,7 @@ public class GameHandlerTest {
         BankEvent tile = new BankEvent(2, "event_bank");
 
         GameMessage msg = handler.decideAction("player1", tile);
-        assertEquals("draw_event_bank_card", msg.getType());
+        assertEquals("event_card_bank", msg.getType());
     }
 
     @Test
