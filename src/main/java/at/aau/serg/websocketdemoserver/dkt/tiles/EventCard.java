@@ -1,13 +1,12 @@
 package at.aau.serg.websocketdemoserver.dkt.tiles;
 
-import lombok.Getter;
+import at.aau.serg.websocketdemoserver.dkt.Tile;
+
 
 public abstract class EventCard {
-    @Getter
-    private String title;
-    @Getter
-    private String description;
-    @Getter
+
+    private final String title;
+    private final String description;
     private int amount;
 
     public EventCard(String title, String description, int amount){
@@ -15,4 +14,18 @@ public abstract class EventCard {
         this.description = description;
         this.amount = amount;
     }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public int getAmount() {
+        return amount;
+    }
+
+    public abstract String getType();
 }
