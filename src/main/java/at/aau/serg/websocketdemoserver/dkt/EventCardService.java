@@ -1,5 +1,6 @@
 package at.aau.serg.websocketdemoserver.dkt;
 
+import at.aau.serg.websocketdemoserver.dkt.tiles.EventCard;
 import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardBank;
 import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardRisiko;
 
@@ -23,11 +24,13 @@ public class EventCardService {
     );
     private final Random rand = new Random();
 
-    public EventCardBank drawBankCard() {
-        return eventCardsBank.get(rand.nextInt(eventCardsBank.size()));
-    }
-
-    public EventCardRisiko drawRisikoCard(){
-        return eventCardsRisiko.get(rand.nextInt((eventCardsRisiko.size())));
+    public EventCard drawCard(String type){
+        if ("risiko".equalsIgnoreCase(type)) {
+            return eventCardsRisiko.get(rand.nextInt(eventCardsRisiko.size()));
+        } else if ("bank".equalsIgnoreCase(type)) {
+            return eventCardsBank.get(rand.nextInt(eventCardsBank.size()));
+        } else {
+            throw new IllegalArgumentException("Unbekannter Event-Typ: " + type);
+        }
     }
 }

@@ -1,6 +1,7 @@
 package at.aau.serg.websocketdemoserver.dkt;
 
 import at.aau.serg.websocketdemoserver.dkt.EventCardService;
+import at.aau.serg.websocketdemoserver.dkt.tiles.EventCard;
 import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardBank;
 import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardRisiko;
 import org.json.JSONObject;
@@ -133,27 +134,29 @@ public class GameHandler {
             case "tax":
                 return new GameMessage("pay_tax", payload.toString());
             case "event_risiko":
-                EventCardRisiko risikoCard = eventCardService.drawRisikoCard();
-                payload.put("eventTitle", risikoCard.getTitle());
-                payload.put("eventDescription", risikoCard.getDescription());
-                payload.put("eventAmount", risikoCard.getAmount());
-                payload.put("eventType", "risiko");
-                return new GameMessage("draw_event_risiko_card", payload.toString());
+                return createEventCardMessage("risiko", "draw_event_risiko_card", playerId);
 
             case "event_bank":
-                EventCardBank bankCard = eventCardService.drawBankCard();
-                payload.put("eventTitle", bankCard.getTitle());
-                payload.put("eventDescription", bankCard.getDescription());
-                payload.put("eventAmount", bankCard.getAmount());
-                payload.put("eventType", "bank");
-                return new GameMessage("draw_event_bank_card", payload.toString());
-
+                return createEventCardMessage("bank", "draw_event_bank_card", playerId);
             case "goto_jail":
                 return new GameMessage("go_to_jail", payload.toString());
 
             default:
                 return new GameMessage("skipped", payload.toString());
         }
+    }
+
+    private GameMessage createEventCardMessage(String type, String gameMessageType, String playerId) {
+        EventCard card = eventCardService.drawCard(type);
+
+        JSONObject payload = new JSONObject();
+        payload.put("playerId", playerId);
+        payload.put("eventTitle", card.getTitle());
+        payload.put("eventDescription", card.getDescription());
+        payload.put("eventAmount", card.getAmount());
+        payload.put("eventType", card.getType());  // z.B. "bank" oder "risiko"
+
+        return new GameMessage(gameMessageType, payload.toString());
     }
 
     private GameMessage handleJoinLobby(String payload) {
