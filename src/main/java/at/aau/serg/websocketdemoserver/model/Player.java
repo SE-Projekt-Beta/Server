@@ -2,19 +2,25 @@ package at.aau.serg.websocketdemoserver.model;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 public class Player {
-    private final String id;
+    private final String id;   // Eindeutige ID (UUID)
+    private final String username;
     private int position = 0;
     private int money = 1500;
-    private final Set<Integer> ownedProperties = new HashSet<>();
 
-    public Player(String id) {
-        this.id = id;
+    public Player(String username) {
+        this.id = UUID.randomUUID().toString();
+        this.username = username;
     }
 
     public String getId() {
         return id;
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public int getPosition() {
@@ -31,13 +37,5 @@ public class Player {
 
     public void setMoney(int money) {
         this.money = money;
-    }
-
-    public Set<Integer> getOwnedProperties() {
-        return ownedProperties;
-    }
-
-    public void addProperty(int tilePos) {
-        ownedProperties.add(tilePos);
     }
 }

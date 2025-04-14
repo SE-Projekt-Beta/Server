@@ -5,11 +5,11 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Lobby {
-
     private final List<Player> players = new ArrayList<>();
 
     public synchronized Player addPlayer(String username) {
@@ -19,28 +19,14 @@ public class Lobby {
     }
 
     public synchronized List<Player> getPlayers() {
-        return new ArrayList<>(players);
+        return Collections.unmodifiableList(players);
     }
 
-    public synchronized JSONObject toJson() {
-        JSONObject obj = new JSONObject();
-        JSONArray playersArray = new JSONArray();
-        for (Player player : players) {
-            JSONObject playerObj = new JSONObject();
-            playerObj.put("id", player.getId());
-            playerObj.put("position", player.getPosition());
-            playerObj.put("money", player.getMoney());
-            playersArray.put(playerObj);
-        }
-        obj.put("players", playersArray);
-        return obj;
-    }
-
-    public synchronized boolean isFull() {
+    public synchronized boolean isReadyToStart() {
         return players.size() >= 2;
     }
 
-    public synchronized void clear() {
+    public synchronized void clearLobby() {
         players.clear();
     }
 }
