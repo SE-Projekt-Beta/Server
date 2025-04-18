@@ -4,6 +4,7 @@ import at.aau.serg.websocketdemoserver.dkt.EventCardService;
 import at.aau.serg.websocketdemoserver.dkt.tiles.EventCard;
 import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardBank;
 import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardRisiko;
+import at.aau.serg.websocketdemoserver.dkt.tiles.GoToJail;
 import org.json.JSONObject;
 import at.aau.serg.websocketdemoserver.dkt.lobby.Lobby;
 
@@ -138,7 +139,13 @@ public class GameHandler {
 
             case "event_bank":
                 return createEventCardMessage("bank", "event_card_bank", playerId);
-            case "goto_jail":
+            case "go_to_jail":
+                gameState.updatePosition(playerId, 10);
+                gameState.setInJail(playerId, true);
+
+                payload.put("newPos", 10);
+                payload.put("inJail", true);
+
                 return new GameMessage("go_to_jail", payload.toString());
 
             default:
