@@ -139,6 +139,7 @@ public class GameHandler {
 
             case "event_bank":
                 return createEventCardMessage("bank", "event_card_bank", playerId);
+
             case "go_to_jail":
                 gameState.updatePosition(playerId, 10);
                 gameState.setInJail(playerId, true);

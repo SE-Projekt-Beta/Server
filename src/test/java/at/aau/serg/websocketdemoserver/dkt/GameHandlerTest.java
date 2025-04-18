@@ -118,12 +118,27 @@ public class GameHandlerTest {
     }
 
     @Test
-    void testDecdeActionForBankEvent() {
+    void testDecideActionForBankEvent() {
         GameHandler handler = new GameHandler();
         BankEvent tile = new BankEvent(2, "event_bank");
 
         GameMessage msg = handler.decideAction("player1", tile);
         assertEquals("event_card_bank", msg.getType());
+    }
+
+    @Test
+    void testDecideActionForGoToJailEvent() {
+        GameHandler handler = new GameHandler();
+        String playerId = "test_player";
+
+        Tile goToJailTile = new GoToJail(30, "Gehe ins Gefängnis");
+        GameMessage msg = handler.decideAction(playerId, goToJailTile);
+
+        assertEquals("go_to_jail", msg.getType());
+
+        int newPos = handler.getGameState().getPosition(playerId);
+        assertEquals(10, newPos);
+        assertTrue(handler.getGameState().isInJail(playerId));
     }
 
     @Test
