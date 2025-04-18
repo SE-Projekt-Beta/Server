@@ -161,7 +161,7 @@ public class GameHandlerTest {
 
         GameMessage action = extras.get(0);
         assertNotNull(action.getType(), "Aktionstyp darf nicht null sein");
-        assertTrue(action.getType().matches("can_buy_property|pay_tax|draw_event_risiko_card|draw_event_bank_card|go_to_jail|skipped"),
+        assertTrue(action.getType().matches("can_buy_property|pay_tax|event_risiko|event_bank|go_to_jail|skipped"),
 
                 "Unerwarteter Aktionstyp: " + action.getType());
     }
