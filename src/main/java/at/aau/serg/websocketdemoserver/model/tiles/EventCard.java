@@ -22,4 +22,5 @@ public abstract class EventCard {
     public int getAmount() {
         return amount;
     }
+    public abstract String getType();
 }

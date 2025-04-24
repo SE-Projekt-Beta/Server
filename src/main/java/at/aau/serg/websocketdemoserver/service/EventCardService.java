@@ -1,8 +1,8 @@
-package at.aau.serg.websocketdemoserver.dkt;
+package at.aau.serg.websocketdemoserver.service;
 
-import at.aau.serg.websocketdemoserver.dkt.tiles.EventCard;
-import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardBank;
-import at.aau.serg.websocketdemoserver.dkt.tiles.EventCardRisiko;
+import at.aau.serg.websocketdemoserver.model.tiles.EventCard;
+import at.aau.serg.websocketdemoserver.model.tiles.EventCardBank;
+import at.aau.serg.websocketdemoserver.model.tiles.EventCardRisiko;
 
 import java.util.List;
 import java.util.Random;
@@ -22,15 +22,24 @@ public class EventCardService {
             new EventCardBank("Für die Auswertung einer Erfindung erhälst du 140,- aus öffentlichen Mitteln", 140),
             new EventCardBank("Die Bank zahlt dir an Dividenden 60,-", 60)
     );
+
     private final Random rand = new Random();
 
     public EventCard drawCard(String type){
         if ("risiko".equalsIgnoreCase(type)) {
-            return eventCardsRisiko.get(rand.nextInt(eventCardsRisiko.size()));
+            return drawRisikoCard();
         } else if ("bank".equalsIgnoreCase(type)) {
-            return eventCardsBank.get(rand.nextInt(eventCardsBank.size()));
+            return drawBankCard();
         } else {
             throw new IllegalArgumentException("Unbekannter Event-Typ: " + type);
         }
+    }
+
+    public EventCardBank drawBankCard() {
+        return eventCardsBank.get(rand.nextInt(eventCardsBank.size()));
+    }
+
+    public EventCardRisiko drawRisikoCard() {
+        return eventCardsRisiko.get(rand.nextInt(eventCardsRisiko.size()));
     }
 }

@@ -7,7 +7,7 @@ public class EventCardBank extends EventCard {
     }
 
     @Override
-    public String getType(){
+    public String getType() {
         return "bank";
     }
 }

@@ -1,5 +1,6 @@
 package at.aau.serg.websocketdemoserver.service;
 
+import at.aau.serg.websocketdemoserver.service.EventCardService;
 import at.aau.serg.websocketdemoserver.dto.*;
 import at.aau.serg.websocketdemoserver.model.GameState;
 import at.aau.serg.websocketdemoserver.model.Player;
