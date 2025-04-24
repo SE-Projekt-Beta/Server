@@ -27,16 +27,18 @@ public class LobbyService {
     private List<LobbyMessage> handleJoinLobby(Object payload) {
         try {
             JoinLobbyPayload joinPayload = objectMapper.convertValue(payload, JoinLobbyPayload.class);
+
+            // Spieler erstellen (oder ignorieren, falls bereits vorhanden)
             Player player = lobby.addPlayer(joinPayload.getUsername());
 
             System.out.println("Neuer Spieler: " + player.getUsername() + " (" + player.getId() + ")");
 
-            List<String> usernames = lobby.getPlayers()
-                    .stream()
-                    .map(Player::getUsername)
+            // Spieler-DTOs erzeugen
+            List<PlayerDTO> playerDTOs = lobby.getPlayers().stream()
+                    .map(p -> new PlayerDTO(p.getId(), p.getUsername()))
                     .collect(Collectors.toList());
 
-            LobbyUpdatePayload lobbyUpdatePayload = new LobbyUpdatePayload(usernames);
+            LobbyUpdatePayload lobbyUpdatePayload = new LobbyUpdatePayload(playerDTOs);
             LobbyMessage updateMessage = new LobbyMessage(LobbyMessageType.LOBBY_UPDATE, lobbyUpdatePayload);
 
             return List.of(updateMessage);
@@ -45,4 +47,5 @@ public class LobbyService {
             return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Fehler beim Beitreten: " + e.getMessage()));
         }
     }
+
 }

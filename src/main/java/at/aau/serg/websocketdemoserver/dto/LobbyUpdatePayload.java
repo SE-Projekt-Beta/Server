@@ -3,19 +3,19 @@ package at.aau.serg.websocketdemoserver.dto;
 import java.util.List;
 
 public class LobbyUpdatePayload {
-    private List<String> usernames;
+    private List<PlayerDTO> players;
 
     public LobbyUpdatePayload() {}
 
-    public LobbyUpdatePayload(List<String> usernames) {
-        this.usernames = usernames;
+    public LobbyUpdatePayload(List<PlayerDTO> players) {
+        this.players = players;
     }
 
-    public List<String> getUsernames() {
-        return usernames;
+    public List<PlayerDTO> getPlayers() {
+        return players;
     }
 
-    public void setUsernames(List<String> usernames) {
-        this.usernames = usernames;
+    public void setPlayers(List<PlayerDTO> players) {
+        this.players = players;
     }
 }
