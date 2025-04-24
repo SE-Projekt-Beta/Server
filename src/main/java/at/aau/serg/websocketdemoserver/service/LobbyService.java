@@ -9,16 +9,27 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 import at.aau.serg.websocketdemoserver.dto.LobbyMessageType;
+import at.aau.serg.websocketdemoserver.dto.GameStartPayload;
+
 
 @Service
 public class LobbyService {
     private final Lobby lobby = new Lobby();
     private final ObjectMapper objectMapper = new ObjectMapper(); // <---- NEU: sicheres JSON
+    private final GameHandler gameHandler;
+
+    public LobbyService(GameHandler gameHandler) {
+        this.gameHandler = gameHandler;
+    }
+
+
 
     public List<LobbyMessage> handle(LobbyMessage message) {
         switch (message.getType()) {
             case JOIN_LOBBY:
                 return handleJoinLobby(message.getPayload());
+            case START_GAME:
+                return handleStartGame(); // <-- hinzufügen!
             default:
                 return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Unbekannter Typ: " + message.getType()));
         }
@@ -47,5 +58,23 @@ public class LobbyService {
             return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Fehler beim Beitreten: " + e.getMessage()));
         }
     }
+
+    private List<LobbyMessage> handleStartGame() {
+        if (!lobby.isReadyToStart()) {
+            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Mindestens 2 Spieler nötig!"));
+        }
+
+        List<Player> players = lobby.getPlayers();
+
+        List<PlayerDTO> order = players.stream()
+                .map(p -> new PlayerDTO(p.getId(), p.getUsername()))
+                .collect(Collectors.toList());
+
+        gameHandler.initGame(players); // setzt Reihenfolge im Spielzustand
+
+        return List.of(new LobbyMessage(LobbyMessageType.START_GAME, new GameStartPayload(order)));
+
+    }
+
 
 }
