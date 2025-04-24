@@ -13,10 +13,16 @@ public class Lobby {
     private final List<Player> players = new ArrayList<>();
 
     public synchronized Player addPlayer(String username) {
+        for (Player p : players) {
+            if (p.getUsername().equalsIgnoreCase(username)) {
+                return p; // Spieler existiert schon
+            }
+        }
         Player player = new Player(username);
         players.add(player);
         return player;
     }
+
 
     public synchronized List<Player> getPlayers() {
         return Collections.unmodifiableList(players);
