@@ -2,6 +2,7 @@ package at.aau.serg.websocketdemoserver.service;
 
 import at.aau.serg.websocketdemoserver.dto.*;
 import at.aau.serg.websocketdemoserver.model.GameState;
+import at.aau.serg.websocketdemoserver.model.Player;
 import at.aau.serg.websocketdemoserver.model.tiles.*;
 import at.aau.serg.websocketdemoserver.model.GameBoard;
 import at.aau.serg.websocketdemoserver.model.Tile;
@@ -167,6 +168,12 @@ public class GameHandler {
         skippedPayload.put("tileName", tile.getName());
         return new GameMessage(MessageType.SKIPPED, skippedPayload);
     }
+
+    public void initGame(List<Player> players) {
+        List<String> ids = players.stream().map(Player::getId).toList();
+        gameState.setPlayerOrder(ids);
+    }
+
 
 
 }
