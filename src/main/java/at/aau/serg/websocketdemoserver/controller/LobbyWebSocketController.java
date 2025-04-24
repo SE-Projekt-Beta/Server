@@ -2,6 +2,7 @@ package at.aau.serg.websocketdemoserver.controller;
 
 import at.aau.serg.websocketdemoserver.dto.LobbyMessage;
 import at.aau.serg.websocketdemoserver.dto.LobbyMessageType;
+import at.aau.serg.websocketdemoserver.service.GameHandler;
 import at.aau.serg.websocketdemoserver.service.LobbyService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -18,9 +19,9 @@ public class LobbyWebSocketController {
     private final SimpMessagingTemplate messagingTemplate;
     private final LobbyService lobbyService;
 
-    public LobbyWebSocketController(SimpMessagingTemplate messagingTemplate, LobbyService lobbyService) {
+    public LobbyWebSocketController(SimpMessagingTemplate messagingTemplate, GameHandler gameHandler) {
         this.messagingTemplate = messagingTemplate;
-        this.lobbyService = lobbyService;
+        this.lobbyService = new LobbyService(gameHandler);
     }
 
     @MessageMapping("/lobby")
