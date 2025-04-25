@@ -25,6 +25,9 @@ public class LobbyService {
 
 
     public List<LobbyMessage> handle(LobbyMessage message) {
+        if (message == null || message.getType() == null) {
+            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Ungültige oder fehlende Nachricht."));
+        }
         switch (message.getType()) {
             case JOIN_LOBBY:
                 return handleJoinLobby(message.getPayload());
