@@ -2,10 +2,10 @@ package at.aau.serg.websocketdemoserver.model.tiles;
 
 import at.aau.serg.websocketdemoserver.model.Tile;
 
-public class Event extends Tile {
+public class GeneralEventTile extends Tile {
         // What does this do?
 
-        public Event(int position, String name) {
+        public GeneralEventTile(int position, String name) {
             super(position, name);
         }
 

@@ -2,8 +2,8 @@ package at.aau.serg.websocketdemoserver.model.tiles;
 
 import at.aau.serg.websocketdemoserver.model.Tile;
 
-public class BankEvent extends Tile {
-    public BankEvent(int position, String name) {
+public class BankEventTile extends Tile {
+    public BankEventTile(int position, String name) {
         super(position, name);
     }
 
