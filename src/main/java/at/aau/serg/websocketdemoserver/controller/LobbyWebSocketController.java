@@ -24,6 +24,11 @@ public class LobbyWebSocketController {
         this.lobbyService = new LobbyService(gameHandler);
     }
 
+
+    public LobbyService getLobbyService() {
+        return lobbyService;
+    }
+
     @MessageMapping("/lobby")
     public void handleLobbyMessage(@Payload LobbyMessage message) {
         System.out.println("Empfangen (Lobby): " + message.getType());
