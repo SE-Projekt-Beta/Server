@@ -1,6 +1,5 @@
 package at.aau.serg.websocketdemoserver.service;
 
-import at.aau.serg.websocketdemoserver.service.EventCardService;
 import at.aau.serg.websocketdemoserver.dto.*;
 import at.aau.serg.websocketdemoserver.model.GameState;
 import at.aau.serg.websocketdemoserver.model.Player;
@@ -29,7 +28,11 @@ public class GameHandler {
     }
 
     public GameMessage handle(GameMessage message) {
-        extraMessages.clear(); // immer zuerst leeren!
+        extraMessages.clear();
+
+        if (message == null || message.getType() == null) {
+            return new GameMessage(MessageType.ERROR, "Ungültige oder fehlende Nachricht.");
+        }
 
         switch (message.getType()) {
             case ROLL_DICE:
@@ -92,7 +95,7 @@ public class GameHandler {
     }
 
     public GameMessage decideAction(String playerId, Tile tile) {
-        if (tile instanceof Event) {
+        if (tile instanceof GeneralEventTile) {
             String type = tile.getTileType(); // event_bank oder event_risiko
 
             if (type.equals("event_bank")) {
