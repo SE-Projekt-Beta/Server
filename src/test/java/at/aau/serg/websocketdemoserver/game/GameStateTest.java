@@ -1,4 +1,4 @@
-package at.aau.serg.websocketdemoserver.gameTest;
+package at.aau.serg.websocketdemoserver.game;
 
 import at.aau.serg.websocketdemoserver.model.GameState;
 import org.junit.jupiter.api.BeforeEach;

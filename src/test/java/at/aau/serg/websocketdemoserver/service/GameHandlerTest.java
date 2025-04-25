@@ -1,16 +1,12 @@
-package at.aau.serg.websocketdemoserver.serviceTest;
+package at.aau.serg.websocketdemoserver.service;
 
 import at.aau.serg.websocketdemoserver.dto.*;
-import at.aau.serg.websocketdemoserver.model.Player;
 import at.aau.serg.websocketdemoserver.model.Tile;
 import at.aau.serg.websocketdemoserver.model.tiles.*;
-import at.aau.serg.websocketdemoserver.service.GameHandler;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 

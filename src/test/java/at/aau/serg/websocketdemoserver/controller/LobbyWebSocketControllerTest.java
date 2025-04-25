@@ -1,6 +1,5 @@
-package at.aau.serg.websocketdemoserver.controllerTest;
+package at.aau.serg.websocketdemoserver.controller;
 
-import at.aau.serg.websocketdemoserver.controller.LobbyWebSocketController;
 import at.aau.serg.websocketdemoserver.dto.LobbyMessage;
 import at.aau.serg.websocketdemoserver.dto.LobbyMessageType;
 import at.aau.serg.websocketdemoserver.service.GameHandler;

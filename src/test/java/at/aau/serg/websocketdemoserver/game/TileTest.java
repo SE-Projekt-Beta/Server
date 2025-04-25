@@ -1,4 +1,4 @@
-package at.aau.serg.websocketdemoserver.gameTest;
+package at.aau.serg.websocketdemoserver.game;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;

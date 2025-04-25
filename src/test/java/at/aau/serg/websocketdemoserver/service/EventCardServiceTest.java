@@ -1,7 +1,6 @@
-package at.aau.serg.websocketdemoserver.serviceTest;
+package at.aau.serg.websocketdemoserver.service;
 
 import at.aau.serg.websocketdemoserver.model.tiles.EventCard;
-import at.aau.serg.websocketdemoserver.service.EventCardService;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
