@@ -1,6 +1,9 @@
 package at.aau.serg.websocketdemoserver.model.gamestate;
+
 import at.aau.serg.websocketdemoserver.model.board.StreetTile;
 import at.aau.serg.websocketdemoserver.model.board.Tile;
+import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
+import at.aau.serg.websocketdemoserver.model.board.BuildingType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,18 +20,16 @@ public class Player implements Comparable<Player> {
     private int suspensionRounds;
     private boolean hasEscapeCard;
     private boolean cheatFlag;
+    private final GameBoard board;
 
-    public Player(String nickname) {
+    public Player(String nickname, GameBoard board) {
         this.id = idCounter++;
         this.nickname = nickname;
         this.cash = 3000; // Startkapital
         this.suspensionRounds = 0;
         this.hasEscapeCard = false;
         this.cheatFlag = false;
-    }
-
-    public Player() {
-        this("Player-" + idCounter);
+        this.board = board;
     }
 
     public int getId() {
@@ -63,8 +64,8 @@ public class Player implements Comparable<Player> {
         return hasEscapeCard;
     }
 
-    public void setEscapeCard(boolean hasCard) {
-        this.hasEscapeCard = hasCard;
+    public void setEscapeCard(boolean hasEscapeCard) {
+        this.hasEscapeCard = hasEscapeCard;
     }
 
     public boolean isSuspended() {
@@ -94,7 +95,7 @@ public class Player implements Comparable<Player> {
     }
 
     public boolean purchaseStreet(int position) {
-        Tile tile = GameState.getBoard().getTile(position);
+        Tile tile = board.getTile(position);
         if (!(tile instanceof StreetTile street)) return false;
         if (street.getOwner() != null) return false;
         if (street.getPrice() > cash) return false;
@@ -106,7 +107,7 @@ public class Player implements Comparable<Player> {
     }
 
     public boolean sellStreet(int position) {
-        Tile tile = GameState.getBoard().getTile(position);
+        Tile tile = board.getTile(position);
         if (!(tile instanceof StreetTile street)) return false;
         if (street.getOwner() == null || street.getOwner().getId() != this.id) return false;
 
@@ -119,7 +120,7 @@ public class Player implements Comparable<Player> {
 
     public void moveToTile(int index) {
         if (!isSuspended()) {
-            Tile destination = GameState.getBoard().getTile(index);
+            Tile destination = board.getTile(index % board.getTiles().size());
             if (destination != null) {
                 this.currentTile = destination;
             }
@@ -128,8 +129,9 @@ public class Player implements Comparable<Player> {
 
     public void moveSteps(int steps) {
         if (!isSuspended()) {
-            int totalTiles = GameState.getBoard().getTiles().size();
-            int newIndex = (currentTile.getIndex() + steps) % (totalTiles + 1);
+            int currentIndex = (currentTile != null) ? currentTile.getIndex() : 0;
+            int totalTiles = board.getTiles().size();
+            int newIndex = (currentIndex + steps) % totalTiles;
             moveToTile(newIndex);
         }
     }
@@ -138,8 +140,8 @@ public class Player implements Comparable<Player> {
         int total = cash;
         for (StreetTile street : ownedStreets) {
             total += street.getPrice();
-            total += street.getHouseCost() * street.getBuildings().stream().filter(b -> b == at.aau.serg.websocketdemoserver.model.board.BuildingType.HOUSE).count();
-            total += street.getHotelCost() * street.getBuildings().stream().filter(b -> b == at.aau.serg.websocketdemoserver.model.board.BuildingType.HOTEL).count();
+            total += street.getHouseCost() * street.getBuildings().stream().filter(b -> b == BuildingType.HOUSE).count();
+            total += street.getHotelCost() * street.getBuildings().stream().filter(b -> b == BuildingType.HOTEL).count();
         }
         return total;
     }

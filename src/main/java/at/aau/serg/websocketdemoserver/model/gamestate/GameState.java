@@ -1,71 +1,88 @@
 package at.aau.serg.websocketdemoserver.model.gamestate;
 
+import at.aau.serg.websocketdemoserver.dto.PlayerDTO;
+import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
 import java.util.*;
 
 public class GameState {
 
-    private static GameBoard board = new GameBoard();
-    private static HashMap<Integer, Player> players = new HashMap<>();
-    private static int currentStartPlayerId = -1;
-    private static int currentRound = 1;
-    private static final List<Player> rankingList = new ArrayList<>();
+    private final GameBoard board;
+    private final List<Player> turnOrder; // Reihenfolge der Spieler
+    private final Map<Integer, Player> playersById; // ID -> Player
+    private int currentPlayerIndex;
+    private int currentRound;
+    private final List<Player> rankingList;
 
-    private GameState() {
-        // Prevent instantiation
+    public GameState() {
+        this.board = new GameBoard();
+        this.turnOrder = new ArrayList<>();
+        this.playersById = new HashMap<>();
+        this.currentPlayerIndex = 0;
+        this.currentRound = 1;
+        this.rankingList = new ArrayList<>();
     }
 
-    public static void setBoard(GameBoard board) {
-        GameState.board = board;
-    }
+    public void addPlayers(List<PlayerDTO> playerDTOs) {
+        turnOrder.clear();
+        playersById.clear();
+        Player.resetIdCounter();
 
-    public static GameBoard getBoard() {
-        return board;
-    }
-
-    public static HashMap<Integer, Player> getPlayers() {
-        return players;
-    }
-
-    public static int getCurrentStartPlayerId() {
-        return currentStartPlayerId;
-    }
-
-    public static void setCurrentStartPlayerId(int id) {
-        GameState.currentStartPlayerId = id;
-    }
-
-    public static int getCurrentRound() {
-        return currentRound;
-    }
-
-    public static void setCurrentRound(int round) {
-        GameState.currentRound = round;
-    }
-
-    public static void advanceRound(int playerId) {
-        if (currentStartPlayerId == -1) {
-            currentStartPlayerId = playerId;
-        } else if (currentStartPlayerId == playerId) {
-            currentRound++;
+        for (PlayerDTO dto : playerDTOs) {
+            Player player = new Player(dto.getNickname(), this.board); // ← BOARD ÜBERGEBEN
+            turnOrder.add(player);
+            playersById.put(player.getId(), player);
         }
     }
 
-    public static boolean isGameOver(int maxRounds, boolean useRoundsMode) {
-        return useRoundsMode && currentRound >= maxRounds;
+
+    public Player getCurrentPlayer() {
+        if (turnOrder.isEmpty()) return null;
+        return turnOrder.get(currentPlayerIndex);
     }
 
-    public static void resetGame() {
-        Player.resetIdCounter();
-        board = new GameBoard();
-        players = new HashMap<>();
-        currentStartPlayerId = -1;
-        currentRound = 1;
+    public Player getPlayer(int id) {
+        return playersById.get(id);
     }
 
-    public static List<Player> getRankingList() {
+    public Collection<Player> getAllPlayers() {
+        return playersById.values();
+    }
+
+    public GameBoard getBoard() {
+        return board;
+    }
+
+    public void advanceTurn() {
+        if (turnOrder.isEmpty()) return;
+
+        do {
+            currentPlayerIndex = (currentPlayerIndex + 1) % turnOrder.size();
+            if (currentPlayerIndex == 0) {
+                currentRound++;
+            }
+        } while (getCurrentPlayer().isSuspended());
+    }
+
+    public int getCurrentRound() {
+        return currentRound;
+    }
+
+    public List<Player> getRankingList() {
         rankingList.clear();
-        rankingList.addAll(players.values());
+        rankingList.addAll(playersById.values());
         rankingList.sort(Comparator.comparingInt(Player::calculateWealth).reversed());
         return rankingList;
+    }
+
+    public boolean isGameOver(int maxRounds, boolean roundsModeEnabled) {
+        return roundsModeEnabled && currentRound > maxRounds;
+    }
+
+    public void resetGame() {
+        Player.resetIdCounter();
+        turnOrder.clear();
+        playersById.clear();
+        currentPlayerIndex = 0;
+        currentRound = 1;
     }
 }

@@ -1,21 +1,17 @@
 package at.aau.serg.websocketdemoserver.service;
 
 import at.aau.serg.websocketdemoserver.dto.*;
-import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
-import java.util.List;
-import java.util.stream.Collectors;
-import at.aau.serg.websocketdemoserver.dto.LobbyMessageType;
-import at.aau.serg.websocketdemoserver.dto.GameStartPayload;
 
+import java.util.List;
 
 @Service
 public class LobbyService {
 
     private final Lobby lobby = new Lobby();
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private final GameHandler gameHandler;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public LobbyService(GameHandler gameHandler) {
         this.gameHandler = gameHandler;
@@ -37,17 +33,13 @@ public class LobbyService {
         try {
             JoinLobbyPayload joinPayload = objectMapper.convertValue(payload, JoinLobbyPayload.class);
 
-            // Spieler anlegen
-            Player player = lobby.addPlayer(joinPayload.getUsername());
-            System.out.println("Neuer Spieler: " + player.getNickname() + " (" + player.getId() + ")");
-
-            List<PlayerDTO> playerDTOs = toPlayerDTOs(lobby.getPlayers());
+            PlayerDTO playerDTO = lobby.addPlayer(joinPayload.getUsername());
+            System.out.println("[LOBBY] Neuer Spieler: " + playerDTO.getNickname() + " (" + playerDTO.getId() + ")");
 
             return List.of(new LobbyMessage(
                     LobbyMessageType.LOBBY_UPDATE,
-                    new LobbyUpdatePayload(playerDTOs)
+                    new LobbyUpdatePayload(lobby.getPlayers())
             ));
-
         } catch (Exception e) {
             return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Fehler beim Beitreten: " + e.getMessage()));
         }
@@ -55,23 +47,16 @@ public class LobbyService {
 
     private List<LobbyMessage> handleStartGame() {
         if (!lobby.isReadyToStart()) {
-            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Mindestens 2 Spieler nötig!"));
+            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Mindestens 2 Spieler benötigt!"));
         }
 
-        List<Player> players = lobby.getPlayers();
-        List<PlayerDTO> playerDTOs = toPlayerDTOs(players);
-
-        gameHandler.initGame(playerDTOs);
+        List<PlayerDTO> players = lobby.getPlayers();
+        gameHandler.initGame(players); // Spiel initialisieren
+        lobby.clear(); // Lobby nach Start leeren
 
         return List.of(new LobbyMessage(
                 LobbyMessageType.START_GAME,
-                new GameStartPayload(playerDTOs)
+                new GameStartPayload(players)
         ));
-    }
-
-    private List<PlayerDTO> toPlayerDTOs(List<Player> players) {
-        return players.stream()
-                .map(p -> new PlayerDTO(p.getId(), p.getNickname()))
-                .collect(Collectors.toList());
     }
 }

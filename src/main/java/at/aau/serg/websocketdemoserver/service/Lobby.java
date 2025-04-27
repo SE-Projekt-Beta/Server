@@ -1,33 +1,36 @@
 package at.aau.serg.websocketdemoserver.service;
 
-import at.aau.serg.websocketdemoserver.model.gamestate.Player;
+import at.aau.serg.websocketdemoserver.dto.PlayerDTO;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Lobby {
-    private final List<Player> players = new ArrayList<>();
 
-    public synchronized Player addPlayer(String nickname) {
-        for (Player p : players) {
-            if (p.getNickname().equalsIgnoreCase(nickname)) {
-                return p; // Spieler existiert bereits
+    private final List<PlayerDTO> players = new ArrayList<>();
+
+    public synchronized PlayerDTO addPlayer(String nickname) {
+        for (PlayerDTO player : players) {
+            if (player.getNickname().equalsIgnoreCase(nickname)) {
+                return player; // Spieler existiert schon
             }
         }
-        Player newPlayer = new Player(nickname);
+        int newId = players.size() + 1; // einfache ID-Generierung
+        PlayerDTO newPlayer = new PlayerDTO(newId, nickname);
         players.add(newPlayer);
         return newPlayer;
     }
 
-    public synchronized List<Player> getPlayers() {
-        return List.copyOf(players);
+    public synchronized List<PlayerDTO> getPlayers() {
+        return Collections.unmodifiableList(players);
     }
 
     public synchronized boolean isReadyToStart() {
-        return players.size() >= 2;
+        return players.size() >= 2; // Mindestens 2 Spieler nötig
     }
 
-    public synchronized void clearLobby() {
+    public synchronized void clear() {
         players.clear();
     }
 }
