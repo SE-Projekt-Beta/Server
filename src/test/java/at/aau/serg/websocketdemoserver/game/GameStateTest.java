@@ -1,11 +1,12 @@
 package at.aau.serg.websocketdemoserver.game;
 
+import at.aau.serg.websocketdemoserver.dto.PlayerDTO;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
+import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,39 +20,101 @@ public class GameStateTest {
     }
 
     @Test
-    void testInitialPositionIsZero() {
-        assertEquals(0, state.getPosition("p1"));
+    void testAddPlayersAndGetters() {
+        PlayerDTO p1 = new PlayerDTO(1, "Alice");
+        PlayerDTO p2 = new PlayerDTO(2, "Bob");
+
+        state.addPlayers(List.of(p1, p2));
+
+        assertEquals(2, state.getAllPlayers().size());
+        assertNotNull(state.getCurrentPlayer());
+        assertEquals("Alice", state.getCurrentPlayer().getNickname());
     }
 
     @Test
-    void testUpdateAndRetrievePosition() {
-        state.updatePosition("p1", 5);
-        assertEquals(5, state.getPosition("p1"));
+    void testAdvanceTurnCyclesCorrectly() {
+        PlayerDTO p1 = new PlayerDTO(1, "Alice");
+        PlayerDTO p2 = new PlayerDTO(2, "Bob");
+
+        state.addPlayers(List.of(p1, p2));
+
+        assertEquals("Alice", state.getCurrentPlayer().getNickname());
+        state.advanceTurn();
+        assertEquals("Bob", state.getCurrentPlayer().getNickname());
+        state.advanceTurn();
+        assertEquals("Alice", state.getCurrentPlayer().getNickname());
     }
 
     @Test
-    void testAllPositionsSnapshot() {
-        state.updatePosition("a", 1);
-        state.updatePosition("b", 2);
-        Map<String, Integer> map = state.getAllPositions();
-        assertEquals(2, map.size());
-        assertEquals(1, map.get("a"));
+    void testAdvanceTurnSkipsSuspended() {
+        PlayerDTO p1 = new PlayerDTO(1, "Alice");
+        PlayerDTO p2 = new PlayerDTO(2, "Bob");
+
+        state.addPlayers(List.of(p1, p2));
+
+        Player bob = state.getAllPlayers().stream().filter(p -> p.getNickname().equals("Bob")).findFirst().orElseThrow();
+        bob.suspendForRounds(1);
+
+        assertEquals("Alice", state.getCurrentPlayer().getNickname());
+        state.advanceTurn();
+        assertEquals("Alice", state.getCurrentPlayer().getNickname()); // Bob wird übersprungen
     }
 
     @Test
-    void testTurnOrderCycling() {
-        state.setPlayerOrder(List.of("a", "b", "c"));
-        assertEquals("a", state.getCurrentPlayer());
-        state.nextTurn();
-        assertEquals("b", state.getCurrentPlayer());
-        state.nextTurn();
-        assertEquals("c", state.getCurrentPlayer());
-        state.nextTurn();
-        assertEquals("a", state.getCurrentPlayer());
+    void testGetPlayerById() {
+        PlayerDTO p1 = new PlayerDTO(1, "Charlie");
+
+        state.addPlayers(List.of(p1));
+        Player player = state.getPlayer(1);
+
+        assertNotNull(player);
+        assertEquals("Charlie", player.getNickname());
     }
 
     @Test
-    void testEmptyOrderReturnsNull() {
+    void testGetRankingList() {
+        PlayerDTO p1 = new PlayerDTO(1, "Alpha");
+        PlayerDTO p2 = new PlayerDTO(2, "Beta");
+
+        state.addPlayers(List.of(p1, p2));
+
+        Player alpha = state.getAllPlayers().stream().filter(p -> p.getNickname().equals("Alpha")).findFirst().orElseThrow();
+        Player beta = state.getAllPlayers().stream().filter(p -> p.getNickname().equals("Beta")).findFirst().orElseThrow();
+
+        // Alpha hat mehr Geld → sollte oben stehen
+        alpha.setCash(5000);
+        beta.setCash(1000);
+
+        List<Player> ranking = state.getRankingList();
+
+        assertEquals("Alpha", ranking.get(0).getNickname());
+        assertEquals("Beta", ranking.get(1).getNickname());
+    }
+
+    @Test
+    void testIsGameOverRoundsModeEnabled() {
+        assertFalse(state.isGameOver(5, true));
+        for (int i = 0; i < 5; i++) {
+            state.advanceTurn();
+        }
+        assertTrue(state.isGameOver(1, true));
+    }
+
+    @Test
+    void testIsGameOverRoundsModeDisabled() {
+        assertFalse(state.isGameOver(1, false));
+    }
+
+    @Test
+    void testResetGame() {
+        PlayerDTO p1 = new PlayerDTO(1, "Alice");
+        state.addPlayers(List.of(p1));
+        state.advanceTurn();
+
+        state.resetGame();
+
+        assertTrue(state.getAllPlayers().isEmpty());
+        assertEquals(1, state.getCurrentRound());
         assertNull(state.getCurrentPlayer());
     }
 }

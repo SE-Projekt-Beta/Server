@@ -5,8 +5,7 @@ import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
 import at.aau.serg.websocketdemoserver.model.board.*;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
-import at.aau.serg.websocketdemoserver.service.EventCardService;
-import org.json.JSONObject;
+
 
 import java.util.Map;
 
