@@ -1,184 +1,125 @@
 package at.aau.serg.websocketdemoserver.service;
 
 import at.aau.serg.websocketdemoserver.dto.*;
-import at.aau.serg.websocketdemoserver.model.GameState;
-import at.aau.serg.websocketdemoserver.model.Player;
-import at.aau.serg.websocketdemoserver.model.tiles.*;
-import at.aau.serg.websocketdemoserver.model.GameBoard;
-import at.aau.serg.websocketdemoserver.model.Tile;
+import at.aau.serg.websocketdemoserver.model.board.*;
+import at.aau.serg.websocketdemoserver.model.cards.BankCardDeck;
+import at.aau.serg.websocketdemoserver.model.cards.RiskCardDeck;
+import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
+import at.aau.serg.websocketdemoserver.model.gamestate.Player;
+import at.aau.serg.websocketdemoserver.model.util.Dice;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
+
 import java.util.*;
-
-
 
 @Service
 public class GameHandler {
 
-    private final GameState gameState = new GameState();
-    private final GameBoard board = new GameBoard();
-    private final Map<Integer, String> ownership = new HashMap<>();
-    private final EventCardService eventCardService = new EventCardService();
-    private final Random random = new Random();
-
+    private final GameState gameState;
+    private final TileActionHandler tileActionHandler;
+    private final Dice dice;
     private final List<GameMessage> extraMessages = new ArrayList<>();
 
+    public GameHandler() {
+        this.gameState = new GameState();
+        this.tileActionHandler = new TileActionHandler(
+                new EventCardService(new BankCardDeck(), new RiskCardDeck())
+        );
+        this.dice = new Dice(1, 6);
+    }
+
     public List<GameMessage> getExtraMessages() {
-        return extraMessages;
+        return new ArrayList<>(extraMessages); // Kopie zurückgeben
     }
 
     public GameMessage handle(GameMessage message) {
         extraMessages.clear();
 
         if (message == null || message.getType() == null) {
-            return new GameMessage(MessageType.ERROR, "Ungültige oder fehlende Nachricht.");
+            return MessageFactory.error("Ungültige oder fehlende Nachricht.");
         }
 
-        switch (message.getType()) {
-            case ROLL_DICE:
-                return handleRollDice(message.getPayload());
-            case BUY_PROPERTY:
-                return handleBuyProperty(message.getPayload());
-            default:
-                return new GameMessage(MessageType.ERROR, "Unbekannte Nachricht: " + message.getType());
-        }
+        return switch (message.getType()) {
+            case ROLL_DICE -> handleRollDice(message.getPayload());
+            case BUY_PROPERTY -> handleBuyProperty(message.getPayload());
+            default -> MessageFactory.error("Unbekannter Nachrichtentyp: " + message.getType());
+        };
+    }
+
+    public void initGame(List<PlayerDTO> players) {
+        gameState.addPlayers(players);
+        System.out.println("[INIT] Game started with " + players.size() + " players.");
+    }
+
+    public String getCurrentPlayerId() {
+        Player current = gameState.getCurrentPlayer();
+        return current != null ? String.valueOf(current.getId()) : null;
     }
 
     private GameMessage handleRollDice(Object payload) {
         try {
             JSONObject obj = new JSONObject(payload.toString());
-            String playerId = obj.getString("playerId");
+            int playerId = obj.getInt("playerId");
 
-            int dice = random.nextInt(6) + 1;
-            int oldPos = gameState.getPosition(playerId);
-            int newPos = (oldPos + dice) % 40;
-            gameState.updatePosition(playerId, newPos);
+            Player player = gameState.getPlayer(playerId);
+            if (player == null) {
+                return MessageFactory.error("Spieler nicht gefunden.");
+            }
 
-            Tile tile = board.getTileAt(newPos);
+            if (player.getId() != gameState.getCurrentPlayer().getId()) {
+                return MessageFactory.error("Nicht dein Zug!");
+            }
 
-            // Spielerbewegung schicken
-            PlayerMovePayload movePayload = new PlayerMovePayload(
-                    playerId, newPos, dice, tile.getName(), tile.getTileType()
+            int diceRoll = dice.roll();
+            int newIndex = (player.getCurrentTile() == null ? 0 : player.getCurrentTile().getIndex()) + diceRoll;
+            newIndex = newIndex % gameState.getBoard().getTiles().size();
+            player.moveToTile(newIndex);
+
+            Tile tile = gameState.getBoard().getTile(newIndex);
+            System.out.println("[ROLL] " + player.getNickname() + " rolled " + diceRoll + " → " + tile.getLabel());
+
+            // Bewegung-Nachricht
+            GameMessage moveMessage = MessageFactory.playerMoved(
+                    player.getId(), newIndex, diceRoll, tile.getLabel(), tile.getClass().getSimpleName()
             );
-            GameMessage moveMessage = new GameMessage(MessageType.PLAYER_MOVED, movePayload);
 
-            // Entscheidung was als nächstes passiert (Extra-Nachricht)
-            GameMessage actionMessage = decideAction(playerId, tile);
+            // Aktion auf dem neuen Feld
+            GameMessage actionMessage = tileActionHandler.handleTileLanding(player, tile);
             extraMessages.add(actionMessage);
+
+            // Spielerwechsel vorbereiten
+            gameState.advanceTurn();
+            Player nextPlayer = gameState.getCurrentPlayer();
+            extraMessages.add(MessageFactory.currentPlayer(nextPlayer.getId()));
 
             return moveMessage;
         } catch (Exception e) {
-            return new GameMessage(MessageType.ERROR, "Fehler beim Würfeln: " + e.getMessage());
+            return MessageFactory.error("Fehler beim Würfeln: " + e.getMessage());
         }
     }
 
     private GameMessage handleBuyProperty(Object payload) {
         try {
             JSONObject obj = new JSONObject(payload.toString());
-            String playerId = obj.getString("playerId");
+            int playerId = obj.getInt("playerId");
             int tilePos = obj.getInt("tilePos");
 
-            if (ownership.containsKey(tilePos)) {
-                return new GameMessage(MessageType.ERROR, "Feld gehört schon jemandem!");
+            Player player = gameState.getPlayer(playerId);
+
+            if (player == null) {
+                return MessageFactory.error("Spieler nicht gefunden.");
             }
 
-            ownership.put(tilePos, playerId);
-            Tile tile = board.getTileAt(tilePos);
-
-            PropertyBoughtPayload boughtPayload = new PropertyBoughtPayload(
-                    playerId, tilePos, tile.getName()
-            );
-            return new GameMessage(MessageType.PROPERTY_BOUGHT, boughtPayload);
+            boolean success = player.purchaseStreet(tilePos);
+            if (success) {
+                Tile tile = gameState.getBoard().getTile(tilePos);
+                System.out.println("[BUY] " + player.getNickname() + " bought " + tile.getLabel());
+                return MessageFactory.propertyBought(playerId, tilePos, tile.getLabel());
+            } else {
+                return MessageFactory.error("Kauf fehlgeschlagen.");
+            }
         } catch (Exception e) {
-            return new GameMessage(MessageType.ERROR, "Fehler beim Kaufen: " + e.getMessage());
+            return MessageFactory.error("Fehler beim Kaufen: " + e.getMessage());
         }
     }
-
-    public GameMessage decideAction(String playerId, Tile tile) {
-        if (tile instanceof GeneralEventTile) {
-            String type = tile.getTileType(); // event_bank oder event_risiko
-
-            if (type.equals("event_bank")) {
-                EventCardBank bankCard = eventCardService.drawBankCard();
-                EventCardPayload payload = new EventCardPayload(
-                        bankCard.getTitle(),
-                        bankCard.getDescription(),
-                        bankCard.getAmount(),
-                        "bank"
-                );
-                return new GameMessage(MessageType.DRAW_EVENT_BANK_CARD, payload);
-            } else if (type.equals("event_risiko")) {
-                EventCardRisiko risikoCard = eventCardService.drawRisikoCard();
-                EventCardPayload payload = new EventCardPayload(
-                        risikoCard.getTitle(),
-                        risikoCard.getDescription(),
-                        risikoCard.getAmount(),
-                        "risiko"
-                );
-                return new GameMessage(MessageType.DRAW_EVENT_RISIKO_CARD, payload);
-            } else {
-                // normales Ereignisfeld → einfach überspringen
-                return createSkippedMessage(playerId, tile);
-            }
-        }
-
-        if (tile instanceof GoToJail) {
-            Map<String, Object> jailPayload = new HashMap<>();
-            jailPayload.put("playerId", playerId);
-            jailPayload.put("tilePos", tile.getPosition());
-            jailPayload.put("tileName", tile.getName());
-            return new GameMessage(MessageType.GO_TO_JAIL, jailPayload);
-        }
-
-        if (tile instanceof Free || tile instanceof Start || tile instanceof Jail) {
-            // Frei Parken, Start, Gefängnis (Besuch) → nichts tun
-            return createSkippedMessage(playerId, tile);
-        }
-
-        if (tile instanceof Tax) {
-            Map<String, Object> taxPayload = new HashMap<>();
-            taxPayload.put("playerId", playerId);
-            taxPayload.put("tilePos", tile.getPosition());
-            taxPayload.put("tileName", tile.getName());
-            return new GameMessage(MessageType.PAY_TAX, taxPayload);
-        }
-
-        // Standard-Fälle: Street, Station (Straßen und Bahnhöfe)
-        if (tile instanceof Street || tile instanceof Station) {
-            String owner = ownership.get(tile.getPosition());
-            if (owner != null && !owner.equals(playerId)) {
-                Map<String, Object> rentPayload = new HashMap<>();
-                rentPayload.put("playerId", playerId);
-                rentPayload.put("tilePos", tile.getPosition());
-                rentPayload.put("tileName", tile.getName());
-                rentPayload.put("ownerId", owner);
-                return new GameMessage(MessageType.MUST_PAY_RENT, rentPayload);
-            } else {
-                Map<String, Object> buyPayload = new HashMap<>();
-                buyPayload.put("playerId", playerId);
-                buyPayload.put("tilePos", tile.getPosition());
-                buyPayload.put("tileName", tile.getName());
-                return new GameMessage(MessageType.CAN_BUY_PROPERTY, buyPayload);
-            }
-        }
-
-        // Fallback: unbekanntes Feld → SKIPPED
-        return createSkippedMessage(playerId, tile);
-    }
-    private GameMessage createSkippedMessage(String playerId, Tile tile) {
-        Map<String, Object> skippedPayload = new HashMap<>();
-        skippedPayload.put("playerId", playerId);
-        skippedPayload.put("tilePos", tile.getPosition());
-        skippedPayload.put("tileName", tile.getName());
-        return new GameMessage(MessageType.SKIPPED, skippedPayload);
-    }
-
-    public void initGame(List<Player> players) {
-        List<String> ids = players.stream().map(Player::getId).toList();
-        gameState.setPlayerOrder(ids);
-    }
-
-
-
 }
-
