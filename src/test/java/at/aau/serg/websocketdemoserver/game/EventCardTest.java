@@ -1,13 +1,14 @@
 package at.aau.serg.websocketdemoserver.game;
 
+import at.aau.serg.websocketdemoserver.model.cards.BankCard;
+import at.aau.serg.websocketdemoserver.model.cards.RiskCard;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import at.aau.serg.websocketdemoserver.model.tiles.*;
 
 public class EventCardTest {
     @Test
     void testEventCardBankProperties() {
-        EventCardBank card = new EventCardBank("Versicherung", -200);
+        BankCard card = new BankCard("Versicherung", -200);
         assertEquals("bank", card.getType());
         assertEquals("Bankkarte", card.getTitle());
         assertEquals("Versicherung", card.getDescription());
@@ -16,7 +17,7 @@ public class EventCardTest {
 
     @Test
     void testEventCardRisikoProperties() {
-        EventCardRisiko card = new EventCardRisiko("Zurückgehen", -3);
+        RiskCard card = new RiskCard("Zurückgehen", -3);
         assertEquals("risiko", card.getType());
         assertEquals("Risikokarte", card.getTitle());
         assertEquals("Zurückgehen", card.getDescription());
