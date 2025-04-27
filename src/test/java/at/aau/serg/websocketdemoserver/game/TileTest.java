@@ -2,19 +2,19 @@ package at.aau.serg.websocketdemoserver.game;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import at.aau.serg.websocketdemoserver.model.tiles.*;
+import at.aau.serg.websocketdemoserver.model.board.*;
 
 public class TileTest {
 
     @Test
     void testBankEventTileType() {
-        BankEventTile tile = new BankEventTile(6, "Bank Ereignis");
+        BankTile tile = new BankTile(6, "Bank Ereignis");
         assertEquals("event_bank", tile.getTileType());
     }
 
     @Test
     void testRisikoEventTileType() {
-        RisikoEventTile tile = new RisikoEventTile(12, "Risiko Ereignis");
+        RiskTile tile = new RiskTile(12, "Risiko Ereignis");
         assertEquals("event_risiko", tile.getTileType());
     }
 
