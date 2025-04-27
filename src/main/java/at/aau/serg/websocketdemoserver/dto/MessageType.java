@@ -12,5 +12,6 @@ public enum MessageType {
     DRAW_EVENT_BANK_CARD,
     GO_TO_JAIL,
     SKIPPED,
-    ERROR
+    ERROR,
+    CURRENT_PLAYER
 }
