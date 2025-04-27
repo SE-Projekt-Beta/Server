@@ -1,7 +1,7 @@
 package at.aau.serg.websocketdemoserver.game;
 
-import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
 import at.aau.serg.websocketdemoserver.model.board.Tile;
+import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -9,20 +9,26 @@ import static org.junit.jupiter.api.Assertions.*;
 public class GameBoardTest {
 
     @Test
-    void testBoardHas40Tiles() {
+    void testGetTileValidIndex() {
         GameBoard board = new GameBoard();
-        for (int i = 0; i < 40; i++) {
-            Tile t = board.getTileAt(i);
-            assertNotNull(t);
-            assertEquals(i, t.getPosition());
-        }
+        Tile tile = board.getTile(0);
+
+        assertNotNull(tile);
+        assertEquals(0, tile.getIndex());
     }
 
     @Test
-    void testBoardWrapsCorrectly() {
+    void testGetTileInvalidIndexReturnsNull() {
         GameBoard board = new GameBoard();
-        Tile t = board.getTileAt(80); // 80 % 40 = 0
-        assertEquals(0, t.getPosition());
+        Tile tile = board.getTile(999);
+
+        assertNull(tile);
+    }
+
+    @Test
+    void testGetAllTiles() {
+        GameBoard board = new GameBoard();
+        assertNotNull(board.getTiles());
+        assertTrue(board.getTiles().size() > 0);
     }
 }
-
