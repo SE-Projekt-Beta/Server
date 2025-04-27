@@ -1,6 +1,6 @@
 package at.aau.serg.websocketdemoserver.service;
 
-import at.aau.serg.websocketdemoserver.model.gamestate.Player;
+import at.aau.serg.websocketdemoserver.dto.PlayerDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -8,7 +8,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class LobbyTest {
+class LobbyTest {
 
     private Lobby lobby;
 
@@ -19,39 +19,59 @@ public class LobbyTest {
 
     @Test
     void testAddPlayerCreatesNewPlayer() {
-        Player p = lobby.addPlayer("Alice");
-        assertNotNull(p.getId());
-        assertEquals("Alice", p.getUsername());
+        PlayerDTO player = lobby.addPlayer("Alice");
+
+        assertNotNull(player);
+        assertEquals(1, player.getId());
+        assertEquals("Alice", player.getNickname());
+
+        List<PlayerDTO> players = lobby.getPlayers();
+        assertEquals(1, players.size());
+        assertEquals("Alice", players.get(0).getNickname());
     }
 
     @Test
     void testAddSamePlayerReturnsSameInstance() {
-        Player p1 = lobby.addPlayer("Bob");
-        Player p2 = lobby.addPlayer("Bob");
+        PlayerDTO p1 = lobby.addPlayer("Bob");
+        PlayerDTO p2 = lobby.addPlayer("bob"); // Groß-/Kleinschreibung ignorieren
+
         assertEquals(p1.getId(), p2.getId());
+        assertEquals(1, lobby.getPlayers().size());
     }
 
     @Test
-    void testGetPlayersReturnsUnmodifiableList() {
-        lobby.addPlayer("Alice");
-        List<Player> players = lobby.getPlayers();
-        assertEquals(1, players.size());
-        assertThrows(UnsupportedOperationException.class, () -> players.add(new Player("Hacker")));
+    void testGetPlayersIsUnmodifiable() {
+        lobby.addPlayer("Charlie");
+        List<PlayerDTO> players = lobby.getPlayers();
+
+        assertThrows(UnsupportedOperationException.class, () -> players.add(new PlayerDTO(99, "Hacker")));
     }
 
     @Test
-    void testIsReadyToStartRequiresTwoPlayers() {
+    void testIsReadyToStartNotEnoughPlayers() {
         assertFalse(lobby.isReadyToStart());
-        lobby.addPlayer("A");
+
+        lobby.addPlayer("Daisy");
         assertFalse(lobby.isReadyToStart());
-        lobby.addPlayer("B");
+    }
+
+    @Test
+    void testIsReadyToStartEnoughPlayers() {
+        lobby.addPlayer("Eve");
+        lobby.addPlayer("Frank");
+
         assertTrue(lobby.isReadyToStart());
     }
 
     @Test
-    void testClearLobbyRemovesAllPlayers() {
-        lobby.addPlayer("A");
-        lobby.clearLobby();
+    void testClearRemovesAllPlayers() {
+        lobby.addPlayer("George");
+        lobby.addPlayer("Helen");
+
+        assertEquals(2, lobby.getPlayers().size());
+
+        lobby.clear();
+
         assertEquals(0, lobby.getPlayers().size());
     }
 }

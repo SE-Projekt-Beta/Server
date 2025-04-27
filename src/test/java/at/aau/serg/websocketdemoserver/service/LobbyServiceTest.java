@@ -8,73 +8,87 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class LobbyServiceTest {
+import at.aau.serg.websocketdemoserver.dto.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-    private LobbyService service;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class LobbyServiceTest {
+
+    private LobbyService lobbyService;
 
     @BeforeEach
     void setup() {
-        service = new LobbyService(new GameHandler());
+        lobbyService = new LobbyService(new GameHandler());
     }
 
     @Test
-    void testJoinLobbyAddsPlayerAndReturnsUpdate() {
-        JoinLobbyPayload payload = new JoinLobbyPayload("Alice");
-        LobbyMessage msg = new LobbyMessage(LobbyMessageType.JOIN_LOBBY, payload);
+    void testHandleJoinLobbySuccess() {
+        JoinLobbyPayload payload = new JoinLobbyPayload("TestUser");
+        LobbyMessage joinMessage = new LobbyMessage(LobbyMessageType.JOIN_LOBBY, payload);
 
-        List<LobbyMessage> response = service.handle(msg);
-        assertEquals(1, response.size());
-        assertEquals(LobbyMessageType.LOBBY_UPDATE, response.get(0).getType());
+        List<LobbyMessage> responses = lobbyService.handle(joinMessage);
 
-        LobbyUpdatePayload update = (LobbyUpdatePayload) response.get(0).getPayload();
+        assertEquals(1, responses.size());
+        LobbyMessage response = responses.get(0);
+        assertEquals(LobbyMessageType.LOBBY_UPDATE, response.getType());
+
+        LobbyUpdatePayload update = (LobbyUpdatePayload) response.getPayload();
+        assertNotNull(update);
         assertEquals(1, update.getPlayers().size());
-        assertEquals("Alice", update.getPlayers().get(0).getUsername());
+        assertEquals("TestUser", update.getPlayers().get(0).getNickname());
     }
 
     @Test
-    void testJoinLobbyTwiceReturnsSamePlayerId() {
-        JoinLobbyPayload payload = new JoinLobbyPayload("Bob");
+    void testHandleJoinLobbyInvalidPayload() {
+        LobbyMessage joinMessage = new LobbyMessage(LobbyMessageType.JOIN_LOBBY, "InvalidPayload");
 
-        LobbyMessage msg = new LobbyMessage(LobbyMessageType.JOIN_LOBBY, payload);
-        List<LobbyMessage> firstJoin = service.handle(msg);
-        List<LobbyMessage> secondJoin = service.handle(msg);
+        List<LobbyMessage> responses = lobbyService.handle(joinMessage);
 
-        LobbyUpdatePayload update1 = (LobbyUpdatePayload) firstJoin.get(0).getPayload();
-        LobbyUpdatePayload update2 = (LobbyUpdatePayload) secondJoin.get(0).getPayload();
-
-        String id1 = update1.getPlayers().get(0).getId();
-        String id2 = update2.getPlayers().get(0).getId();
-        assertEquals(id1, id2);
+        assertEquals(1, responses.size());
+        assertEquals(LobbyMessageType.ERROR, responses.get(0).getType());
     }
 
     @Test
-    void testStartGameFailsIfNotEnoughPlayers() {
-        LobbyMessage msg = new LobbyMessage(LobbyMessageType.START_GAME, null);
-        List<LobbyMessage> result = service.handle(msg);
+    void testHandleStartGameNotEnoughPlayers() {
+        LobbyMessage startMessage = new LobbyMessage(LobbyMessageType.START_GAME, null);
 
-        assertEquals(1, result.size());
-        assertEquals(LobbyMessageType.ERROR, result.get(0).getType());
+        List<LobbyMessage> responses = lobbyService.handle(startMessage);
+
+        assertEquals(1, responses.size());
+        assertEquals(LobbyMessageType.ERROR, responses.get(0).getType());
+        assertTrue(responses.get(0).getPayload().toString().contains("Mindestens 2 Spieler"));
     }
 
     @Test
-    void testStartGameSucceedsWithEnoughPlayers() {
-        service.handle(new LobbyMessage(LobbyMessageType.JOIN_LOBBY, new JoinLobbyPayload("Alice")));
-        service.handle(new LobbyMessage(LobbyMessageType.JOIN_LOBBY, new JoinLobbyPayload("Bob")));
+    void testHandleStartGameSuccess() {
+        // Zwei Spieler hinzufügen
+        lobbyService.handle(new LobbyMessage(LobbyMessageType.JOIN_LOBBY, new JoinLobbyPayload("User1")));
+        lobbyService.handle(new LobbyMessage(LobbyMessageType.JOIN_LOBBY, new JoinLobbyPayload("User2")));
 
-        List<LobbyMessage> result = service.handle(new LobbyMessage(LobbyMessageType.START_GAME, null));
+        LobbyMessage startMessage = new LobbyMessage(LobbyMessageType.START_GAME, null);
 
-        assertEquals(1, result.size());
-        assertEquals(LobbyMessageType.START_GAME, result.get(0).getType());
+        List<LobbyMessage> responses = lobbyService.handle(startMessage);
 
-        GameStartPayload payload = (GameStartPayload) result.get(0).getPayload();
+        assertEquals(1, responses.size());
+        LobbyMessage response = responses.get(0);
+        assertEquals(LobbyMessageType.START_GAME, response.getType());
+
+        GameStartPayload payload = (GameStartPayload) response.getPayload();
+        assertNotNull(payload);
         assertEquals(2, payload.getPlayerOrder().size());
     }
 
     @Test
-    void testInvalidMessageTypeReturnsError() {
-        LobbyMessage msg = new LobbyMessage(null, null);
-        List<LobbyMessage> result = service.handle(msg);
-        assertEquals(1, result.size());
-        assertEquals(LobbyMessageType.ERROR, result.get(0).getType());
+    void testHandleUnknownType() {
+        LobbyMessage unknownMessage = new LobbyMessage(null, null);
+
+        List<LobbyMessage> responses = lobbyService.handle(unknownMessage);
+
+        assertEquals(1, responses.size());
+        assertEquals(LobbyMessageType.ERROR, responses.get(0).getType());
     }
 }
