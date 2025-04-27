@@ -1,10 +1,8 @@
 package at.aau.serg.websocketdemoserver.service;
 
 import at.aau.serg.websocketdemoserver.dto.*;
-import at.aau.serg.websocketdemoserver.model.Player;
+import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.json.JSONObject;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -14,48 +12,41 @@ import at.aau.serg.websocketdemoserver.dto.GameStartPayload;
 
 @Service
 public class LobbyService {
+
     private final Lobby lobby = new Lobby();
-    private final ObjectMapper objectMapper = new ObjectMapper(); // <---- NEU: sicheres JSON
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private final GameHandler gameHandler;
 
     public LobbyService(GameHandler gameHandler) {
         this.gameHandler = gameHandler;
     }
 
-
-
     public List<LobbyMessage> handle(LobbyMessage message) {
         if (message == null || message.getType() == null) {
             return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Ungültige oder fehlende Nachricht."));
         }
-        switch (message.getType()) {
-            case JOIN_LOBBY:
-                return handleJoinLobby(message.getPayload());
-            case START_GAME:
-                return handleStartGame(); // <-- hinzufügen!
-            default:
-                return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Unbekannter Typ: " + message.getType()));
-        }
+
+        return switch (message.getType()) {
+            case JOIN_LOBBY -> handleJoinLobby(message.getPayload());
+            case START_GAME -> handleStartGame();
+            default -> List.of(new LobbyMessage(LobbyMessageType.ERROR, "Unbekannter Nachrichtentyp: " + message.getType()));
+        };
     }
 
     private List<LobbyMessage> handleJoinLobby(Object payload) {
         try {
             JoinLobbyPayload joinPayload = objectMapper.convertValue(payload, JoinLobbyPayload.class);
 
-            // Spieler erstellen (oder ignorieren, falls bereits vorhanden)
+            // Spieler anlegen
             Player player = lobby.addPlayer(joinPayload.getUsername());
+            System.out.println("Neuer Spieler: " + player.getNickname() + " (" + player.getId() + ")");
 
-            System.out.println("Neuer Spieler: " + player.getUsername() + " (" + player.getId() + ")");
+            List<PlayerDTO> playerDTOs = toPlayerDTOs(lobby.getPlayers());
 
-            // Spieler-DTOs erzeugen
-            List<PlayerDTO> playerDTOs = lobby.getPlayers().stream()
-                    .map(p -> new PlayerDTO(p.getId(), p.getUsername()))
-                    .collect(Collectors.toList());
-
-            LobbyUpdatePayload lobbyUpdatePayload = new LobbyUpdatePayload(playerDTOs);
-            LobbyMessage updateMessage = new LobbyMessage(LobbyMessageType.LOBBY_UPDATE, lobbyUpdatePayload);
-
-            return List.of(updateMessage);
+            return List.of(new LobbyMessage(
+                    LobbyMessageType.LOBBY_UPDATE,
+                    new LobbyUpdatePayload(playerDTOs)
+            ));
 
         } catch (Exception e) {
             return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Fehler beim Beitreten: " + e.getMessage()));
@@ -68,16 +59,19 @@ public class LobbyService {
         }
 
         List<Player> players = lobby.getPlayers();
+        List<PlayerDTO> playerDTOs = toPlayerDTOs(players);
 
-        List<PlayerDTO> order = players.stream()
-                .map(p -> new PlayerDTO(p.getId(), p.getUsername()))
-                .collect(Collectors.toList());
+        gameHandler.initGame(playerDTOs);
 
-        gameHandler.initGame(players); // setzt Reihenfolge im Spielzustand
-
-        return List.of(new LobbyMessage(LobbyMessageType.START_GAME, new GameStartPayload(order)));
-
+        return List.of(new LobbyMessage(
+                LobbyMessageType.START_GAME,
+                new GameStartPayload(playerDTOs)
+        ));
     }
 
-
+    private List<PlayerDTO> toPlayerDTOs(List<Player> players) {
+        return players.stream()
+                .map(p -> new PlayerDTO(p.getId(), p.getNickname()))
+                .collect(Collectors.toList());
+    }
 }
