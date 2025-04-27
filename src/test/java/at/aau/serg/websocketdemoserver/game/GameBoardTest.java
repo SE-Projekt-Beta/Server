@@ -1,7 +1,7 @@
 package at.aau.serg.websocketdemoserver.game;
 
-import at.aau.serg.websocketdemoserver.model.GameBoard;
-import at.aau.serg.websocketdemoserver.model.Tile;
+import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
+import at.aau.serg.websocketdemoserver.model.board.Tile;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

@@ -1,6 +1,6 @@
 package at.aau.serg.websocketdemoserver.game;
 
-import at.aau.serg.websocketdemoserver.model.GameState;
+import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
