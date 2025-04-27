@@ -93,12 +93,22 @@ public class GameStateTest {
 
     @Test
     void testIsGameOverRoundsModeEnabled() {
-        assertFalse(state.isGameOver(5, true));
-        for (int i = 0; i < 5; i++) {
-            state.advanceTurn();
-        }
-        assertTrue(state.isGameOver(1, true));
+        Player.resetIdCounter();
+        state.addPlayers(List.of(
+                new PlayerDTO(1, "Alice"),
+                new PlayerDTO(2, "Bob")
+        ));
+
+        // Anfangs: Runde 1
+        assertFalse(state.isGameOver(1, true));
+
+        // Simuliere genug Turns, damit eine neue Runde beginnt
+        state.advanceTurn(); // Bob dran
+        state.advanceTurn(); // wieder Alice, jetzt Runde 2
+
+        assertTrue(state.isGameOver(1, true)); // maxRounds = 1 → Runde > 1 = Spiel vorbei
     }
+
 
     @Test
     void testIsGameOverRoundsModeDisabled() {

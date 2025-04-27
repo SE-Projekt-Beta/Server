@@ -11,10 +11,10 @@ public class GameBoardTest {
     @Test
     void testGetTileValidIndex() {
         GameBoard board = new GameBoard();
-        Tile tile = board.getTile(0);
+        Tile tile = board.getTile(1);
 
         assertNotNull(tile);
-        assertEquals(0, tile.getIndex());
+        assertEquals(1, tile.getIndex());
     }
 
     @Test

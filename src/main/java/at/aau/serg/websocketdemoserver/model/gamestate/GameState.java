@@ -28,9 +28,9 @@ public class GameState {
         Player.resetIdCounter();
 
         for (PlayerDTO dto : playerDTOs) {
-            Player player = new Player(dto.getNickname(), this.board); // ← BOARD ÜBERGEBEN
+            Player player = new Player(dto.getNickname(), this.board);
+            playersById.put(dto.getId(), player); // Player-ID bleibt DTO-ID
             turnOrder.add(player);
-            playersById.put(player.getId(), player);
         }
     }
 

@@ -1,8 +1,6 @@
 package at.aau.serg.websocketdemoserver.websocket;
 
-
-import at.aau.serg.websocketdemoserver.dto.GameMessage;
-import at.aau.serg.websocketdemoserver.dto.MessageType;
+import at.aau.serg.websocketdemoserver.dto.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,6 +12,7 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
 import java.lang.reflect.Type;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +28,7 @@ class GameWebSocketIntegrationTest {
 
     private static final String ENDPOINT = "/websocket-example-broker";
     private static final String SEND_PATH = "/app/dkt";
+    private static final String LOBBY_PATH = "/app/lobby";
     private static final String SUBSCRIBE_PATH = "/topic/dkt";
 
     BlockingQueue<GameMessage> messages = new LinkedBlockingDeque<>();
@@ -54,15 +54,45 @@ class GameWebSocketIntegrationTest {
             }
         });
 
-        GameMessage testMsg = new GameMessage();
-        testMsg.setType(MessageType.ROLL_DICE);
-        testMsg.setPayload("{\"playerId\": \"playerTest\"}");
+        // Lobby beitreten
+        session.send(LOBBY_PATH, new LobbyMessage(LobbyMessageType.JOIN_LOBBY, new JoinLobbyPayload("TestPlayer")));
+        Thread.sleep(200);
 
-        session.send(SEND_PATH, testMsg);
+        session.send(LOBBY_PATH, new LobbyMessage(LobbyMessageType.JOIN_LOBBY, new JoinLobbyPayload("TestPlayer2")));
+        Thread.sleep(200);
 
-        GameMessage received = messages.poll(2, TimeUnit.SECONDS);
-        assertThat(received).isNotNull();
-        assertThat(received.getType()).isEqualTo(MessageType.PLAYER_MOVED);
+        // Spiel starten
+        session.send(LOBBY_PATH, new LobbyMessage(LobbyMessageType.START_GAME, null));
+        Thread.sleep(200);
+
+        // Warten bis CURRENT_PLAYER empfangen wird
+        GameMessage currentPlayerMessage = waitForMessageType(MessageType.CURRENT_PLAYER, 5);
+        assertThat(currentPlayerMessage).isNotNull();
+
+        // PlayerId extrahieren
+        Map<String, Object> payloadMap = (Map<String, Object>) currentPlayerMessage.getPayload();
+        String currentPlayerId = payloadMap.get("playerId").toString();
+
+        // Roll Dice senden
+        GameMessage rollDiceMessage = new GameMessage();
+        rollDiceMessage.setType(MessageType.ROLL_DICE);
+        rollDiceMessage.setPayload("{\"playerId\": " + currentPlayerId + "}");
+
+        session.send(SEND_PATH, rollDiceMessage);
+
+        // Warten auf PLAYER_MOVED
+        GameMessage movedMessage = waitForMessageType(MessageType.PLAYER_MOVED, 5);
+        assertThat(movedMessage).isNotNull();
+    }
+
+    private GameMessage waitForMessageType(MessageType expectedType, int timeoutSeconds) throws InterruptedException {
+        long end = System.currentTimeMillis() + timeoutSeconds * 1000L;
+        while (System.currentTimeMillis() < end) {
+            GameMessage msg = messages.poll(500, TimeUnit.MILLISECONDS);
+            if (msg != null && msg.getType() == expectedType) {
+                return msg;
+            }
+        }
+        return null;
     }
 }
-

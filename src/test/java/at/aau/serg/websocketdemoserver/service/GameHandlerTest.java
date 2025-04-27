@@ -36,14 +36,17 @@ class GameHandlerTest {
         List<PlayerDTO> players = List.of(new PlayerDTO(1, "Alice"));
         handler.initGame(players);
 
+        int actualPlayerId = Integer.parseInt(handler.getCurrentPlayerId()); // hole echte ID!
+
         JSONObject payload = new JSONObject();
-        payload.put("playerId", 1);
+        payload.put("playerId", actualPlayerId); // NICHT fix 1!
 
         GameMessage response = handler.handle(new GameMessage(MessageType.ROLL_DICE, payload.toString()));
 
         assertEquals(MessageType.PLAYER_MOVED, response.getType());
         assertFalse(handler.getExtraMessages().isEmpty());
     }
+
 
     @Test
     void testHandleRollDiceWrongPlayer() throws JSONException {
