@@ -13,10 +13,10 @@ public class Lobby {
     public synchronized PlayerDTO addPlayer(String nickname) {
         for (PlayerDTO player : players) {
             if (player.getNickname().equalsIgnoreCase(nickname)) {
-                return player; // Spieler existiert schon
+                return player; // Player already exists
             }
         }
-        int newId = players.size() + 1; // einfache ID-Generierung
+        int newId = players.size() + 1; // Simple ID generation
         PlayerDTO newPlayer = new PlayerDTO(newId, nickname);
         players.add(newPlayer);
         return newPlayer;
@@ -27,7 +27,7 @@ public class Lobby {
     }
 
     public synchronized boolean isReadyToStart() {
-        return players.size() >= 2; // Mindestens 2 Spieler nötig
+        return players.size() >= 2; // At least 2 players required
     }
 
     public synchronized void clear() {

@@ -9,7 +9,7 @@ import java.util.List;
 @Service
 public class LobbyService {
 
-    private final Lobby lobby = new Lobby();
+    private final LobbyManager lobbyManager = new LobbyManager();
     private final GameHandler gameHandler;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -19,44 +19,68 @@ public class LobbyService {
 
     public List<LobbyMessage> handle(LobbyMessage message) {
         if (message == null || message.getType() == null) {
-            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Ungültige oder fehlende Nachricht."));
+            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Invalid or missing message."));
         }
 
         return switch (message.getType()) {
+            case CREATE_LOBBY -> handleCreateLobby();
+            case LIST_LOBBIES -> handleListLobbies();
             case JOIN_LOBBY -> handleJoinLobby(message.getPayload());
-            case START_GAME -> handleStartGame();
-            default -> List.of(new LobbyMessage(LobbyMessageType.ERROR, "Unbekannter Nachrichtentyp: " + message.getType()));
+            case START_GAME -> handleStartGame(message.getPayload());
+            default -> List.of(new LobbyMessage(LobbyMessageType.ERROR, "Unknown message type: " + message.getType()));
         };
+    }
+
+    private List<LobbyMessage> handleCreateLobby() {
+        int lobbyId = lobbyManager.createLobby();
+        return List.of(new LobbyMessage(LobbyMessageType.LOBBY_CREATED, lobbyId));
+    }
+
+    private List<LobbyMessage> handleListLobbies() {
+        List<Integer> lobbyIds = lobbyManager.getLobbyIds();
+        return List.of(new LobbyMessage(LobbyMessageType.LOBBY_LIST, lobbyIds));
     }
 
     private List<LobbyMessage> handleJoinLobby(Object payload) {
         try {
             JoinLobbyPayload joinPayload = objectMapper.convertValue(payload, JoinLobbyPayload.class);
+            int lobbyId = joinPayload.getLobbyId();
+            Lobby lobby = lobbyManager.getLobby(lobbyId);
+
+            if (lobby == null) {
+                return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Lobby not found."));
+            }
 
             PlayerDTO playerDTO = lobby.addPlayer(joinPayload.getUsername());
-            System.out.println("[LOBBY] Neuer Spieler: " + playerDTO.getNickname() + " (" + playerDTO.getId() + ")");
-
             return List.of(new LobbyMessage(
                     LobbyMessageType.LOBBY_UPDATE,
                     new LobbyUpdatePayload(lobby.getPlayers())
             ));
         } catch (Exception e) {
-            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Fehler beim Beitreten: " + e.getMessage()));
+            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Error joining lobby: " + e.getMessage()));
         }
     }
 
-    private List<LobbyMessage> handleStartGame() {
-        if (!lobby.isReadyToStart()) {
-            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Mindestens 2 Spieler benötigt!"));
+    private List<LobbyMessage> handleStartGame(Object payload) {
+        try {
+            StartGamePayload startPayload = objectMapper.convertValue(payload, StartGamePayload.class);
+            int lobbyId = startPayload.getLobbyId();
+            Lobby lobby = lobbyManager.getLobby(lobbyId);
+
+            if (lobby == null || !lobby.isReadyToStart()) {
+                return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Lobby not ready to start."));
+            }
+
+            List<PlayerDTO> players = lobby.getPlayers();
+            gameHandler.initGame(players);
+            lobbyManager.removeLobby(lobbyId);
+
+            return List.of(new LobbyMessage(
+                    LobbyMessageType.START_GAME,
+                    new GameStartPayload(players)
+            ));
+        } catch (Exception e) {
+            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Error starting game: " + e.getMessage()));
         }
-
-        List<PlayerDTO> players = lobby.getPlayers();
-        gameHandler.initGame(players); // Spiel initialisieren
-        lobby.clear(); // Lobby nach Start leeren
-
-        return List.of(new LobbyMessage(
-                LobbyMessageType.START_GAME,
-                new GameStartPayload(players)
-        ));
     }
 }

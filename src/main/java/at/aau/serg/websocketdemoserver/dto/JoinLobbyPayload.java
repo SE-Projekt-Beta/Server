@@ -1,12 +1,15 @@
 package at.aau.serg.websocketdemoserver.dto;
 
 public class JoinLobbyPayload {
+    private int lobbyId;
     private String username;
 
-    public JoinLobbyPayload() {}
+    public int getLobbyId() {
+        return lobbyId;
+    }
 
-    public JoinLobbyPayload(String username) {
-        this.username = username;
+    public void setLobbyId(int lobbyId) {
+        this.lobbyId = lobbyId;
     }
 
     public String getUsername() {
