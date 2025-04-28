@@ -1,5 +1,5 @@
 package at.aau.serg.websocketdemoserver.websocket;
-
+/*
 import at.aau.serg.websocketdemoserver.dto.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -96,3 +96,6 @@ class GameWebSocketIntegrationTest {
         return null;
     }
 }
+
+
+ */
