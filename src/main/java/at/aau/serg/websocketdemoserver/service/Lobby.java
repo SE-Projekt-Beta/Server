@@ -1,6 +1,7 @@
 package at.aau.serg.websocketdemoserver.service;
 
 import at.aau.serg.websocketdemoserver.dto.PlayerDTO;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,6 +10,13 @@ import java.util.List;
 public class Lobby {
 
     private final List<PlayerDTO> players = new ArrayList<>();
+
+    @Getter
+    private final String lobbyName;
+
+    public Lobby(String lobbyName) {
+        this.lobbyName = lobbyName;
+    }
 
     public synchronized PlayerDTO addPlayer(String nickname) {
         for (PlayerDTO player : players) {
@@ -33,4 +41,5 @@ public class Lobby {
     public synchronized void clear() {
         players.clear();
     }
+
 }

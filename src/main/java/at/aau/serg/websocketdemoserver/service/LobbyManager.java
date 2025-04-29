@@ -7,9 +7,9 @@ public class LobbyManager {
     private final Map<Integer, Lobby> lobbies = new HashMap<>();
     private final AtomicInteger lobbyIdCounter = new AtomicInteger(1);
 
-    public synchronized int createLobby() {
+    public synchronized int createLobby(String lobbyName) {
         int id = lobbyIdCounter.getAndIncrement();
-        lobbies.put(id, new Lobby());
+        lobbies.put(id, new Lobby(lobbyName));
         return id;
     }
 

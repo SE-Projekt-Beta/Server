@@ -4,7 +4,9 @@ import at.aau.serg.websocketdemoserver.dto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class LobbyService {
@@ -23,7 +25,7 @@ public class LobbyService {
         }
 
         return switch (message.getType()) {
-            case CREATE_LOBBY -> handleCreateLobby();
+            case CREATE_LOBBY -> handleCreateLobby(message.getPayload());
             case LIST_LOBBIES -> handleListLobbies();
             case JOIN_LOBBY -> handleJoinLobby(message.getPayload());
             case START_GAME -> handleStartGame(message.getPayload());
@@ -31,14 +33,40 @@ public class LobbyService {
         };
     }
 
-    private List<LobbyMessage> handleCreateLobby() {
-        int lobbyId = lobbyManager.createLobby();
-        return List.of(new LobbyMessage(LobbyMessageType.LOBBY_CREATED, lobbyId));
+    private List<LobbyMessage> handleCreateLobby(Object payload) {
+        try {
+            // Convert payload to CreateLobbyPayload DTO
+            CreateLobbyPayload createPayload = objectMapper.convertValue(payload, CreateLobbyPayload.class);
+            String lobbyName = createPayload.getLobbyName();
+
+            // Create a new lobby
+            int lobbyId = lobbyManager.createLobby(lobbyName);
+
+            // Return a response with the created lobby ID
+            return List.of(new LobbyMessage(LobbyMessageType.LOBBY_CREATED, lobbyId));
+        } catch (Exception e) {
+            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Error creating lobby: " + e.getMessage()));
+        }
     }
 
+//    private List<LobbyMessage> handleListLobbies() {
+//        List<Integer> lobbyIds = lobbyManager.getLobbyIds();
+//        return List.of(new LobbyMessage(LobbyMessageType.LOBBY_LIST, lobbyIds));
+//    }
+
     private List<LobbyMessage> handleListLobbies() {
-        List<Integer> lobbyIds = lobbyManager.getLobbyIds();
-        return List.of(new LobbyMessage(LobbyMessageType.LOBBY_LIST, lobbyIds));
+        List<Map<String, Object>> lobbyDetails = lobbyManager.getLobbyIds().stream()
+                .map(lobbyId -> {
+                    Lobby lobby = lobbyManager.getLobby(lobbyId);
+                    Map<String, Object> details = new HashMap<>();
+                    details.put("lobbyId", lobbyId);
+                    details.put("lobbyName", lobby != null ? lobby.getLobbyName() : "Unknown");
+                    details.put("playerCount", lobby != null ? lobby.getPlayers().size() : 0);
+                    return details;
+                })
+                .toList();
+
+        return List.of(new LobbyMessage(LobbyMessageType.LOBBY_LIST, lobbyDetails));
     }
 
     private List<LobbyMessage> handleJoinLobby(Object payload) {
