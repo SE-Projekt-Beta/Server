@@ -32,6 +32,7 @@ public class Player implements Comparable<Player> {
         this.board = board;
     }
 
+
     public int getId() {
         return id;
     }

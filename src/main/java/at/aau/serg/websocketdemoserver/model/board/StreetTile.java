@@ -116,4 +116,9 @@ public class StreetTile extends Tile {
     public List<BuildingType> getBuildings() {
         return new ArrayList<>(buildings);
     }
+
+    public int getHouses() {
+        return getHouseCount();
+    }
+
 }
