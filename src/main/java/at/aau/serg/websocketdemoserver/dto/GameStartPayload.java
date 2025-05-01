@@ -4,21 +4,21 @@ import java.util.List;
 
 public class GameStartPayload {
 
-    private List<PlayerDTO> playerOrder;
+    private List<CurrentPlayerPayload> playerOrder;
 
     public GameStartPayload() {
         // leerer Standard-Konstruktor für JSON
     }
 
-    public GameStartPayload(List<PlayerDTO> playerOrder) {
+    public GameStartPayload(List<CurrentPlayerPayload> playerOrder) {
         this.playerOrder = playerOrder;
     }
 
-    public List<PlayerDTO> getPlayerOrder() {
+    public List<CurrentPlayerPayload> getPlayerOrder() {
         return playerOrder;
     }
 
-    public void setPlayerOrder(List<PlayerDTO> playerOrder) {
+    public void setPlayerOrder(List<CurrentPlayerPayload> playerOrder) {
         this.playerOrder = playerOrder;
     }
 

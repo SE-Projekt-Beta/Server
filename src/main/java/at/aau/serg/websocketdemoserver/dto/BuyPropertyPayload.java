@@ -1,21 +1,27 @@
 package at.aau.serg.websocketdemoserver.dto;
 
+/**
+ * Payload für die Anfrage, ein Grundstück zu kaufen.
+ */
 public class BuyPropertyPayload {
-    private String playerId;
+
+    private int playerId;
     private int tilePos;
 
-    public BuyPropertyPayload() {}
+    public BuyPropertyPayload() {
+        // Standard-Konstruktor für Deserialisierung
+    }
 
-    public BuyPropertyPayload(String playerId, int tilePos) {
+    public BuyPropertyPayload(int playerId, int tilePos) {
         this.playerId = playerId;
         this.tilePos = tilePos;
     }
 
-    public String getPlayerId() {
+    public int getPlayerId() {
         return playerId;
     }
 
-    public void setPlayerId(String playerId) {
+    public void setPlayerId(int playerId) {
         this.playerId = playerId;
     }
 
