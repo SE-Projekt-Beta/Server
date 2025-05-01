@@ -1,6 +1,6 @@
 package at.aau.serg.websocketdemoserver.game;
 
-import at.aau.serg.websocketdemoserver.dto.PlayerDTO;
+import at.aau.serg.websocketdemoserver.dto.CurrentPlayerPayload;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,8 +21,8 @@ public class GameStateTest {
 
     @Test
     void testAddPlayersAndGetters() {
-        PlayerDTO p1 = new PlayerDTO(1, "Alice");
-        PlayerDTO p2 = new PlayerDTO(2, "Bob");
+        CurrentPlayerPayload p1 = new CurrentPlayerPayload(1, "Alice");
+        CurrentPlayerPayload p2 = new CurrentPlayerPayload(2, "Bob");
 
         state.addPlayers(List.of(p1, p2));
 
@@ -33,8 +33,8 @@ public class GameStateTest {
 
     @Test
     void testAdvanceTurnCyclesCorrectly() {
-        PlayerDTO p1 = new PlayerDTO(1, "Alice");
-        PlayerDTO p2 = new PlayerDTO(2, "Bob");
+        CurrentPlayerPayload p1 = new CurrentPlayerPayload(1, "Alice");
+        CurrentPlayerPayload p2 = new CurrentPlayerPayload(2, "Bob");
 
         state.addPlayers(List.of(p1, p2));
 
@@ -47,8 +47,8 @@ public class GameStateTest {
 
     @Test
     void testAdvanceTurnSkipsSuspended() {
-        PlayerDTO p1 = new PlayerDTO(1, "Alice");
-        PlayerDTO p2 = new PlayerDTO(2, "Bob");
+        CurrentPlayerPayload p1 = new CurrentPlayerPayload(1, "Alice");
+        CurrentPlayerPayload p2 = new CurrentPlayerPayload(2, "Bob");
 
         state.addPlayers(List.of(p1, p2));
 
@@ -62,7 +62,7 @@ public class GameStateTest {
 
     @Test
     void testGetPlayerById() {
-        PlayerDTO p1 = new PlayerDTO(1, "Charlie");
+        CurrentPlayerPayload p1 = new CurrentPlayerPayload(1, "Charlie");
 
         state.addPlayers(List.of(p1));
         Player player = state.getPlayer(1);
@@ -73,8 +73,8 @@ public class GameStateTest {
 
     @Test
     void testGetRankingList() {
-        PlayerDTO p1 = new PlayerDTO(1, "Alpha");
-        PlayerDTO p2 = new PlayerDTO(2, "Beta");
+        CurrentPlayerPayload p1 = new CurrentPlayerPayload(1, "Alpha");
+        CurrentPlayerPayload p2 = new CurrentPlayerPayload(2, "Beta");
 
         state.addPlayers(List.of(p1, p2));
 
@@ -95,8 +95,8 @@ public class GameStateTest {
     void testIsGameOverRoundsModeEnabled() {
         Player.resetIdCounter();
         state.addPlayers(List.of(
-                new PlayerDTO(1, "Alice"),
-                new PlayerDTO(2, "Bob")
+                new CurrentPlayerPayload(1, "Alice"),
+                new CurrentPlayerPayload(2, "Bob")
         ));
 
         // Anfangs: Runde 1
@@ -117,7 +117,7 @@ public class GameStateTest {
 
     @Test
     void testResetGame() {
-        PlayerDTO p1 = new PlayerDTO(1, "Alice");
+        CurrentPlayerPayload p1 = new CurrentPlayerPayload(1, "Alice");
         state.addPlayers(List.of(p1));
         state.advanceTurn();
 

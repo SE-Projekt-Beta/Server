@@ -1,7 +1,6 @@
 package at.aau.serg.websocketdemoserver.service;
 
 import at.aau.serg.websocketdemoserver.dto.*;
-import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,9 +21,9 @@ class GameHandlerTest {
 
     @Test
     void testInitGameCreatesPlayers() {
-        List<PlayerDTO> players = List.of(
-                new PlayerDTO(1, "Alice"),
-                new PlayerDTO(2, "Bob")
+        List<CurrentPlayerPayload> players = List.of(
+                new CurrentPlayerPayload(1, "Alice"),
+                new CurrentPlayerPayload(2, "Bob")
         );
         handler.initGame(players);
 
@@ -33,7 +32,7 @@ class GameHandlerTest {
 
     @Test
     void testHandleRollDiceSuccess() throws JSONException {
-        List<PlayerDTO> players = List.of(new PlayerDTO(1, "Alice"));
+        List<CurrentPlayerPayload> players = List.of(new CurrentPlayerPayload(1, "Alice"));
         handler.initGame(players);
 
         int actualPlayerId = Integer.parseInt(handler.getCurrentPlayerId()); // hole echte ID!
@@ -50,7 +49,7 @@ class GameHandlerTest {
 
     @Test
     void testHandleRollDiceWrongPlayer() throws JSONException {
-        List<PlayerDTO> players = List.of(new PlayerDTO(1, "Alice"));
+        List<CurrentPlayerPayload> players = List.of(new CurrentPlayerPayload(1, "Alice"));
         handler.initGame(players);
 
         JSONObject payload = new JSONObject();
@@ -64,7 +63,7 @@ class GameHandlerTest {
     @Test
     void testHandleBuyPropertySuccess() throws JSONException {
         // Spiel vorbereiten
-        List<PlayerDTO> players = List.of(new PlayerDTO(1, "Alice"));
+        List<CurrentPlayerPayload> players = List.of(new CurrentPlayerPayload(1, "Alice"));
         handler.initGame(players);
 
         // Spieler eine Bewegung geben, damit er auf einem Feld steht
