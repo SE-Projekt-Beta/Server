@@ -1,108 +1,68 @@
 package at.aau.serg.websocketdemoserver.model.gamestate;
 
-import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
-
 import java.util.*;
 
 public class GameState {
 
     private final GameBoard board;
-    private final List<Player> turnOrder;
-    private final Map<Integer, Player> playersById;
-    private final List<Player> winnerRankingList;
-
+    private final List<Player> players;
     private int currentPlayerIndex;
     private int currentRound;
-    private int roundStartId;
 
-    public GameState() {
-        this.board = new GameBoard();
-        this.turnOrder = new ArrayList<>();
-        this.playersById = new HashMap<>();
-        this.winnerRankingList = new ArrayList<>();
+    public GameState(GameBoard board) {
+        this.board = board;
+        this.players = new ArrayList<>();
         this.currentPlayerIndex = 0;
         this.currentRound = 1;
-        this.roundStartId = -1;
     }
 
-    public void setPlayers(List<Player> players) {
-        turnOrder.clear();
-        playersById.clear();
-        Player.resetIdCounter();
+    public synchronized Player addPlayer(String nickname) {
+        Player newPlayer = new Player(nickname, this.board);
+        players.add(newPlayer);
+        return newPlayer;
+    }
 
-        for (Player player : players) {
-            playersById.put(player.getId(), player);
-            turnOrder.add(player);
-        }
+    public synchronized void addPlayer(Player player) {
+        players.add(player);
+    }
+
+    public synchronized void removePlayer(Player player) {
+        players.remove(player);
+    }
+
+    public synchronized List<Player> getPlayers() {
+        return Collections.unmodifiableList(players);
+    }
+
+    public synchronized boolean isReadyToStart() {
+        return players.size() >= 2;
     }
 
     public Player getCurrentPlayer() {
-        if (turnOrder.isEmpty()) return null;
-        return turnOrder.get(currentPlayerIndex);
+        return players.get(currentPlayerIndex);
     }
 
-    public Player getPlayer(int id) {
-        return playersById.get(id);
+    public void advanceTurn() {
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+        if (currentPlayerIndex == 0) currentRound++;
     }
 
-    public Collection<Player> getAllPlayers() {
-        return playersById.values();
-    }
-
-    public List<Player> getTurnOrder() {
-        return Collections.unmodifiableList(turnOrder);
+    public void startGame() {
+        if (isReadyToStart()) {
+            currentRound = 1;
+        }
     }
 
     public GameBoard getBoard() {
         return board;
     }
 
-    public void advanceTurn() {
-        if (turnOrder.isEmpty()) return;
-
-        do {
-            currentPlayerIndex = (currentPlayerIndex + 1) % turnOrder.size();
-            if (currentPlayerIndex == 0) {
-                currentRound++;
-            }
-        } while (getCurrentPlayer().isSuspended());
-
-        if (roundStartId == -1) {
-            roundStartId = getCurrentPlayer().getId();
-        } else if (roundStartId == getCurrentPlayer().getId()) {
-            currentRound++;
-        }
-    }
-
     public int getCurrentRound() {
         return currentRound;
     }
 
-    public boolean isGameOver(int maxRounds, boolean roundsModeEnabled) {
-        return roundsModeEnabled && currentRound > maxRounds;
-    }
-
-    public List<Player> getRankingList() {
-        winnerRankingList.clear();
-        winnerRankingList.addAll(playersById.values());
-        winnerRankingList.sort(Comparator.comparingInt(Player::calculateWealth).reversed());
-        return winnerRankingList;
-    }
-
-    public void removePlayer(int id) {
-        Player removed = playersById.remove(id);
-        if (removed != null) {
-            turnOrder.remove(removed);
-        }
-    }
-
-    public void resetGame() {
-        Player.resetIdCounter();
-        turnOrder.clear();
-        playersById.clear();
-        winnerRankingList.clear();
-        currentPlayerIndex = 0;
-        currentRound = 1;
-        roundStartId = -1;
+    public void setPlayers(List<Player> newPlayers) {
+        players.clear();
+        players.addAll(newPlayers);
     }
 }

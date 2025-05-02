@@ -1,6 +1,6 @@
 package at.aau.serg.websocketdemoserver.service;
 
-import at.aau.serg.websocketdemoserver.dto.PlayerDTO;
+import at.aau.serg.websocketdemoserver.dto.CurrentPlayerPayload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -19,21 +19,21 @@ class LobbyTest {
 
     @Test
     void testAddPlayerCreatesNewPlayer() {
-        PlayerDTO player = lobby.addPlayer("Alice");
+        CurrentPlayerPayload player = lobby.addPlayer("Alice");
 
         assertNotNull(player);
         assertEquals(1, player.getId());
         assertEquals("Alice", player.getNickname());
 
-        List<PlayerDTO> players = lobby.getPlayers();
+        List<CurrentPlayerPayload> players = lobby.getPlayers();
         assertEquals(1, players.size());
         assertEquals("Alice", players.get(0).getNickname());
     }
 
     @Test
     void testAddSamePlayerReturnsSameInstance() {
-        PlayerDTO p1 = lobby.addPlayer("Bob");
-        PlayerDTO p2 = lobby.addPlayer("bob"); // Groß-/Kleinschreibung ignorieren
+        CurrentPlayerPayload p1 = lobby.addPlayer("Bob");
+        CurrentPlayerPayload p2 = lobby.addPlayer("bob"); // Groß-/Kleinschreibung ignorieren
 
         assertEquals(p1.getId(), p2.getId());
         assertEquals(1, lobby.getPlayers().size());
@@ -42,9 +42,9 @@ class LobbyTest {
     @Test
     void testGetPlayersIsUnmodifiable() {
         lobby.addPlayer("Charlie");
-        List<PlayerDTO> players = lobby.getPlayers();
+        List<CurrentPlayerPayload> players = lobby.getPlayers();
 
-        assertThrows(UnsupportedOperationException.class, () -> players.add(new PlayerDTO(99, "Hacker")));
+        assertThrows(UnsupportedOperationException.class, () -> players.add(new CurrentPlayerPayload(99, "Hacker")));
     }
 
     @Test
