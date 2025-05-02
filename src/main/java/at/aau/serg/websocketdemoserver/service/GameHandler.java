@@ -1,3 +1,4 @@
+// src/main/java/at/aau/serg/websocketdemoserver/service/GameHandler.java
 package at.aau.serg.websocketdemoserver.service;
 
 import at.aau.serg.websocketdemoserver.dto.*;
@@ -10,8 +11,12 @@ import at.aau.serg.websocketdemoserver.model.util.Dice;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * Handles all in-game messages, now routing every GameMessage through its lobbyId.
+ */
 @Service
 public class GameHandler {
 
@@ -28,24 +33,36 @@ public class GameHandler {
         this.dice = new Dice(1, 6);
     }
 
+    /**
+     * Returns any additional messages generated during the last handle(...) call.
+     */
     public List<GameMessage> getExtraMessages() {
-        return new ArrayList<>(extraMessages); // Kopie zurückgeben
+        return new ArrayList<>(extraMessages);
     }
 
+    /**
+     * Main entry point for game messages.
+     * Extracts lobbyId and dispatches to the correct handler.
+     */
     public GameMessage handle(GameMessage message) {
         extraMessages.clear();
+        int lobbyId = message.getLobbyId();
 
         if (message == null || message.getType() == null) {
-            return MessageFactory.error("Ungültige oder fehlende Nachricht.");
+            return MessageFactory.error(lobbyId, "Ungültige oder fehlende Nachricht.");
         }
 
         return switch (message.getType()) {
-            case ROLL_DICE -> handleRollDice(message.getPayload());
-            case BUY_PROPERTY -> handleBuyProperty(message.getPayload());
-            default -> MessageFactory.error("Unbekannter Nachrichtentyp: " + message.getType());
+            case ROLL_DICE     -> handleRollDice(lobbyId, message.getPayload());
+            case BUY_PROPERTY  -> handleBuyProperty(lobbyId, message.getPayload());
+            default             -> MessageFactory.error(lobbyId,
+                    "Unbekannter Nachrichtentyp: " + message.getType());
         };
     }
 
+    /**
+     * Initialize the game state with the given players.
+     */
     public void initGame(List<PlayerDTO> players) {
         gameState.addPlayers(players);
         System.out.println("[INIT] Game started with " + players.size() + " players.");
@@ -56,70 +73,90 @@ public class GameHandler {
         return current != null ? String.valueOf(current.getId()) : null;
     }
 
-    private GameMessage handleRollDice(Object payload) {
+    /**
+     * Handles a ROLL_DICE message for a specific lobby.
+     */
+    private GameMessage handleRollDice(int lobbyId, Object payload) {
         try {
             JSONObject obj = new JSONObject(payload.toString());
             int playerId = obj.getInt("playerId");
 
             Player player = gameState.getPlayer(playerId);
             if (player == null) {
-                return MessageFactory.error("Spieler nicht gefunden.");
+                return MessageFactory.error(lobbyId, "Spieler nicht gefunden.");
             }
-
             if (player.getId() != gameState.getCurrentPlayer().getId()) {
-                return MessageFactory.error("Nicht dein Zug!");
+                return MessageFactory.error(lobbyId, "Nicht dein Zug!");
             }
 
             int diceRoll = dice.roll();
             int newIndex = (player.getCurrentTile() == null ? 0 : player.getCurrentTile().getIndex()) + diceRoll;
-            newIndex = newIndex % gameState.getBoard().getTiles().size();
+            newIndex %= gameState.getBoard().getTiles().size();
             player.moveToTile(newIndex);
 
             Tile tile = gameState.getBoard().getTile(newIndex);
-            System.out.println("[ROLL] " + player.getNickname() + " rolled " + diceRoll + " → " + tile.getLabel());
+            String tileName = tile.getLabel();
+            String tileType = tile.getClass().getSimpleName();
+            System.out.println("[ROLL] " + player.getNickname() + " rolled " + diceRoll + " → " + tileName);
 
-            // Bewegung-Nachricht
+            // 1) Movement message scoped to this lobby
             GameMessage moveMessage = MessageFactory.playerMoved(
-                    player.getId(), newIndex, diceRoll, tile.getLabel(), tile.getClass().getSimpleName()
+                    lobbyId,
+                    player.getId(),
+                    newIndex,
+                    diceRoll,
+                    tileName,
+                    tileType
             );
 
-            // Aktion auf dem neuen Feld
+            // 2) Action message from landing on the tile
             GameMessage actionMessage = tileActionHandler.handleTileLanding(player, tile);
+            actionMessage.setLobbyId(lobbyId);
             extraMessages.add(actionMessage);
 
-            // Spielerwechsel vorbereiten
+            // 3) Advance turn and notify next player
             gameState.advanceTurn();
-            Player nextPlayer = gameState.getCurrentPlayer();
-            extraMessages.add(MessageFactory.currentPlayer(nextPlayer.getId()));
+            Player next = gameState.getCurrentPlayer();
+            extraMessages.add(MessageFactory.currentPlayer(
+                    lobbyId,
+                    next.getId()
+            ));
 
             return moveMessage;
         } catch (Exception e) {
-            return MessageFactory.error("Fehler beim Würfeln: " + e.getMessage());
+            return MessageFactory.error(lobbyId, "Fehler beim Würfeln: " + e.getMessage());
         }
     }
 
-    private GameMessage handleBuyProperty(Object payload) {
+    /**
+     * Handles a BUY_PROPERTY message for a specific lobby.
+     */
+    private GameMessage handleBuyProperty(int lobbyId, Object payload) {
         try {
             JSONObject obj = new JSONObject(payload.toString());
             int playerId = obj.getInt("playerId");
-            int tilePos = obj.getInt("tilePos");
+            int tilePos  = obj.getInt("tilePos");
 
             Player player = gameState.getPlayer(playerId);
-
             if (player == null) {
-                return MessageFactory.error("Spieler nicht gefunden.");
+                return MessageFactory.error(lobbyId, "Spieler nicht gefunden.");
             }
 
             boolean success = player.purchaseStreet(tilePos);
             if (success) {
                 Tile tile = gameState.getBoard().getTile(tilePos);
                 System.out.println("[BUY] " + player.getNickname() + " bought " + tile.getLabel());
-                return MessageFactory.propertyBought(playerId, tilePos, tile.getLabel());
+                return MessageFactory.propertyBought(
+                        lobbyId,
+                        playerId,
+                        tilePos,
+                        tile.getLabel()
+                );
             } else {
-                return MessageFactory.error("Kauf fehlgeschlagen.");
+                return MessageFactory.error(lobbyId, "Kauf fehlgeschlagen.");
             }
         } catch (Exception e) {
-            return MessageFactory.error("Fehler beim Kaufen: " + e.getMessage());
+            return MessageFactory.error(lobbyId, "Fehler beim Kaufen: " + e.getMessage());
         }
     }
 }

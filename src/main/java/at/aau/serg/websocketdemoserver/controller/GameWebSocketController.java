@@ -1,40 +1,43 @@
 package at.aau.serg.websocketdemoserver.controller;
 
-import at.aau.serg.websocketdemoserver.dto.LobbyMessage;
-import at.aau.serg.websocketdemoserver.service.GameHandler;
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.service.LobbyService;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.stereotype.Controller;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Controller;
 
-import java.util.List;
-
-
+/**
+ * Routes game‐related WebSocket messages to the correct GameHandler.
+ */
 @Controller
 public class GameWebSocketController {
 
     private final SimpMessagingTemplate messagingTemplate;
-    private final GameHandler gameHandler;
+    private final LobbyService lobbyService;
 
-    public GameWebSocketController(SimpMessagingTemplate messagingTemplate, GameHandler gameHandler) {
+    public GameWebSocketController(SimpMessagingTemplate messagingTemplate,
+                                   LobbyService lobbyService) {
         this.messagingTemplate = messagingTemplate;
-        this.gameHandler = gameHandler;
+        this.lobbyService = lobbyService;
     }
 
-    @MessageMapping("/dkt")
-    public void handleGameMessage(@Payload GameMessage message) {
-        System.out.println("Empfangen (DKT): " + message.getType());
-
-        GameMessage result = gameHandler.handle(message);
-
+    /**
+     * Clients send to /app/dkt/{lobbyId}, subscribe to /topic/dkt/{lobbyId}.
+     */
+    @MessageMapping("/dkt/{lobbyId}")
+    public void handleGameMessage(@DestinationVariable int lobbyId,
+                                  @Payload GameMessage message) {
+        System.out.println("Game " + lobbyId + ": " + message.getType());
+        message.setLobbyId(lobbyId);
+        var handler = lobbyService.getGameHandler(lobbyId);
+        GameMessage result = handler.handle(message);
         if (result != null) {
-            messagingTemplate.convertAndSend("/topic/dkt", result);
+            messagingTemplate.convertAndSend("/topic/dkt/" + lobbyId, result);
         }
-
-        for (GameMessage extra : gameHandler.getExtraMessages()) {
-            messagingTemplate.convertAndSend("/topic/dkt", extra);
-        }
+        handler.getExtraMessages().forEach(extra ->
+                messagingTemplate.convertAndSend("/topic/dkt/" + lobbyId, extra)
+        );
     }
 }
