@@ -8,6 +8,7 @@ import at.aau.serg.websocketdemoserver.service.game_request.*;
 
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,9 +18,10 @@ public class GameHandler {
 
     private final GameState gameState;
     private final Map<MessageType, GameHandlerInterface> handlerMap = new HashMap<>();
+    private final List<GameMessage> extraMessages = new ArrayList<>();
 
-    public GameHandler() {
-        this.gameState = new GameState();
+    public GameHandler(GameState gameState) {
+        this.gameState = gameState;
         registerHandlers();
     }
 
@@ -44,6 +46,8 @@ public class GameHandler {
     }
 
     public GameMessage handle(GameMessage message) {
+        extraMessages.clear();
+
         if (message == null || message.getType() == null) {
             return new GameMessage(MessageType.ERROR, "Ungültige Nachricht.");
         }
@@ -63,5 +67,9 @@ public class GameHandler {
 
     public GameState getGameState() {
         return gameState;
+    }
+
+    public List<GameMessage> getExtraMessages() {
+        return extraMessages;
     }
 }
