@@ -2,9 +2,7 @@ package at.aau.serg.websocketdemoserver.model.gamestate;
 
 import at.aau.serg.websocketdemoserver.model.board.StreetTile;
 import at.aau.serg.websocketdemoserver.model.board.Tile;
-import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
 import at.aau.serg.websocketdemoserver.model.board.BuildingType;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,71 +23,42 @@ public class Player implements Comparable<Player> {
     public Player(String nickname, GameBoard board) {
         this.id = idCounter++;
         this.nickname = nickname;
-        this.cash = 3000; // Startkapital
+        this.cash = 3000;
         this.suspensionRounds = 0;
         this.hasEscapeCard = false;
         this.cheatFlag = false;
         this.board = board;
     }
 
+    public int getId() { return id; }
 
-    public int getId() {
-        return id;
-    }
+    public String getNickname() { return nickname; }
 
-    public String getNickname() {
-        return nickname;
-    }
+    public void setNickname(String nickname) { this.nickname = nickname; }
 
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
-    }
+    public Tile getCurrentTile() { return currentTile; }
 
-    public Tile getCurrentTile() {
-        return currentTile;
-    }
+    public void setCurrentTile(Tile tile) { this.currentTile = tile; }
 
-    public void setCurrentTile(Tile tile) {
-        this.currentTile = tile;
-    }
+    public int getCash() { return cash; }
 
-    public int getCash() {
-        return cash;
-    }
+    public void setCash(int cash) { this.cash = cash; }
 
-    public void setCash(int cash) {
-        this.cash = cash;
-    }
+    public boolean hasEscapeCard() { return hasEscapeCard; }
 
-    public boolean hasEscapeCard() {
-        return hasEscapeCard;
-    }
+    public void setEscapeCard(boolean hasEscapeCard) { this.hasEscapeCard = hasEscapeCard; }
 
-    public void setEscapeCard(boolean hasEscapeCard) {
-        this.hasEscapeCard = hasEscapeCard;
-    }
-
-    public boolean isSuspended() {
-        return suspensionRounds > 0;
-    }
+    public boolean isSuspended() { return suspensionRounds > 0; }
 
     public void decreaseSuspension() {
-        if (suspensionRounds > 0) {
-            suspensionRounds--;
-        }
+        if (suspensionRounds > 0) suspensionRounds--;
     }
 
-    public void resetSuspension() {
-        suspensionRounds = 0;
-    }
+    public void resetSuspension() { suspensionRounds = 0; }
 
-    public void suspendForRounds(int rounds) {
-        suspensionRounds = rounds;
-    }
+    public void suspendForRounds(int rounds) { suspensionRounds = rounds; }
 
-    public int getSuspensionRounds() {
-        return suspensionRounds;
-    }
+    public int getSuspensionRounds() { return suspensionRounds; }
 
     public List<StreetTile> getOwnedStreets() {
         return new ArrayList<>(ownedStreets);
@@ -98,9 +67,7 @@ public class Player implements Comparable<Player> {
     public boolean purchaseStreet(int position) {
         Tile tile = board.getTile(position);
         if (!(tile instanceof StreetTile street)) return false;
-        if (street.getOwner() != null) return false;
-        if (street.getPrice() > cash) return false;
-
+        if (street.getOwner() != null || street.getPrice() > cash) return false;
         cash -= street.getPrice();
         street.setOwner(this);
         ownedStreets.add(street);
@@ -111,7 +78,6 @@ public class Player implements Comparable<Player> {
         Tile tile = board.getTile(position);
         if (!(tile instanceof StreetTile street)) return false;
         if (street.getOwner() == null || street.getOwner().getId() != this.id) return false;
-
         cash += street.calculateSellValue();
         street.setOwner(null);
         street.clearBuildings();
@@ -122,17 +88,14 @@ public class Player implements Comparable<Player> {
     public void moveToTile(int index) {
         if (!isSuspended()) {
             Tile destination = board.getTile(index % board.getTiles().size());
-            if (destination != null) {
-                this.currentTile = destination;
-            }
+            if (destination != null) this.currentTile = destination;
         }
     }
 
     public void moveSteps(int steps) {
         if (!isSuspended()) {
             int currentIndex = (currentTile != null) ? currentTile.getIndex() : 0;
-            int totalTiles = board.getTiles().size();
-            int newIndex = (currentIndex + steps) % totalTiles;
+            int newIndex = (currentIndex + steps) % board.getTiles().size();
             moveToTile(newIndex);
         }
     }
@@ -154,17 +117,11 @@ public class Player implements Comparable<Player> {
         }
     }
 
-    public boolean hasCheated() {
-        return cheatFlag;
-    }
+    public boolean hasCheated() { return cheatFlag; }
 
-    public void setCheatFlag(boolean cheatFlag) {
-        this.cheatFlag = cheatFlag;
-    }
+    public void setCheatFlag(boolean cheatFlag) { this.cheatFlag = cheatFlag; }
 
-    public static void resetIdCounter() {
-        idCounter = 1;
-    }
+    public static void resetIdCounter() { idCounter = 1; }
 
     @Override
     public int compareTo(Player other) {
