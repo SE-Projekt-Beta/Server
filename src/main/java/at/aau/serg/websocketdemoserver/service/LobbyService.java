@@ -1,62 +1,44 @@
 package at.aau.serg.websocketdemoserver.service;
 
-import at.aau.serg.websocketdemoserver.dto.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import at.aau.serg.websocketdemoserver.dto.LobbyMessage;
+import at.aau.serg.websocketdemoserver.dto.LobbyMessageType;
+import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
+import at.aau.serg.websocketdemoserver.service.lobby_request.*;
+
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class LobbyService {
 
-    private final Lobby lobby = new Lobby();
+    private final GameState gameState;
     private final GameHandler gameHandler;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final Map<LobbyMessageType, LobbyHandlerInterface> handlerMap = new HashMap<>();
 
-    public LobbyService(GameHandler gameHandler) {
+    public LobbyService(GameState gameState, GameHandler gameHandler) {
+        this.gameState = gameState;
         this.gameHandler = gameHandler;
+        registerHandlers();
+    }
+
+    private void registerHandlers() {
+        handlerMap.put(LobbyMessageType.JOIN_LOBBY, new JoinLobbyRequest());
+        handlerMap.put(LobbyMessageType.LEAVE_LOBBY, new LeaveLobbyRequest());
+        handlerMap.put(LobbyMessageType.START_GAME, new StartGameRequest(gameHandler));
+        handlerMap.put(LobbyMessageType.LOBBY_UPDATE, new LobbyUpdateRequest());
+        handlerMap.put(LobbyMessageType.PLAYER_INIT, new InitPlayerRequest());
     }
 
     public List<LobbyMessage> handle(LobbyMessage message) {
-        if (message == null || message.getType() == null) {
-            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Ungültige oder fehlende Nachricht."));
+        LobbyHandlerInterface handler = handlerMap.get(message.getType());
+        if (handler == null) {
+            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Unbekannter Nachrichtentyp"));
         }
 
-        return switch (message.getType()) {
-            case JOIN_LOBBY -> handleJoinLobby(message.getPayload());
-            case START_GAME -> handleStartGame();
-            default -> List.of(new LobbyMessage(LobbyMessageType.ERROR, "Unbekannter Nachrichtentyp: " + message.getType()));
-        };
-    }
-
-    private List<LobbyMessage> handleJoinLobby(Object payload) {
-        try {
-            JoinLobbyPayload joinPayload = objectMapper.convertValue(payload, JoinLobbyPayload.class);
-
-            PlayerDTO playerDTO = lobby.addPlayer(joinPayload.getUsername());
-            System.out.println("[LOBBY] Neuer Spieler: " + playerDTO.getNickname() + " (" + playerDTO.getId() + ")");
-
-            return List.of(new LobbyMessage(
-                    LobbyMessageType.LOBBY_UPDATE,
-                    new LobbyUpdatePayload(lobby.getPlayers())
-            ));
-        } catch (Exception e) {
-            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Fehler beim Beitreten: " + e.getMessage()));
-        }
-    }
-
-    private List<LobbyMessage> handleStartGame() {
-        if (!lobby.isReadyToStart()) {
-            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Mindestens 2 Spieler benötigt!"));
-        }
-
-        List<PlayerDTO> players = lobby.getPlayers();
-        gameHandler.initGame(players); // Spiel initialisieren
-        lobby.clear(); // Lobby nach Start leeren
-
-        return List.of(new LobbyMessage(
-                LobbyMessageType.START_GAME,
-                new GameStartPayload(players)
-        ));
+        LobbyMessage result = handler.execute(gameState, message.getPayload());
+        return List.of(result);
     }
 }

@@ -11,20 +11,11 @@ public class LobbyMessage {
         this.payload = payload;
     }
 
-    public LobbyMessageType getType() {
-        return type;
-    }
+    public LobbyMessageType getType() { return type; }
 
-    public void setType(LobbyMessageType type) {
-        this.type = type;
-    }
+    public void setType(LobbyMessageType type) { this.type = type; }
 
-    public Object getPayload() {
-        return payload;
-    }
+    public Object getPayload() { return payload; }
 
-    public void setPayload(Object payload) {
-        this.payload = payload;
-    }
+    public void setPayload(Object payload) { this.payload = payload; }
 }
-
