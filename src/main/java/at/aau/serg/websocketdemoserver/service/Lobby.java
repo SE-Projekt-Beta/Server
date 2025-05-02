@@ -35,6 +35,7 @@ public class Lobby {
     }
 
     public synchronized boolean isReadyToStart() {
+        System.out.println("Lobby " + lobbyName + " is ready to start: " + (players.size() >= 2));
         return players.size() >= 2; // At least 2 players required
     }
 

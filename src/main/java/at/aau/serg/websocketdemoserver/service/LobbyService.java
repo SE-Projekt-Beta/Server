@@ -49,23 +49,9 @@ public class LobbyService {
         }
     }
 
-//    private List<LobbyMessage> handleListLobbies() {
-//        List<Integer> lobbyIds = lobbyManager.getLobbyIds();
-//        return List.of(new LobbyMessage(LobbyMessageType.LOBBY_LIST, lobbyIds));
-//    }
 
     private List<LobbyMessage> handleListLobbies() {
-        List<Map<String, Object>> lobbyDetails = lobbyManager.getLobbyIds().stream()
-                .map(lobbyId -> {
-                    Lobby lobby = lobbyManager.getLobby(lobbyId);
-                    Map<String, Object> details = new HashMap<>();
-                    details.put("lobbyId", lobbyId);
-                    details.put("lobbyName", lobby != null ? lobby.getLobbyName() : "Unknown");
-                    details.put("playerCount", lobby != null ? lobby.getPlayers().size() : 0);
-                    return details;
-                })
-                .toList();
-
+        List<Map<String, Object>> lobbyDetails = getLobbyDetails();
         return List.of(new LobbyMessage(LobbyMessageType.LOBBY_LIST, lobbyDetails));
     }
 
@@ -79,11 +65,18 @@ public class LobbyService {
                 return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Lobby not found."));
             }
 
+            // Add the player to the lobby
             PlayerDTO playerDTO = lobby.addPlayer(joinPayload.getUsername());
+
+            // Notify all players about the new player
+            List<Map<String, Object>> lobbyDetails = getLobbyDetails();
             return List.of(new LobbyMessage(
                     LobbyMessageType.LOBBY_UPDATE,
-                    new LobbyUpdatePayload(lobby.getPlayers())
-            ));
+                    new LobbyUpdatePayload(lobbyId, lobby.getPlayers())
+            ), new LobbyMessage(
+                    LobbyMessageType.LOBBY_LIST, lobbyDetails)
+            );
+
         } catch (Exception e) {
             return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Error joining lobby: " + e.getMessage()));
         }
@@ -110,5 +103,18 @@ public class LobbyService {
         } catch (Exception e) {
             return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Error starting game: " + e.getMessage()));
         }
+    }
+
+    private List<Map<String, Object>> getLobbyDetails() {
+        return lobbyManager.getLobbyIds().stream()
+                .map(lobbyId -> {
+                    Lobby lobby = lobbyManager.getLobby(lobbyId);
+                    Map<String, Object> details = new HashMap<>();
+                    details.put("lobbyId", lobbyId);
+                    details.put("lobbyName", lobby != null ? lobby.getLobbyName() : "Unknown");
+                    details.put("playerCount", lobby != null ? lobby.getPlayers().size() : 0);
+                    return details;
+                })
+                .toList();
     }
 }
