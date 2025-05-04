@@ -1,130 +1,159 @@
 package at.aau.serg.websocketdemoserver.model.gamestate;
 
+import at.aau.serg.websocketdemoserver.dto.GameMessage;
+import at.aau.serg.websocketdemoserver.dto.MessageType;
+import at.aau.serg.websocketdemoserver.dto.PlayerLostPayload;
 import at.aau.serg.websocketdemoserver.model.board.StreetTile;
 import at.aau.serg.websocketdemoserver.model.board.Tile;
-import at.aau.serg.websocketdemoserver.model.board.BuildingType;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class Player implements Comparable<Player> {
-
-    private static int idCounter = 1;
+public class Player {
 
     private final int id;
-    private String nickname;
+    private final String nickname;
     private Tile currentTile;
     private int cash;
-    private final List<StreetTile> ownedStreets = new ArrayList<>();
+    private boolean escapeCard;
     private int suspensionRounds;
-    private boolean hasEscapeCard;
-    private boolean cheatFlag;
-    private final GameBoard board;
+    private final List<StreetTile> ownedStreets;
 
-    public Player(String nickname, GameBoard board) {
-        this.id = idCounter++;
+    public Player(int id, String nickname, Tile startTile) {
+        this.id = id;
         this.nickname = nickname;
-        this.cash = 3000;
+        this.currentTile = startTile;
+        this.cash = 1500;
+        this.escapeCard = false;
         this.suspensionRounds = 0;
-        this.hasEscapeCard = false;
-        this.cheatFlag = false;
-        this.board = board;
+        this.ownedStreets = new ArrayList<>();
     }
 
-    public int getId() { return id; }
+    public int getId() {
+        return id;
+    }
 
-    public String getNickname() { return nickname; }
+    public String getNickname() {
+        return nickname;
+    }
 
-    public void setNickname(String nickname) { this.nickname = nickname; }
+    public Tile getCurrentTile() {
+        return currentTile;
+    }
 
-    public Tile getCurrentTile() { return currentTile; }
+    public void setCurrentTile(Tile tile) {
+        this.currentTile = tile;
+    }
 
-    public void setCurrentTile(Tile tile) { this.currentTile = tile; }
+    public int getCash() {
+        return cash;
+    }
 
-    public int getCash() { return cash; }
+    public void setCash(int cash) {
+        this.cash = cash;
+    }
 
-    public void setCash(int cash) { this.cash = cash; }
+    public boolean hasEscapeCard() {
+        return escapeCard;
+    }
 
-    public boolean hasEscapeCard() { return hasEscapeCard; }
+    public void setEscapeCard(boolean hasCard) {
+        this.escapeCard = hasCard;
+    }
 
-    public void setEscapeCard(boolean hasEscapeCard) { this.hasEscapeCard = hasEscapeCard; }
+    public boolean isSuspended() {
+        return suspensionRounds > 0;
+    }
 
-    public boolean isSuspended() { return suspensionRounds > 0; }
+    public int getSuspensionRounds() {
+        return suspensionRounds;
+    }
+
+    public void suspendForRounds(int rounds) {
+        this.suspensionRounds = rounds;
+    }
 
     public void decreaseSuspension() {
-        if (suspensionRounds > 0) suspensionRounds--;
+        if (suspensionRounds > 0) {
+            suspensionRounds--;
+        }
     }
 
-    public void resetSuspension() { suspensionRounds = 0; }
-
-    public void suspendForRounds(int rounds) { suspensionRounds = rounds; }
-
-    public int getSuspensionRounds() { return suspensionRounds; }
-
-    public List<StreetTile> getOwnedStreets() {
-        return new ArrayList<>(ownedStreets);
+    public void resetSuspension() {
+        this.suspensionRounds = 0;
     }
 
-    public boolean purchaseStreet(int position) {
-        Tile tile = board.getTile(position);
-        if (!(tile instanceof StreetTile street)) return false;
-        if (street.getOwner() != null || street.getPrice() > cash) return false;
-        cash -= street.getPrice();
+    public void moveToTile(int index, GameBoard board) {
+        this.currentTile = board.getTile(index);
+    }
+
+    public void moveSteps(int steps, GameBoard board) {
+        int currentIndex = currentTile.getIndex();
+        int newIndex = (currentIndex + steps) % board.getTiles().size();
+        this.currentTile = board.getTile(newIndex);
+    }
+
+    public boolean purchaseStreet(int tileIndex) {
+        if (!(currentTile instanceof StreetTile street)) return false;
+        if (street.getIndex() != tileIndex) return false;
+        if (street.getOwner() != null) return false;
+        if (cash < street.getPrice()) return false;
+
+        this.cash -= street.getPrice();
         street.setOwner(this);
         ownedStreets.add(street);
         return true;
     }
 
-    public boolean sellStreet(int position) {
-        Tile tile = board.getTile(position);
-        if (!(tile instanceof StreetTile street)) return false;
-        if (street.getOwner() == null || street.getOwner().getId() != this.id) return false;
-        cash += street.calculateSellValue();
-        street.setOwner(null);
-        street.clearBuildings();
-        ownedStreets.remove(street);
-        return true;
+    public GameMessage transferCash(Player to, int amount) {
+        this.cash -= amount;
+        to.cash += amount;
+        if (this.cash < 0) {
+            return createBankruptMessage();
+        }
+        return null;
     }
 
-    public void moveToTile(int index) {
-        if (!isSuspended()) {
-            Tile destination = board.getTile(index % board.getTiles().size());
-            if (destination != null) this.currentTile = destination;
+    public GameMessage deductCash(int amount) {
+        this.cash -= amount;
+        if (this.cash < 0) {
+            return createBankruptMessage();
         }
+        return null;
     }
 
-    public void moveSteps(int steps) {
-        if (!isSuspended()) {
-            int currentIndex = (currentTile != null) ? currentTile.getIndex() : 0;
-            int newIndex = (currentIndex + steps) % board.getTiles().size();
-            moveToTile(newIndex);
-        }
+    private GameMessage createBankruptMessage() {
+        PlayerLostPayload payload = new PlayerLostPayload();
+        payload.setPlayerId(this.id);
+        payload.setCash(this.cash);
+        payload.setReason("Bankrott! Dein Vermögen ist negativ.");
+        return new GameMessage(MessageType.PLAYER_LOST, payload);
+    }
+
+    public List<StreetTile> getOwnedStreets() {
+        return new ArrayList<>(ownedStreets);
     }
 
     public int calculateWealth() {
-        int total = cash;
-        for (StreetTile street : ownedStreets) {
-            total += street.getPrice();
-            total += street.getHouseCost() * street.getBuildings().stream().filter(b -> b == BuildingType.HOUSE).count();
-            total += street.getHotelCost() * street.getBuildings().stream().filter(b -> b == BuildingType.HOTEL).count();
-        }
-        return total;
+        int propertyValue = ownedStreets.stream()
+                .mapToInt(st -> st.getPrice()
+                        + st.getHouseCount() * st.getHouseCost()
+                        + st.getHotelCount() * st.getHotelCost())
+                .sum();
+        return cash + propertyValue;
     }
 
-    public void transferCash(Player receiver, int amount) {
-        if (this.cash >= amount) {
-            this.cash -= amount;
-            receiver.cash += amount;
+    public void resetProperties() {
+        for (StreetTile st : ownedStreets) {
+            st.setOwner(null);
+            st.clearBuildings();
         }
+        ownedStreets.clear();
     }
 
-    public boolean hasCheated() { return cheatFlag; }
-
-    public void setCheatFlag(boolean cheatFlag) { this.cheatFlag = cheatFlag; }
-
-    public static void resetIdCounter() { idCounter = 1; }
-
-    @Override
-    public int compareTo(Player other) {
-        return Integer.compare(this.id, other.id);
+    public int calculateNewPosition(int steps) {
+        int size = GameBoard.get().getTiles().size();
+        int current = this.currentTile.getIndex();
+        return (current + steps) % size;
     }
 }
