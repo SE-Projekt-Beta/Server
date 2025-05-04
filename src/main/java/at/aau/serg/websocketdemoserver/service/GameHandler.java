@@ -10,6 +10,8 @@ import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.model.util.Dice;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,7 +80,11 @@ public class GameHandler {
      */
     private GameMessage handleRollDice(int lobbyId, Object payload) {
         try {
-            JSONObject obj = new JSONObject(payload.toString());
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonPayload = mapper.writeValueAsString(payload);  // this converts {playerId=fdghfdh} to {"playerId":"fdghfdh"}
+
+            JSONObject obj = new JSONObject(jsonPayload);  // now it's valid
+            System.out.println("[ROLL] Parsed JSON: " + obj.toString(2));
             int playerId = obj.getInt("playerId");
 
             Player player = gameState.getPlayer(playerId);
@@ -124,6 +130,9 @@ public class GameHandler {
 
             return moveMessage;
         } catch (Exception e) {
+            System.out.println("[ROLL] Error: " + e.getMessage());
+            // which line is the error?
+            e.printStackTrace();
             return MessageFactory.error(lobbyId, "Fehler beim Würfeln: " + e.getMessage());
         }
     }
