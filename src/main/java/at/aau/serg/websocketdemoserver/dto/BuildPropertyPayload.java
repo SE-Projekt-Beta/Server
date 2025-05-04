@@ -1,18 +1,11 @@
 package at.aau.serg.websocketdemoserver.dto;
 
-
-/**
- * Payload zur Mitteilung, welcher Spieler aktuell an der Reihe ist.
- */
-public class CurrentPlayerPayload {
-
+public class BuildPropertyPayload {
     private int playerId;
 
-    public CurrentPlayerPayload() {
-        // Standard-Konstruktor für Deserialisierung
-    }
+    public BuildPropertyPayload() {}
 
-    public CurrentPlayerPayload(int playerId) {
+    public BuildPropertyPayload(int playerId) {
         this.playerId = playerId;
     }
 
