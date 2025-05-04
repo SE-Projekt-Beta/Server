@@ -20,8 +20,9 @@ public class GameWebSocketController {
 
     @MessageMapping("/dkt")
     public void handleGameMessage(@Payload GameMessage message) {
-        GameMessage result = gameHandler.handle(message);
-        messagingTemplate.convertAndSend("/topic/dkt", result);
+        GameMessage response = gameHandler.handle(message);
+        messagingTemplate.convertAndSend("/topic/dkt", response);
+
         for (GameMessage extra : gameHandler.getExtraMessages()) {
             messagingTemplate.convertAndSend("/topic/dkt", extra);
         }

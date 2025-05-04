@@ -5,47 +5,61 @@ import at.aau.serg.websocketdemoserver.dto.MessageType;
 import at.aau.serg.websocketdemoserver.service.GameHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-public class GameWebSocketControllerTest {
+class GameWebSocketControllerTest {
 
-    private GameWebSocketController controller;
     private SimpMessagingTemplate messagingTemplate;
     private GameHandler gameHandler;
+    private GameWebSocketController controller;
 
     @BeforeEach
-    void setup() {
+    void setUp() {
         messagingTemplate = mock(SimpMessagingTemplate.class);
         gameHandler = mock(GameHandler.class);
         controller = new GameWebSocketController(messagingTemplate, gameHandler);
     }
 
     @Test
-    void testHandleGameMessageSendsResponse() {
-        GameMessage incoming = new GameMessage(MessageType.ROLL_DICE, "{}");
-        GameMessage result = new GameMessage(MessageType.PLAYER_MOVED, null);
-        when(gameHandler.handle(incoming)).thenReturn(result);
-        when(gameHandler.getExtraMessages()).thenReturn(java.util.List.of());
+    void testHandleGameMessage_sendsMainAndExtraMessages() {
+        GameMessage input = new GameMessage();
+        input.setType(MessageType.ROLL_DICE);
 
-        controller.handleGameMessage(incoming);
+        GameMessage response = new GameMessage();
+        response.setType(MessageType.ROLL_DICE);
 
-        verify(messagingTemplate).convertAndSend("/topic/dkt", result);
-    }
+        GameMessage extra1 = new GameMessage();
+        extra1.setType(MessageType.START_MONEY);
 
-    @Test
-    void testHandleGameMessageWithExtraMessages() {
-        GameMessage incoming = new GameMessage(MessageType.ROLL_DICE, "{}");
-        GameMessage result = new GameMessage(MessageType.PLAYER_MOVED, null);
-        GameMessage extra = new GameMessage(MessageType.CAN_BUY_PROPERTY, null);
+        GameMessage extra2 = new GameMessage();
+        extra2.setType(MessageType.BUY_PROPERTY);
 
-        when(gameHandler.handle(incoming)).thenReturn(result);
-        when(gameHandler.getExtraMessages()).thenReturn(java.util.List.of(extra));
+        when(gameHandler.handle(input)).thenReturn(response);
+        when(gameHandler.getExtraMessages()).thenReturn(List.of(extra1, extra2));
 
-        controller.handleGameMessage(incoming);
+        controller.handleGameMessage(input);
 
-        verify(messagingTemplate).convertAndSend("/topic/dkt", result);
-        verify(messagingTemplate).convertAndSend("/topic/dkt", extra);
+        ArgumentCaptor<String> destinationCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<GameMessage> messageCaptor = ArgumentCaptor.forClass(GameMessage.class);
+
+        verify(messagingTemplate, times(3))
+                .convertAndSend(destinationCaptor.capture(), messageCaptor.capture());
+
+        List<String> destinations = destinationCaptor.getAllValues();
+        List<GameMessage> messages = messageCaptor.getAllValues();
+
+        assertEquals("/topic/dkt", destinations.get(0));
+        assertEquals("/topic/dkt", destinations.get(1));
+        assertEquals("/topic/dkt", destinations.get(2));
+
+        assertEquals(response, messages.get(0));
+        assertEquals(extra1, messages.get(1));
+        assertEquals(extra2, messages.get(2));
     }
 }
