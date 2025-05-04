@@ -1,6 +1,5 @@
 package at.aau.serg.websocketdemoserver.dto;
 
-
 public enum LobbyMessageType {
     JOIN_LOBBY,
     LEAVE_LOBBY,
