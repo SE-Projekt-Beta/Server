@@ -1,5 +1,6 @@
 package at.aau.serg.websocketdemoserver.model.cards;
 
+import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 
 public abstract class ActionCard {
@@ -26,10 +27,6 @@ public abstract class ActionCard {
         return description;
     }
 
-    /**
-     * Execute the card's action for a given player.
-     *
-     * @param player Player who draws the card.
-     */
-    public abstract void execute(Player player);
+    public abstract GameMessage execute(Player player);
+
 }

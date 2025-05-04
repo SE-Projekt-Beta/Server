@@ -1,20 +1,24 @@
 package at.aau.serg.websocketdemoserver.model.cards;
 
-
+import at.aau.serg.websocketdemoserver.dto.CashTaskPayload;
+import at.aau.serg.websocketdemoserver.dto.GameMessage;
+import at.aau.serg.websocketdemoserver.dto.MessageType;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 
 public class CashRiskCard extends RiskCard {
+    private final int amount;
 
-    private final int cashAmount;
-
-    public CashRiskCard(int id, String title, String description, int cashAmount) {
+    public CashRiskCard(int id, String title, String description, int amount) {
         super(id, title, description);
-        this.cashAmount = cashAmount;
+        this.amount = amount;
     }
 
     @Override
-    public void execute(Player player) {
-        player.setCash(player.getCash() + cashAmount);
-        System.out.println("CashRiskCard applied: " + (cashAmount >= 0 ? "+" : "") + cashAmount + " to " + player.getNickname());
+    public GameMessage execute(Player player) {
+        int oldCash = player.getCash();
+        player.setCash(oldCash + amount);
+
+        CashTaskPayload payload = new CashTaskPayload(player.getId(), amount, player.getCash());
+        return new GameMessage(MessageType.CASH_TASK, payload);
     }
 }
