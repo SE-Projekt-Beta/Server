@@ -1,40 +1,46 @@
 package at.aau.serg.websocketdemoserver.service;
 
-import at.aau.serg.websocketdemoserver.model.cards.CashRiskCard;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-
-import at.aau.serg.websocketdemoserver.model.cards.BankCard;
-import at.aau.serg.websocketdemoserver.model.cards.BankCardDeck;
-import at.aau.serg.websocketdemoserver.model.cards.RiskCard;
-import at.aau.serg.websocketdemoserver.model.cards.RiskCardDeck;
+import at.aau.serg.websocketdemoserver.model.cards.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class EventCardServiceTest {
 
+    private BankCardDeck mockBankDeck;
+    private RiskCardDeck mockRiskDeck;
     private EventCardService service;
 
     @BeforeEach
-    void setup() {
-        BankCardDeck bankDeck = new BankCardDeck();
-        RiskCardDeck riskDeck = new RiskCardDeck();
-        service = new EventCardService(bankDeck, riskDeck);
+    void setUp() {
+        mockBankDeck = mock(BankCardDeck.class);
+        mockRiskDeck = mock(RiskCardDeck.class);
+        service = new EventCardService(mockBankDeck, mockRiskDeck);
     }
 
     @Test
-    void testDrawBankCardReturnsCard() {
-        BankCard card = service.drawBankCard();
-        assertNotNull(card);
-        assertTrue(card instanceof BankCard);
+    void testDrawBankCard() {
+        BankCard expected = new BankCard(1, "Test", "Test Bank Card");
+        when(mockBankDeck.drawRandomBankCard()).thenReturn(expected);
+
+        BankCard result = service.drawBankCard();
+
+        assertNotNull(result);
+        assertEquals(expected, result);
+        verify(mockBankDeck).drawRandomBankCard();
     }
 
     @Test
-    void testDrawRiskCardReturnsCard() {
-        RiskCard card = service.drawRiskCard();
-        assertNotNull(card);
-        assertTrue(card instanceof RiskCard);
+    void testDrawRiskCard() {
+        RiskCard expected = new RiskCard(2, "Risk", "Test Risk Card");
+        when(mockRiskDeck.drawRandomRiskCard()).thenReturn(expected);
+
+        RiskCard result = service.drawRiskCard();
+
+        assertNotNull(result);
+        assertEquals(expected, result);
+        verify(mockRiskDeck).drawRandomRiskCard();
     }
 }
