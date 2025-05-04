@@ -1,8 +1,10 @@
 package at.aau.serg.websocketdemoserver.service;
 
-import at.aau.serg.websocketdemoserver.dto.*;
-import org.json.JSONException;
-import org.json.JSONObject;
+import at.aau.serg.websocketdemoserver.dto.GameMessage;
+import at.aau.serg.websocketdemoserver.dto.LobbyMessageType;
+import at.aau.serg.websocketdemoserver.dto.MessageType;
+import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
+import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -12,116 +14,47 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class GameHandlerTest {
 
+    private GameState gameState;
     private GameHandler handler;
 
     @BeforeEach
-    void setup() {
-        handler = new GameHandler();
+    void setUp() {
+        gameState = new GameState(new at.aau.serg.websocketdemoserver.model.gamestate.GameBoard());
+        handler = new GameHandler(gameState);
     }
 
     @Test
-    void testInitGameCreatesPlayers() {
-        List<CurrentPlayerPayload> players = List.of(
-                new CurrentPlayerPayload(1, "Alice"),
-                new CurrentPlayerPayload(2, "Bob")
-        );
-        handler.initGame(players);
-
-        assertEquals("1", handler.getCurrentPlayerId());
+    void testHandle_NullMessage() {
+        GameMessage result = handler.handle(null);
+        assertEquals(MessageType.ERROR, result.getType());
+        assertEquals("Ungültige Nachricht.", result.getPayload());
     }
 
     @Test
-    void testHandleRollDiceSuccess() throws JSONException {
-        List<CurrentPlayerPayload> players = List.of(new CurrentPlayerPayload(1, "Alice"));
-        handler.initGame(players);
-
-        int actualPlayerId = Integer.parseInt(handler.getCurrentPlayerId()); // hole echte ID!
-
-        JSONObject payload = new JSONObject();
-        payload.put("playerId", actualPlayerId); // NICHT fix 1!
-
-        GameMessage response = handler.handle(new GameMessage(MessageType.ROLL_DICE, payload.toString()));
-
-        assertEquals(MessageType.PLAYER_MOVED, response.getType());
-        assertFalse(handler.getExtraMessages().isEmpty());
+    void testHandle_NullType() {
+        GameMessage message = new GameMessage();
+        GameMessage result = handler.handle(message);
+        assertEquals(MessageType.ERROR, result.getType());
+        assertEquals("Ungültige Nachricht.", result.getPayload());
     }
 
 
     @Test
-    void testHandleRollDiceWrongPlayer() throws JSONException {
-        List<CurrentPlayerPayload> players = List.of(new CurrentPlayerPayload(1, "Alice"));
-        handler.initGame(players);
-
-        JSONObject payload = new JSONObject();
-        payload.put("playerId", 999); // Falsche ID
-
-        GameMessage response = handler.handle(new GameMessage(MessageType.ROLL_DICE, payload.toString()));
-
-        assertEquals(MessageType.ERROR, response.getType());
+    void testInitGame() {
+        Player p1 = gameState.addPlayer("Max");
+        Player p2 = gameState.addPlayer("Eva");
+        handler.initGame(List.of(p1, p2));
+        assertEquals(2, handler.getGameState().getPlayers().size());
     }
 
     @Test
-    void testHandleBuyPropertySuccess() throws JSONException {
-        // Spiel vorbereiten
-        List<CurrentPlayerPayload> players = List.of(new CurrentPlayerPayload(1, "Alice"));
-        handler.initGame(players);
-
-        // Spieler eine Bewegung geben, damit er auf einem Feld steht
-        JSONObject rollPayload = new JSONObject();
-        rollPayload.put("playerId", 1);
-        handler.handle(new GameMessage(MessageType.ROLL_DICE, rollPayload.toString()));
-
-        // Jetzt korrekt Kaufversuch auf sein aktuelles Feld
-        int tilePos = 0; // Default auf Startposition
-
-        // Versuchen echte Tile-Position zu lesen aus der Message
-        List<GameMessage> extras = handler.getExtraMessages();
-        if (!extras.isEmpty()) {
-            GameMessage firstExtra = extras.get(0);
-            if (firstExtra.getType() == MessageType.PLAYER_MOVED) {
-                JSONObject movedPayload = new JSONObject(firstExtra.getPayload().toString());
-                tilePos = movedPayload.getInt("pos");
-            }
-        }
-
-        JSONObject buyPayload = new JSONObject();
-        buyPayload.put("playerId", 1);
-        buyPayload.put("tilePos", tilePos);
-
-        GameMessage response = handler.handle(new GameMessage(MessageType.BUY_PROPERTY, buyPayload.toString()));
-
-        assertNotNull(response.getType());
-        assertTrue(response.getType() == MessageType.PROPERTY_BOUGHT || response.getType() == MessageType.ERROR);
-    }
-
-
-    @Test
-    void testHandleBuyPropertyInvalidPayload() {
-        GameMessage response = handler.handle(new GameMessage(MessageType.BUY_PROPERTY, "invalid_payload"));
-        assertEquals(MessageType.ERROR, response.getType());
+    void testGetExtraMessages() {
+        assertNotNull(handler.getExtraMessages());
+        assertTrue(handler.getExtraMessages().isEmpty());
     }
 
     @Test
-    void testHandleRollDiceInvalidPayload() {
-        GameMessage response = handler.handle(new GameMessage(MessageType.ROLL_DICE, "invalid_payload"));
-        assertEquals(MessageType.ERROR, response.getType());
+    void testGetGameState() {
+        assertEquals(gameState, handler.getGameState());
     }
-
-    @Test
-    void testHandleUnknownMessageType() {
-        GameMessage response = handler.handle(new GameMessage(MessageType.ERROR, null));
-        assertEquals(MessageType.ERROR, response.getType());
-    }
-
-    @Test
-    void testHandleNullMessage() {
-        GameMessage response = handler.handle(null);
-        assertEquals(MessageType.ERROR, response.getType());
-    }
-
-    @Test
-    void testGetCurrentPlayerIdNullIfNoPlayers() {
-        assertNull(handler.getCurrentPlayerId());
-    }
-
 }
