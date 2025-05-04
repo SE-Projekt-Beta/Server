@@ -28,14 +28,17 @@ public class LobbyService {
         handlerMap.put(LobbyMessageType.JOIN_LOBBY, new JoinLobbyRequest());
         handlerMap.put(LobbyMessageType.LEAVE_LOBBY, new LeaveLobbyRequest());
         handlerMap.put(LobbyMessageType.START_GAME, new StartGameRequest(gameHandler));
-        handlerMap.put(LobbyMessageType.LOBBY_UPDATE, new LobbyUpdateRequest());
         handlerMap.put(LobbyMessageType.PLAYER_INIT, new InitPlayerRequest());
     }
 
     public List<LobbyMessage> handle(LobbyMessage message) {
+        if (message == null || message.getType() == null) {
+            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Ungültige Nachricht."));
+        }
+
         LobbyHandlerInterface handler = handlerMap.get(message.getType());
         if (handler == null) {
-            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Unbekannter Nachrichtentyp"));
+            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Unbekannter Nachrichtentyp: " + message.getType()));
         }
 
         LobbyMessage result = handler.execute(gameState, message.getPayload());

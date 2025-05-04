@@ -18,8 +18,16 @@ public class JoinLobbyRequest implements LobbyHandlerInterface {
             return new LobbyMessage(LobbyMessageType.ERROR, "Ungültiger Nickname.");
         }
 
-        Player newPlayer = gameState.addPlayer(nickname);
+        // Spieler bereits vorhanden?
+        boolean exists = gameState.getPlayers().stream()
+                .anyMatch(p -> p.getNickname().equalsIgnoreCase(nickname));
 
+        if (exists) {
+            return new LobbyMessage(LobbyMessageType.ERROR, "Nickname bereits vergeben.");
+        }
+
+        // Spieler wurde bereits mit InitPlayerRequest erstellt
+        // Wir gehen davon aus, dass JoinLobbyRequest rein das Update triggert
         List<PlayerLobbyEntry> entries = gameState.getPlayers().stream()
                 .map(p -> new PlayerLobbyEntry(p.getId(), p.getNickname()))
                 .collect(Collectors.toList());

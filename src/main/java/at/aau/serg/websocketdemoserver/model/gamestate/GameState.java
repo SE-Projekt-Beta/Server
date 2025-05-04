@@ -111,4 +111,11 @@ public class GameState {
 
         return new GameMessage(MessageType.END_GAME, new GameEndedPayload(ranking));
     }
+    public void setPlayers(List<Player> newPlayers) {
+        this.players.clear();
+        this.players.addAll(newPlayers);
+        this.currentPlayerIndex = 0;
+        this.gameStarted = false;
+    }
+
 }

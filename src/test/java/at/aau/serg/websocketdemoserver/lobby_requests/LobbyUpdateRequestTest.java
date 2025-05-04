@@ -5,7 +5,6 @@ import at.aau.serg.websocketdemoserver.dto.LobbyMessageType;
 import at.aau.serg.websocketdemoserver.dto.PlayerLobbyEntry;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
-import at.aau.serg.websocketdemoserver.service.lobby_request.LobbyUpdateRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

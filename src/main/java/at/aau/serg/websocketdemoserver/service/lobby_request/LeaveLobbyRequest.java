@@ -14,18 +14,20 @@ public class LeaveLobbyRequest implements LobbyHandlerInterface {
 
     @Override
     public LobbyMessage execute(GameState gameState, Object parameter) {
-        if (!(parameter instanceof String nickname) || nickname.isBlank()) {
-            return new LobbyMessage(LobbyMessageType.ERROR, "Ungültiger Nickname.");
+        if (!(parameter instanceof Integer playerId)) {
+            return new LobbyMessage(LobbyMessageType.ERROR, "Ungültige Spieler-ID.");
         }
 
-        Player toRemove = gameState.getPlayers().stream()
-                .filter(p -> p.getNickname().equals(nickname))
-                .findFirst()
-                .orElse(null);
-
-        if (toRemove != null) {
-            gameState.removePlayer(toRemove);
+        Player player = gameState.getPlayer(playerId);
+        if (player == null) {
+            return new LobbyMessage(LobbyMessageType.ERROR, "Spieler nicht gefunden.");
         }
+
+        if (gameState.isGameStarted()) {
+            return new LobbyMessage(LobbyMessageType.ERROR, "Verlassen während des Spiels nicht möglich.");
+        }
+
+        gameState.removePlayer(player);
 
         List<PlayerLobbyEntry> updatedList = gameState.getPlayers().stream()
                 .map(p -> new PlayerLobbyEntry(p.getId(), p.getNickname()))
