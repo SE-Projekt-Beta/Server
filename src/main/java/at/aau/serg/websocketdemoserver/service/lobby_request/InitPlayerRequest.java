@@ -10,9 +10,11 @@ public class InitPlayerRequest implements LobbyHandlerInterface {
 
     @Override
     public LobbyMessage execute(GameState gameState, Object parameter) {
-        String nickname = (String) parameter;
-        Player player = new Player(nickname, gameState.getBoard());
-        gameState.addPlayer(player);
+        if (!(parameter instanceof String nickname) || nickname.isBlank()) {
+            return new LobbyMessage(LobbyMessageType.ERROR, "Ungültiger Spielername.");
+        }
+
+        Player player = gameState.addPlayer(nickname);
 
         String[] payload = new String[] {
                 String.valueOf(player.getId()),
