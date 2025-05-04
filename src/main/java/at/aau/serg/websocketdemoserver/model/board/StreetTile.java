@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-
 public class StreetTile extends Tile {
 
     private final int price;
@@ -41,7 +40,7 @@ public class StreetTile extends Tile {
             case PREMIUM -> 1.5;
         };
 
-        if (buildings.get(0) == BuildingType.HOTEL) {
+        if (buildings.contains(BuildingType.HOTEL)) {
             return (int) (baseRent + baseRent * factor * 6);
         }
 
@@ -49,15 +48,16 @@ public class StreetTile extends Tile {
     }
 
     public boolean addHouse() {
-        if (!buildings.isEmpty() && buildings.get(0) == BuildingType.HOTEL) return false;
+        if (buildings.contains(BuildingType.HOTEL)) return false;
         if (buildings.size() >= 4) return false;
         buildings.add(BuildingType.HOUSE);
         return true;
     }
 
     public boolean addHotel() {
-        if (buildings.size() > 0 && buildings.size() < 4) return false;
-        if (buildings.size() == 4) buildings.clear();
+        if (buildings.contains(BuildingType.HOTEL)) return false;
+        if (getHouseCount() < 4) return false;
+        buildings.clear();
         buildings.add(BuildingType.HOTEL);
         return true;
     }
@@ -117,8 +117,17 @@ public class StreetTile extends Tile {
         return new ArrayList<>(buildings);
     }
 
-    public int getHouses() {
-        return getHouseCount();
+    @Override
+    public TileType getType() {
+        return TileType.STREET;
+    }
+
+    public boolean buildHouse() {
+        return addHouse();
+    }
+
+    public boolean buildHotel() {
+        return addHotel();
     }
 
 }
