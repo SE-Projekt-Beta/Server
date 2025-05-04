@@ -1,22 +1,17 @@
 package at.aau.serg.websocketdemoserver.dto;
 
-/**
- * Payload zur Mitteilung, dass ein Spieler übersprungen wird (z.B. wegen Gefängnis).
- */
 public class SkippedTurnPayload {
-
     private int playerId;
-    private int position;
+    private String reason;
+    private int tilePos;
     private String tileName;
+    private int suspension;
 
-    public SkippedTurnPayload() {
-        // Standard-Konstruktor für Deserialisierung
-    }
+    public SkippedTurnPayload() {}
 
-    public SkippedTurnPayload(int playerId, int position, String tileName) {
+    public SkippedTurnPayload(int playerId, String reason) {
         this.playerId = playerId;
-        this.position = position;
-        this.tileName = tileName;
+        this.reason = reason;
     }
 
     public int getPlayerId() {
@@ -27,12 +22,20 @@ public class SkippedTurnPayload {
         this.playerId = playerId;
     }
 
-    public int getPosition() {
-        return position;
+    public String getReason() {
+        return reason;
     }
 
-    public void setPosition(int position) {
-        this.position = position;
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    public int getTilePos() {
+        return tilePos;
+    }
+
+    public void setTilePos(int tilePos) {
+        this.tilePos = tilePos;
     }
 
     public String getTileName() {
@@ -41,5 +44,13 @@ public class SkippedTurnPayload {
 
     public void setTileName(String tileName) {
         this.tileName = tileName;
+    }
+
+    public int getSuspension() {
+        return suspension;
+    }
+
+    public void setSuspension(int suspension) {
+        this.suspension = suspension;
     }
 }
