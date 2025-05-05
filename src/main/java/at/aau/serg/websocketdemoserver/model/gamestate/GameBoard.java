@@ -37,4 +37,9 @@ public class GameBoard {
     public int size() {
         return tiles.size();
     }
+
+    public static void setInstance(GameBoard customInstance) {
+        instance = customInstance;
+    }
+
 }

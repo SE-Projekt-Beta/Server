@@ -1,16 +1,16 @@
 package at.aau.serg.websocketdemoserver.dto;
 
-import at.aau.serg.websocketdemoserver.model.board.StreetTile;
+import at.aau.serg.websocketdemoserver.dto.PropertyEntry;
 
 import java.util.List;
 
 public class PropertyListUpdatePayload {
     private int playerId;
-    private List<StreetTile> ownedStreets;
+    private List<PropertyEntry> ownedStreets;
 
     public PropertyListUpdatePayload() {}
 
-    public PropertyListUpdatePayload(int playerId, List<StreetTile> ownedStreets) {
+    public PropertyListUpdatePayload(int playerId, List<PropertyEntry> ownedStreets) {
         this.playerId = playerId;
         this.ownedStreets = ownedStreets;
     }
@@ -23,11 +23,11 @@ public class PropertyListUpdatePayload {
         this.playerId = playerId;
     }
 
-    public List<StreetTile> getOwnedStreets() {
+    public List<PropertyEntry> getOwnedStreets() {
         return ownedStreets;
     }
 
-    public void setOwnedStreets(List<StreetTile> ownedStreets) {
+    public void setOwnedStreets(List<PropertyEntry> ownedStreets) {
         this.ownedStreets = ownedStreets;
     }
 }

@@ -1,10 +1,8 @@
 package at.aau.serg.websocketdemoserver.lobby_requests;
 
-import at.aau.serg.websocketdemoserver.dto.LobbyMessage;
-import at.aau.serg.websocketdemoserver.dto.LobbyMessageType;
-import at.aau.serg.websocketdemoserver.dto.PlayerLobbyEntry;
-import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
+import at.aau.serg.websocketdemoserver.dto.*;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
+import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.service.lobby_request.JoinLobbyRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,67 +10,78 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class JoinLobbyRequestTest {
 
-    private GameState gameState;
     private JoinLobbyRequest request;
+    private GameState gameState;
 
     @BeforeEach
     void setUp() {
-        gameState = new GameState(new GameBoard());
         request = new JoinLobbyRequest();
+        gameState = mock(GameState.class);
     }
 
     @Test
-    void testNullNickname() {
-        LobbyMessage result = request.execute(gameState, null);
+    void testInvalidParameterType_returnsError() {
+        LobbyMessage result = request.execute(gameState, 42); // kein JoinLobbyPayload
         assertEquals(LobbyMessageType.ERROR, result.getType());
-        assertEquals("Ungültiger Nickname.", result.getPayload());
+        assertEquals("Ungültiges Payload-Format.", result.getPayload());
     }
 
     @Test
-    void testNonStringParameter() {
-        LobbyMessage result = request.execute(gameState, 123); // kein String
+    void testEmptyNickname_returnsError() {
+        JoinLobbyPayload payload = new JoinLobbyPayload();
+        payload.setNickname("  ");
+
+        LobbyMessage result = request.execute(gameState, payload);
         assertEquals(LobbyMessageType.ERROR, result.getType());
-        assertEquals("Ungültiger Nickname.", result.getPayload());
+        assertEquals("Nickname fehlt.", result.getPayload());
     }
 
     @Test
-    void testBlankNickname() {
-        LobbyMessage result = request.execute(gameState, "   ");
+    void testDuplicateNickname_returnsError() {
+        Player p1 = mock(Player.class);
+        when(p1.getNickname()).thenReturn("Thomas");
+
+        when(gameState.getPlayers()).thenReturn(List.of(p1));
+
+        JoinLobbyPayload payload = new JoinLobbyPayload();
+        payload.setNickname("thomas"); // case-insensitive match
+
+        LobbyMessage result = request.execute(gameState, payload);
         assertEquals(LobbyMessageType.ERROR, result.getType());
-        assertEquals("Ungültiger Nickname.", result.getPayload());
+        assertEquals("Nickname bereits vergeben.", result.getPayload());
     }
 
     @Test
-    void testValidNickname() {
-        LobbyMessage result = request.execute(gameState, "Eva");
+    void testValidNickname_returnsLobbyUpdate() {
+        Player p1 = mock(Player.class);
+        when(p1.getId()).thenReturn(1);
+        when(p1.getNickname()).thenReturn("Eva");
+
+        Player p2 = mock(Player.class);
+        when(p2.getId()).thenReturn(2);
+        when(p2.getNickname()).thenReturn("Max");
+
+        when(gameState.getPlayers()).thenReturn(List.of(p1, p2));
+
+        JoinLobbyPayload payload = new JoinLobbyPayload();
+        payload.setNickname("Tom");
+
+        LobbyMessage result = request.execute(gameState, payload);
 
         assertEquals(LobbyMessageType.LOBBY_UPDATE, result.getType());
-        assertTrue(result.getPayload() instanceof List<?>);
+        assertTrue(result.getPayload() instanceof LobbyUpdatePayload);
 
-        @SuppressWarnings("unchecked")
-        List<PlayerLobbyEntry> entries = (List<PlayerLobbyEntry>) result.getPayload();
+        LobbyUpdatePayload lobbyUpdate = (LobbyUpdatePayload) result.getPayload();
+        assertEquals(2, lobbyUpdate.getPlayers().size());
 
-        assertEquals(1, entries.size());
-        PlayerLobbyEntry entry = entries.get(0);
-        assertEquals("Eva", entry.getNickname());
-        assertTrue(entry.getPlayerId() > 0);
-    }
+        assertEquals("Eva", lobbyUpdate.getPlayers().get(0).getNickname());
+        assertEquals(1, lobbyUpdate.getPlayers().get(0).getPlayerId());
 
-    @Test
-    void testMultiplePlayers() {
-        request.execute(gameState, "Anna");
-        request.execute(gameState, "Ben");
-        LobbyMessage result = request.execute(gameState, "Chris");
-
-        @SuppressWarnings("unchecked")
-        List<PlayerLobbyEntry> entries = (List<PlayerLobbyEntry>) result.getPayload();
-
-        assertEquals(3, entries.size());
-        assertTrue(entries.stream().anyMatch(e -> e.getNickname().equals("Anna")));
-        assertTrue(entries.stream().anyMatch(e -> e.getNickname().equals("Ben")));
-        assertTrue(entries.stream().anyMatch(e -> e.getNickname().equals("Chris")));
+        assertEquals("Max", lobbyUpdate.getPlayers().get(1).getNickname());
+        assertEquals(2, lobbyUpdate.getPlayers().get(1).getPlayerId());
     }
 }

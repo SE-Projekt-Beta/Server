@@ -16,7 +16,8 @@ public class BuyPropertyRequest implements GameHandlerInterface {
     public GameMessage execute(GameState gameState, GameMessage message) {
         BuyPropertyPayload payload = message.parsePayload(BuyPropertyPayload.class);
         int playerId = payload.getPlayerId();
-        int tileIndex = payload.getTilePosition();
+        int tileIndex = payload.getTilePos();
+
 
         Player player = gameState.getPlayer(playerId);
         if (player == null) {

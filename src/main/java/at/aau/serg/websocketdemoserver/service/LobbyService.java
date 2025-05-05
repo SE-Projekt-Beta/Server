@@ -1,15 +1,13 @@
 package at.aau.serg.websocketdemoserver.service;
 
+import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.LobbyMessage;
 import at.aau.serg.websocketdemoserver.dto.LobbyMessageType;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.service.lobby_request.*;
-
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class LobbyService {
@@ -31,17 +29,28 @@ public class LobbyService {
         handlerMap.put(LobbyMessageType.PLAYER_INIT, new InitPlayerRequest());
     }
 
-    public List<LobbyMessage> handle(LobbyMessage message) {
+    public List<Object> handle(LobbyMessage message) {
+        List<Object> results = new ArrayList<>();
+
         if (message == null || message.getType() == null) {
-            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Ungültige Nachricht."));
+            results.add(new LobbyMessage(LobbyMessageType.ERROR, "Ungültige Nachricht."));
+            return results;
         }
 
         LobbyHandlerInterface handler = handlerMap.get(message.getType());
         if (handler == null) {
-            return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Unbekannter Nachrichtentyp: " + message.getType()));
+            results.add(new LobbyMessage(LobbyMessageType.ERROR, "Unbekannter Nachrichtentyp: " + message.getType()));
+            return results;
         }
 
         LobbyMessage result = handler.execute(gameState, message.getPayload());
-        return List.of(result);
+        results.add(result);
+
+        if (message.getType() == LobbyMessageType.START_GAME) {
+            // zusätzlich GameMessage (START_GAME mit GameStartedPayload) anfügen
+            results.addAll(gameHandler.getExtraMessages());
+        }
+
+        return results;
     }
 }

@@ -1,7 +1,9 @@
 package at.aau.serg.websocketdemoserver.service;
 
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
+import at.aau.serg.websocketdemoserver.dto.GameStartedPayload;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
+import at.aau.serg.websocketdemoserver.dto.PlayerLobbyEntry;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.service.game_request.*;
@@ -65,6 +67,14 @@ public class GameHandler {
     public void initGame(List<Player> players) {
         gameState.setPlayers(players);
         System.out.println("[INIT] Spiel gestartet mit " + players.size() + " Spieler(n).");
+
+        List<PlayerLobbyEntry> order = players.stream()
+                .map(p -> new PlayerLobbyEntry(p.getId(), p.getNickname()))
+                .toList();
+
+        GameStartedPayload payload = new GameStartedPayload(order);
+        GameMessage startMessage = new GameMessage(MessageType.START_GAME, payload);
+        extraMessages.add(startMessage);
     }
 
     public GameState getGameState() {

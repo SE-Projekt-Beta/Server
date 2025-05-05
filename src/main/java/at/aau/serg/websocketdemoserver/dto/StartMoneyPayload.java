@@ -7,6 +7,12 @@ public class StartMoneyPayload {
 
     public StartMoneyPayload() {}
 
+    public StartMoneyPayload(int playerId, int bonusAmount, int newCash) {
+        this.playerId = playerId;
+        this.bonusAmount = bonusAmount;
+        this.newCash = newCash;
+    }
+
     public int getPlayerId() {
         return playerId;
     }

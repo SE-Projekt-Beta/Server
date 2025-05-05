@@ -1,5 +1,6 @@
 package at.aau.serg.websocketdemoserver.controller;
 
+import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.LobbyMessage;
 import at.aau.serg.websocketdemoserver.service.LobbyService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -22,9 +23,14 @@ public class LobbyWebSocketController {
 
     @MessageMapping("/lobby")
     public void handleLobbyMessage(@Payload LobbyMessage message) {
-        List<LobbyMessage> responses = lobbyService.handle(message);
-        for (LobbyMessage response : responses) {
-            messagingTemplate.convertAndSend("/topic/lobby", response);
+        List<Object> responses = lobbyService.handle(message);
+
+        for (Object response : responses) {
+            if (response instanceof LobbyMessage lobbyMsg) {
+                messagingTemplate.convertAndSend("/topic/lobby", lobbyMsg);
+            } else if (response instanceof GameMessage gameMsg) {
+                messagingTemplate.convertAndSend("/topic/dkt", gameMsg);
+            }
         }
     }
 }

@@ -129,5 +129,17 @@ public class StreetTile extends Tile {
     public boolean buildHotel() {
         return addHotel();
     }
+    public String getName() {
+        return getLabel(); // da label im Super-Tile gesetzt wird
+    }
+
+    public int getOwnerId() {
+        return (owner != null) ? owner.getId() : -1;
+    }
+
+    public String getOwnerName() {
+        return (owner != null) ? owner.getNickname() : "BANK";
+    }
+
 
 }

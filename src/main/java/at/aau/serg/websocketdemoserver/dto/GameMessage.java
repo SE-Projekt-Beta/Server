@@ -1,9 +1,12 @@
 package at.aau.serg.websocketdemoserver.dto;
+
 import com.google.gson.Gson;
 
 public class GameMessage {
     private MessageType type;
     private Object payload;
+
+    private static final Gson gson = new Gson();
 
     public GameMessage() {}
 
@@ -33,7 +36,6 @@ public class GameMessage {
     }
 
     public <T> T parsePayload(Class<T> clazz) {
-        Gson gson = new Gson();
         return gson.fromJson(gson.toJson(payload), clazz);
     }
 }

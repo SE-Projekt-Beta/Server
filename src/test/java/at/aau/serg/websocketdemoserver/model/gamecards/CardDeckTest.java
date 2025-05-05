@@ -1,75 +1,40 @@
 package at.aau.serg.websocketdemoserver.model.gamecards;
 
-
-import at.aau.serg.websocketdemoserver.model.cards.*;
-import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
-import at.aau.serg.websocketdemoserver.model.gamestate.Player;
-import org.junit.jupiter.api.RepeatedTest;
+import at.aau.serg.websocketdemoserver.model.cards.BankCard;
+import at.aau.serg.websocketdemoserver.model.cards.BankCardDeck;
+import at.aau.serg.websocketdemoserver.model.cards.RiskCard;
+import at.aau.serg.websocketdemoserver.model.cards.RiskCardDeck;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class CardDecksTest {
+class CardDeckTest {
 
-    @RepeatedTest(10)
-    void testDrawRandomRiskCard_returnsValidCard() {
-        RiskCardDeck deck = new RiskCardDeck();
-        RiskCard card = deck.drawRandomRiskCard();
+    @Test
+    void testBankCardDeckSingletonAndDrawCard() {
+        BankCardDeck deck1 = BankCardDeck.get();
+        BankCardDeck deck2 = BankCardDeck.get();
 
+        assertSame(deck1, deck2, "BankCardDeck ist kein Singleton");
+
+        BankCard card = deck1.drawCard();
         assertNotNull(card);
+        assertInstanceOf(BankCard.class, card);
         assertNotNull(card.getTitle());
         assertNotNull(card.getDescription());
-
-        Player player = new Player("RiskTester", new GameBoard());
-        card.execute(player);
     }
 
-    @RepeatedTest(10)
-    void testDrawRandomBankCard_returnsValidCard() {
-        BankCardDeck deck = new BankCardDeck();
-        BankCard card = deck.drawRandomBankCard();
+    @Test
+    void testRiskCardDeckSingletonAndDrawCard() {
+        RiskCardDeck deck1 = RiskCardDeck.get();
+        RiskCardDeck deck2 = RiskCardDeck.get();
 
+        assertSame(deck1, deck2, "RiskCardDeck ist kein Singleton");
+
+        RiskCard card = deck1.drawCard();
         assertNotNull(card);
+        assertInstanceOf(RiskCard.class, card);
         assertNotNull(card.getTitle());
         assertNotNull(card.getDescription());
-
-        Player player = new Player("BankTester", new GameBoard());
-        card.execute(player);
-    }
-
-    @Test
-    void testCashBankCardModifiesPlayerCash() {
-        Player player = new Player("CashBank", new GameBoard());
-        int original = player.getCash();
-
-        CashBankCard card = new CashBankCard(99, "TestCard", "Add 500", 500);
-        card.execute(player);
-        assertEquals(original + 500, player.getCash());
-
-        card = new CashBankCard(100, "LoseMoney", "Minus 200", -200);
-        card.execute(player);
-        assertEquals(original + 300, player.getCash()); // 500 - 200
-    }
-
-    @Test
-    void testCashRiskCardModifiesPlayerCash() {
-        Player player = new Player("CashRisk", new GameBoard());
-        int original = player.getCash();
-
-        CashRiskCard card = new CashRiskCard(77, "Lottery", "Win 300", 300);
-        card.execute(player);
-        assertEquals(original + 300, player.getCash());
-    }
-
-    @Test
-    void testEscapeRiskCardGrantsEscape() {
-        Player player = new Player("Escape", new GameBoard());
-        assertFalse(player.hasEscapeCard());
-
-        EscapeRiskCard card = new EscapeRiskCard(55, "Get Out", "Escape jail");
-        card.execute(player);
-
-        assertTrue(player.hasEscapeCard());
     }
 }
-

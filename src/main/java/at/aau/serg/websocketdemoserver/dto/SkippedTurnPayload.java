@@ -14,6 +14,14 @@ public class SkippedTurnPayload {
         this.reason = reason;
     }
 
+    public SkippedTurnPayload(int playerId, String reason, int tilePos, String tileName, int suspension) {
+        this.playerId = playerId;
+        this.reason = reason;
+        this.tilePos = tilePos;
+        this.tileName = tileName;
+        this.suspension = suspension;
+    }
+
     public int getPlayerId() {
         return playerId;
     }

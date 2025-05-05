@@ -3,7 +3,6 @@ package at.aau.serg.websocketdemoserver.game_requests;
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.GoToJailPayload;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
-import at.aau.serg.websocketdemoserver.model.board.GoToJailTile;
 import at.aau.serg.websocketdemoserver.model.board.JailTile;
 import at.aau.serg.websocketdemoserver.model.board.Tile;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
@@ -12,54 +11,73 @@ import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.service.game_request.GoToJailRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class GoToJailRequestTest {
 
+    private GoToJailRequest request;
     private GameState gameState;
     private Player player;
+    private JailTile jailTile;
 
     @BeforeEach
     void setUp() {
-        gameState = new GameState(new GameBoard());
-        player = new Player("TestPlayer", gameState.getBoard());
-        gameState.addPlayer(player);
+        request = new GoToJailRequest();
+        gameState = mock(GameState.class);
+        player = mock(Player.class);
+        jailTile = mock(JailTile.class);
     }
 
     @Test
-    void testExecute_validPlayer_goesToJail() {
-        // given
-        GoToJailPayload payload = new GoToJailPayload(player.getId(), 0, 0, "");
-        GameMessage message = new GameMessage(MessageType.GO_TO_JAIL, payload);
+    void testSuccessfulGoToJail() {
+        when(gameState.getCurrentPlayer()).thenReturn(player);
+        when(player.getId()).thenReturn(7);
+        when(gameState.getPlayer(7)).thenReturn(player);
+        when(jailTile.getIndex()).thenReturn(10);
+        when(player.getSuspensionRounds()).thenReturn(2);
 
-        // when
-        GoToJailRequest request = new GoToJailRequest();
-        GameMessage result = request.execute(gameState, message);
+        GameBoard mockBoard = mock(GameBoard.class);
+        when(mockBoard.getTiles()).thenReturn(List.of(jailTile));
 
-        // then
-        assertEquals(MessageType.GO_TO_JAIL, result.getType());
+        try (MockedStatic<GameBoard> boardMock = mockStatic(GameBoard.class)) {
+            boardMock.when(GameBoard::get).thenReturn(mockBoard);
 
-        GoToJailPayload response = result.parsePayload(GoToJailPayload.class);
-        assertEquals(player.getId(), response.getPlayerId());
-        assertEquals(31, response.getJailPosition());
-        assertEquals(3, response.getRoundsInJail());
-        assertNotNull(response.getReason());
+            GameMessage result = request.execute(gameState, null);
 
-        Tile jailTile = gameState.getBoard().getTile(31);
-        assertEquals(jailTile, player.getCurrentTile());
-        assertTrue(player.isSuspended());
+            verify(player).moveToTile(10, mockBoard);
+            verify(player).suspendForRounds(2);
+
+            assertEquals(MessageType.GO_TO_JAIL, result.getType());
+            GoToJailPayload payload = (GoToJailPayload) result.getPayload();
+            assertEquals(7, payload.getPlayerId());
+            assertEquals(10, payload.getJailPosition());
+            assertEquals(2, payload.getRoundsInJail());
+            assertEquals("Du wurdest ins Gefängnis geschickt.", payload.getReason());
+        }
     }
 
     @Test
-    void testExecute_playerNotFound_returnsErrorMessage() {
-        // ID = 999 does not exist
-        GoToJailPayload payload = new GoToJailPayload(999, 0, 0, "");
-        GameMessage message = new GameMessage(MessageType.GO_TO_JAIL, payload);
+    void testNoJailTileFound_throwsException() {
+        when(gameState.getCurrentPlayer()).thenReturn(player);
+        when(player.getId()).thenReturn(99);
+        when(gameState.getPlayer(99)).thenReturn(player);
 
-        GameMessage result = new GoToJailRequest().execute(gameState, message);
+        GameBoard mockBoard = mock(GameBoard.class);
+        when(mockBoard.getTiles()).thenReturn(List.of(mock(Tile.class))); // Kein JailTile
 
-        assertEquals(MessageType.ERROR, result.getType());
-        assertTrue(result.getPayload().toString().contains("Spieler nicht gefunden"));
+        try (MockedStatic<GameBoard> boardMock = mockStatic(GameBoard.class)) {
+            boardMock.when(GameBoard::get).thenReturn(mockBoard);
+
+            IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+                request.execute(gameState, null);
+            });
+
+            assertEquals("Kein Gefängnisfeld gefunden.", exception.getMessage());
+        }
     }
 }

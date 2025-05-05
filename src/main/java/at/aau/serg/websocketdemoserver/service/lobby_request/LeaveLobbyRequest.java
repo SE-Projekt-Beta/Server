@@ -1,8 +1,6 @@
 package at.aau.serg.websocketdemoserver.service.lobby_request;
 
-import at.aau.serg.websocketdemoserver.dto.LobbyMessage;
-import at.aau.serg.websocketdemoserver.dto.LobbyMessageType;
-import at.aau.serg.websocketdemoserver.dto.PlayerLobbyEntry;
+import at.aau.serg.websocketdemoserver.dto.*;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.service.LobbyHandlerInterface;
@@ -33,6 +31,7 @@ public class LeaveLobbyRequest implements LobbyHandlerInterface {
                 .map(p -> new PlayerLobbyEntry(p.getId(), p.getNickname()))
                 .collect(Collectors.toList());
 
-        return new LobbyMessage(LobbyMessageType.LOBBY_UPDATE, updatedList);
+        LobbyUpdatePayload payload = new LobbyUpdatePayload(updatedList);
+        return new LobbyMessage(LobbyMessageType.LOBBY_UPDATE, payload);
     }
 }

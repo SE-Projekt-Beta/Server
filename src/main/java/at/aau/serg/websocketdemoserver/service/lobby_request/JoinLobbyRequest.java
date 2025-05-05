@@ -1,10 +1,7 @@
 package at.aau.serg.websocketdemoserver.service.lobby_request;
 
-import at.aau.serg.websocketdemoserver.dto.LobbyMessage;
-import at.aau.serg.websocketdemoserver.dto.LobbyMessageType;
-import at.aau.serg.websocketdemoserver.dto.PlayerLobbyEntry;
+import at.aau.serg.websocketdemoserver.dto.*;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
-import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.service.LobbyHandlerInterface;
 
 import java.util.List;
@@ -14,11 +11,15 @@ public class JoinLobbyRequest implements LobbyHandlerInterface {
 
     @Override
     public LobbyMessage execute(GameState gameState, Object parameter) {
-        if (!(parameter instanceof String nickname) || nickname.isBlank()) {
-            return new LobbyMessage(LobbyMessageType.ERROR, "Ungültiger Nickname.");
+        if (!(parameter instanceof JoinLobbyPayload payload)) {
+            return new LobbyMessage(LobbyMessageType.ERROR, "Ungültiges Payload-Format.");
         }
 
-        // Spieler bereits vorhanden?
+        String nickname = payload.getNickname();
+        if (nickname == null || nickname.isBlank()) {
+            return new LobbyMessage(LobbyMessageType.ERROR, "Nickname fehlt.");
+        }
+
         boolean exists = gameState.getPlayers().stream()
                 .anyMatch(p -> p.getNickname().equalsIgnoreCase(nickname));
 
@@ -26,12 +27,12 @@ public class JoinLobbyRequest implements LobbyHandlerInterface {
             return new LobbyMessage(LobbyMessageType.ERROR, "Nickname bereits vergeben.");
         }
 
-        // Spieler wurde bereits mit InitPlayerRequest erstellt
-        // Wir gehen davon aus, dass JoinLobbyRequest rein das Update triggert
+        // Spieler wurde bereits mit InitPlayerRequest erstellt → nur Liste aktualisieren
         List<PlayerLobbyEntry> entries = gameState.getPlayers().stream()
                 .map(p -> new PlayerLobbyEntry(p.getId(), p.getNickname()))
                 .collect(Collectors.toList());
 
-        return new LobbyMessage(LobbyMessageType.LOBBY_UPDATE, entries);
+        LobbyUpdatePayload lobbyUpdatePayload = new LobbyUpdatePayload(entries);
+        return new LobbyMessage(LobbyMessageType.LOBBY_UPDATE, lobbyUpdatePayload);
     }
 }

@@ -3,9 +3,8 @@ package at.aau.serg.websocketdemoserver.game_requests;
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
 import at.aau.serg.websocketdemoserver.dto.PayRentPayload;
-import at.aau.serg.websocketdemoserver.dto.PlayerLostPayload;
 import at.aau.serg.websocketdemoserver.model.board.StreetTile;
-import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
+import at.aau.serg.websocketdemoserver.model.board.Tile;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.service.game_request.PayRentRequest;
@@ -13,92 +12,88 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class PayRentRequestTest {
 
-    private GameState gameState;
     private PayRentRequest request;
-    private Player payer;
-    private Player owner;
-    private StreetTile street;
+    private GameState gameState;
+    private Player currentPlayer;
+    private GameMessage bankruptMessage;
 
     @BeforeEach
     void setUp() {
-        gameState = new GameState(new GameBoard());
         request = new PayRentRequest();
-
-        payer = gameState.addPlayer("Payer");
-        owner = gameState.addPlayer("Owner");
-
-        // Wir verwenden z. B. Tile 2 = StreetTile (Amtsplatz)
-        street = (StreetTile) gameState.getBoard().getTile(2);
-        street.setOwner(owner);
-        payer.setCurrentTile(street);
-    }
-
-    private GameMessage createMessage(int fromId, int toId) {
-        PayRentPayload payload = new PayRentPayload();
-        payload.setFromPlayerId(fromId);
-        payload.setToPlayerId(toId);
-        return new GameMessage(MessageType.PAY_RENT, payload);
+        gameState = mock(GameState.class);
+        currentPlayer = mock(Player.class);
+        bankruptMessage = mock(GameMessage.class);
     }
 
     @Test
-    void testSuccessfulRentPayment() {
-        payer.setCash(1000);
-        int rent = street.calculateRent();
+    void testTileNotStreet_returnsError() {
+        Tile tile = mock(Tile.class);
 
-        GameMessage result = request.execute(gameState, createMessage(payer.getId(), owner.getId()));
+        when(gameState.getCurrentPlayer()).thenReturn(currentPlayer);
+        when(currentPlayer.getCurrentTile()).thenReturn(tile);
+
+        GameMessage result = request.execute(gameState, null);
+        assertEquals(MessageType.ERROR, result.getType());
+    }
+
+    @Test
+    void testNoOwnerOrOwnField_returnsError() {
+        StreetTile street = mock(StreetTile.class);
+
+        when(gameState.getCurrentPlayer()).thenReturn(currentPlayer);
+        when(currentPlayer.getCurrentTile()).thenReturn(street);
+        when(currentPlayer.getId()).thenReturn(1);
+        when(street.getOwner()).thenReturn(null);  // no owner
+
+        GameMessage result1 = request.execute(gameState, null);
+        assertEquals(MessageType.ERROR, result1.getType());
+
+        // simulate own field
+        when(street.getOwner()).thenReturn(currentPlayer);
+        GameMessage result2 = request.execute(gameState, null);
+        assertEquals(MessageType.ERROR, result2.getType());
+    }
+
+    @Test
+    void testBankruptcyDuringRent_returnsBankruptMessage() {
+        StreetTile street = mock(StreetTile.class);
+        Player owner = mock(Player.class);
+
+        when(gameState.getCurrentPlayer()).thenReturn(currentPlayer);
+        when(currentPlayer.getCurrentTile()).thenReturn(street);
+        when(currentPlayer.getId()).thenReturn(1);
+        when(owner.getId()).thenReturn(2);
+        when(street.getOwner()).thenReturn(owner);
+        when(street.calculateRent()).thenReturn(150);
+        when(currentPlayer.transferCash(owner, 150)).thenReturn(bankruptMessage);
+
+        GameMessage result = request.execute(gameState, null);
+        assertEquals(bankruptMessage, result);
+    }
+
+    @Test
+    void testRentPaid_returnsRentPaidMessage() {
+        StreetTile street = mock(StreetTile.class);
+        Player owner = mock(Player.class);
+
+        when(gameState.getCurrentPlayer()).thenReturn(currentPlayer);
+        when(currentPlayer.getCurrentTile()).thenReturn(street);
+        when(currentPlayer.getId()).thenReturn(1);
+        when(owner.getId()).thenReturn(2);
+        when(street.getOwner()).thenReturn(owner);
+        when(street.calculateRent()).thenReturn(200);
+        when(currentPlayer.transferCash(owner, 200)).thenReturn(null);
+
+        GameMessage result = request.execute(gameState, null);
+
         assertEquals(MessageType.RENT_PAID, result.getType());
-
-        PayRentPayload response = result.parsePayload(PayRentPayload.class);
-        assertEquals(payer.getId(), response.getFromPlayerId());
-        assertEquals(owner.getId(), response.getToPlayerId());
-        assertEquals(rent, response.getAmount());
-    }
-
-    @Test
-    void testPayerNotFound() {
-        GameMessage result = request.execute(gameState, createMessage(-1, owner.getId()));
-        assertEquals(MessageType.ERROR, result.getType());
-    }
-
-    @Test
-    void testOwnerNotFound() {
-        GameMessage result = request.execute(gameState, createMessage(payer.getId(), -1));
-        assertEquals(MessageType.ERROR, result.getType());
-    }
-
-    @Test
-    void testTileIsNotStreet() {
-        payer.setCurrentTile(gameState.getBoard().getTile(1)); // Startfeld
-        GameMessage result = request.execute(gameState, createMessage(payer.getId(), owner.getId()));
-        assertEquals(MessageType.ERROR, result.getType());
-    }
-
-    @Test
-    void testTileHasNoOwner() {
-        street.setOwner(null);
-        GameMessage result = request.execute(gameState, createMessage(payer.getId(), owner.getId()));
-        assertEquals(MessageType.ERROR, result.getType());
-    }
-
-    @Test
-    void testTileOwnerMismatch() {
-        Player other = gameState.addPlayer("WrongOwner");
-        street.setOwner(other);
-        GameMessage result = request.execute(gameState, createMessage(payer.getId(), owner.getId()));
-        assertEquals(MessageType.ERROR, result.getType());
-    }
-
-    @Test
-    void testPayerGoesBankrupt() {
-        payer.setCash(0);
-        GameMessage result = request.execute(gameState, createMessage(payer.getId(), owner.getId()));
-        assertEquals(MessageType.PLAYER_LOST, result.getType());
-
-        PlayerLostPayload payload = result.parsePayload(PlayerLostPayload.class);
-        assertEquals(payer.getId(), payload.getPlayerId());
-        assertEquals(payer.getNickname(), payload.getNickname());
+        PayRentPayload payload = (PayRentPayload) result.getPayload();
+        assertEquals(1, payload.getFromPlayerId());
+        assertEquals(2, payload.getToPlayerId());
+        assertEquals(200, payload.getAmount());
     }
 }

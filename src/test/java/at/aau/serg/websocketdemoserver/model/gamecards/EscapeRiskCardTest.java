@@ -1,34 +1,43 @@
 package at.aau.serg.websocketdemoserver.model.gamecards;
 
+import at.aau.serg.websocketdemoserver.dto.GameMessage;
+import at.aau.serg.websocketdemoserver.dto.MessageType;
+import at.aau.serg.websocketdemoserver.dto.PlayerOutOfJailCardPayload;
 import at.aau.serg.websocketdemoserver.model.cards.EscapeRiskCard;
-import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class EscapeRiskCardTest {
 
-    private Player player;
+    @Test
+    void testConstructorAndGetters() {
+        EscapeRiskCard card = new EscapeRiskCard(1, "Freiheitskarte", "Du darfst aus dem Gefängnis frei.");
 
-    @BeforeEach
-    void setup() {
-        GameBoard board = new GameBoard();
-        player = new Player("TestPlayer", board);
+        assertEquals(1, card.getId());
+        assertEquals("Freiheitskarte", card.getTitle());
+        assertEquals("Du darfst aus dem Gefängnis frei.", card.getDescription());
     }
 
     @Test
-    void testExecute_grantsEscapeCard() {
-        EscapeRiskCard card = new EscapeRiskCard(5, "Get Out", "You are free to leave jail");
+    void testExecute_setsEscapeCardAndReturnsMessage() {
+        Player player = mock(Player.class);
+        when(player.getId()).thenReturn(42);
+        when(player.getNickname()).thenReturn("Max");
 
-        assertFalse(player.hasEscapeCard());
-        card.execute(player);
-        assertTrue(player.hasEscapeCard());
+        EscapeRiskCard card = new EscapeRiskCard(2, "Frei", "Verlasse das Gefängnis");
 
-        assertEquals(5, card.getId());
-        assertEquals("Get Out", card.getTitle());
-        assertEquals("You are free to leave jail", card.getDescription());
+        GameMessage result = card.execute(player);
+
+        verify(player).setEscapeCard(true);
+
+        assertEquals(MessageType.PLAYER_OUT_OF_JAIL_CARD, result.getType());
+        assertTrue(result.getPayload() instanceof PlayerOutOfJailCardPayload);
+
+        PlayerOutOfJailCardPayload payload = (PlayerOutOfJailCardPayload) result.getPayload();
+        assertEquals(42, payload.getPlayerId());
+        assertEquals("Max", payload.getMessage());
     }
 }
-

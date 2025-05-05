@@ -1,113 +1,142 @@
 package at.aau.serg.websocketdemoserver.model.gameboard;
 
-
+import at.aau.serg.websocketdemoserver.model.board.BuildingType;
 import at.aau.serg.websocketdemoserver.model.board.StreetLevel;
 import at.aau.serg.websocketdemoserver.model.board.StreetTile;
 import at.aau.serg.websocketdemoserver.model.board.TileType;
-import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class StreetTileTest {
 
     private StreetTile tile;
 
     @BeforeEach
-    void setUp() {
-        tile = new StreetTile(5, "Hauptstraße", 500, 50, StreetLevel.NORMAL, 100);
+    void setup() {
+        tile = new StreetTile(5, "Hauptstraße", 200, 50, StreetLevel.NORMAL, 100);
     }
 
     @Test
-    void testConstructorAndGetters() {
+    void testConstructor_initialValues() {
         assertEquals(5, tile.getIndex());
-        assertEquals("Hauptstraße", tile.getLabel());
-        assertEquals(500, tile.getPrice());
+        assertEquals("Hauptstraße", tile.getName());
+        assertEquals(200, tile.getPrice());
         assertEquals(50, tile.getBaseRent());
         assertEquals(StreetLevel.NORMAL, tile.getLevel());
         assertEquals(100, tile.getHouseCost());
-        assertEquals(200, tile.getHotelCost()); // hotelCost = houseCost * 2
+        assertEquals(200, tile.getHotelCost());
         assertEquals(TileType.STREET, tile.getType());
-        assertTrue(tile.getBuildings().isEmpty());
     }
 
     @Test
-    void testSetAndGetOwner() {
-        Player player = new Player("Max", new GameBoard());
+    void testOwnerHandling() {
+        Player player = mock(Player.class);
+        when(player.getId()).thenReturn(1);
+        when(player.getNickname()).thenReturn("Eva");
+
         tile.setOwner(player);
+
         assertEquals(player, tile.getOwner());
+        assertEquals(1, tile.getOwnerId());
+        assertEquals("Eva", tile.getOwnerName());
     }
 
     @Test
-    void testCalculateRent_NoBuildings() {
+    void testOwnerNullFallbacks() {
+        assertEquals(-1, tile.getOwnerId());
+        assertEquals("BANK", tile.getOwnerName());
+    }
+
+    @Test
+    void testBuildHouse_success() {
+        assertTrue(tile.buildHouse());
+        assertEquals(1, tile.getHouseCount());
+        assertEquals(0, tile.getHotelCount());
+    }
+
+    @Test
+    void testBuildHotel_requires4Houses() {
+        // Weniger als 4 Häuser → kein Hotel
+        assertFalse(tile.buildHotel());
+
+        tile.buildHouse();
+        tile.buildHouse();
+        tile.buildHouse();
+        tile.buildHouse();
+
+        assertTrue(tile.buildHotel());
+        assertEquals(0, tile.getHouseCount());
+        assertEquals(1, tile.getHotelCount());
+    }
+
+    @Test
+    void testPreventTooManyHouses() {
+        for (int i = 0; i < 4; i++) {
+            assertTrue(tile.buildHouse());
+        }
+        assertFalse(tile.buildHouse()); // 5. Haus nicht möglich
+    }
+
+    @Test
+    void testCalculateRent_baseOnly() {
         assertEquals(50, tile.calculateRent());
     }
 
     @Test
-    void testCalculateRent_WithHouses() {
-        tile.addHouse();
-        tile.addHouse();
-        assertEquals(50 + 50 * 2 * 1.0, tile.calculateRent());
+    void testCalculateRent_withHouses() {
+        tile.buildHouse(); // 1 house
+        assertEquals(100, tile.calculateRent()); // 50 + 50*1*1.0
     }
 
     @Test
-    void testCalculateRent_WithHotel() {
-        tile.addHouse();
-        tile.addHouse();
-        tile.addHouse();
-        tile.addHouse();
-        tile.addHotel(); // replaces 4 houses
-        assertEquals(50 + 50 * 6 * 1.0, tile.calculateRent());
-    }
-
-    @Test
-    void testAddHouseLimits() {
-        assertTrue(tile.addHouse());
-        assertTrue(tile.addHouse());
-        assertTrue(tile.addHouse());
-        assertTrue(tile.addHouse());
-        assertFalse(tile.addHouse()); // max 4
-    }
-
-    @Test
-    void testAddHotelConditions() {
-        // Not enough houses
-        tile.clearBuildings();
-        tile.addHouse();
-        assertFalse(tile.addHotel());
-
-        // Add 4 houses and then hotel
-        tile.clearBuildings();
-        tile.addHouse();
-        tile.addHouse();
-        tile.addHouse();
-        tile.addHouse();
-        assertTrue(tile.addHotel());
-        assertEquals(1, tile.getHotelCount());
-        assertEquals(0, tile.getHouseCount());
+    void testCalculateRent_withHotel() {
+        tile.buildHouse();
+        tile.buildHouse();
+        tile.buildHouse();
+        tile.buildHouse();
+        tile.buildHotel();
+        assertEquals(350, tile.calculateRent()); // 50 + 50*1*6
     }
 
     @Test
     void testClearBuildings() {
-        tile.addHouse();
-        tile.addHouse();
+        tile.buildHouse();
+        tile.buildHouse();
         tile.clearBuildings();
-        assertEquals(0, tile.getBuildings().size());
+        assertEquals(0, tile.getHouseCount());
+        assertEquals(0, tile.getHotelCount());
     }
 
     @Test
-    void testCalculateRawValueAndSellValue() {
-        tile.addHouse();
-        tile.addHouse();
-        tile.addHotel();
+    void testCalculateRawAndSellValue() {
+        // no buildings
+        assertEquals(200, tile.calculateRawValue());
+        assertEquals(100, tile.calculateSellValue());
 
-        int raw = tile.calculateRawValue(); // 500 + 0*house + 1*hotel
-        int expectedRaw = 500 + 200;
-        assertEquals(expectedRaw, raw);
+        tile.buildHouse(); // +100
+        tile.buildHouse(); // +100
+        assertEquals(400, tile.calculateRawValue());
+        assertEquals(150, tile.calculateSellValue());
 
-        int expectedSell = (int)(500 * 0.5 + 200 * 0.25);
-        assertEquals(expectedSell, tile.calculateSellValue());
+        tile.buildHouse();
+        tile.buildHouse();
+        tile.buildHotel(); // ersetzt Häuser
+
+        assertEquals(400, tile.calculateRawValue());
+        assertEquals(150, tile.calculateSellValue());
+    }
+
+    @Test
+    void testGetBuildingsListIsCopy() {
+        tile.buildHouse();
+        List<BuildingType> buildings = tile.getBuildings();
+        buildings.clear(); // shouldn't affect internal list
+        assertEquals(1, tile.getHouseCount());
     }
 }

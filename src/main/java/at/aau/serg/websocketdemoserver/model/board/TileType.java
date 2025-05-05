@@ -8,5 +8,6 @@ public enum TileType {
     PRISON,
     GOTO_JAIL,
     TAX,
+    SPECIAL
 }
 

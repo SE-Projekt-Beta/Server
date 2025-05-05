@@ -1,48 +1,75 @@
 package at.aau.serg.websocketdemoserver.model.state;
 
 import at.aau.serg.websocketdemoserver.model.board.Tile;
+import at.aau.serg.websocketdemoserver.model.board.TileFactory;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class GameBoardTest {
 
+    @BeforeEach
+    void resetSingleton() {
+        GameBoard.setInstance(null);
+    }
+
+    @AfterEach
+    void cleanup() {
+        GameBoard.setInstance(null);
+    }
+
     @Test
-    void testConstructor_createsAllTiles() {
-        GameBoard board = new GameBoard();
+    void testSingletonInstanceIsConsistent() {
+        GameBoard board1 = GameBoard.get();
+        GameBoard board2 = GameBoard.get();
+
+        assertNotNull(board1);
+        assertSame(board1, board2);
+    }
+
+    @Test
+    void testSetInstanceOverridesSingleton() {
+        GameBoard dummy = mock(GameBoard.class);
+        GameBoard.setInstance(dummy);
+        assertSame(dummy, GameBoard.get());
+    }
+
+    @Test
+    void testGetTilesReturnsCorrectList() {
+        GameBoard board = GameBoard.get();
         List<Tile> tiles = board.getTiles();
 
         assertNotNull(tiles);
-        assertTrue(tiles.size() > 0); // Es sollten Tiles vorhanden sein
+        assertFalse(tiles.isEmpty());
+        assertTrue(tiles.stream().allMatch(t -> t.getIndex() >= 0));
     }
 
     @Test
-    void testGetTile_validIndex_returnsTile() {
-        GameBoard board = new GameBoard();
-        Tile tile = board.getTile(1); // Startfeld laut TileFactory
+    void testGetTileByValidIndexReturnsTile() {
+        GameBoard board = GameBoard.get();
+        Tile known = board.getTiles().get(0);
+        Tile result = board.getTile(known.getIndex());
 
-        assertNotNull(tile);
-        assertEquals(1, tile.getIndex());
+        assertNotNull(result);
+        assertEquals(known.getIndex(), result.getIndex());
     }
 
     @Test
-    void testGetTile_invalidIndex_returnsNull() {
-        GameBoard board = new GameBoard();
-        Tile tile = board.getTile(100); // Index außerhalb des Spielfeldes
+    void testGetTileByInvalidIndexThrowsException() {
+        GameBoard board = GameBoard.get();
+        int invalidIndex = -999;
 
-        assertNull(tile);
+        assertThrows(IndexOutOfBoundsException.class, () -> board.getTile(invalidIndex));
     }
 
     @Test
-    void testGetTiles_returnsSameList() {
-        GameBoard board = new GameBoard();
-        List<Tile> tiles1 = board.getTiles();
-        List<Tile> tiles2 = board.getTiles();
-
-        assertSame(tiles1, tiles2); // sollte dieselbe Referenz sein
+    void testBoardSizeMatchesTileCount() {
+        GameBoard board = GameBoard.get();
+        assertEquals(board.getTiles().size(), board.size());
     }
+
 }
-
