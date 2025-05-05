@@ -17,6 +17,11 @@ public class StartGameRequest implements LobbyHandlerInterface {
     }
 
     @Override
+    public LobbyMessageType getType() {
+        return LobbyMessageType.START_GAME;
+    }
+
+    @Override
     public LobbyMessage execute(GameState gameState, Object parameter) {
         if (!gameState.isReadyToStart()) {
             return new LobbyMessage(LobbyMessageType.ERROR, "Mindestens 2 Spieler notwendig, um das Spiel zu starten.");
