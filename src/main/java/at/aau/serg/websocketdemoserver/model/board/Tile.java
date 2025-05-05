@@ -20,4 +20,6 @@ public abstract class Tile {
     public void setLabel(String label) {
         this.label = label;
     }
+
+    public abstract TileType getType();
 }

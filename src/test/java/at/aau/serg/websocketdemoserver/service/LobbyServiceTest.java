@@ -1,78 +1,56 @@
 package at.aau.serg.websocketdemoserver.service;
 
 import at.aau.serg.websocketdemoserver.dto.*;
+import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-
-import at.aau.serg.websocketdemoserver.dto.*;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class LobbyServiceTest {
 
     private LobbyService lobbyService;
+    private GameHandler mockGameHandler;
+    private GameState gameState;
 
     @BeforeEach
     void setup() {
-        lobbyService = new LobbyService(new GameHandler());
+        gameState = new GameState();
+        mockGameHandler = mock(GameHandler.class);
+        lobbyService = new LobbyService(gameState, mockGameHandler);
     }
 
     @Test
-    void testHandleJoinLobbySuccess() {
-        JoinLobbyPayload payload = new JoinLobbyPayload("TestUser");
-        LobbyMessage joinMessage = new LobbyMessage(LobbyMessageType.JOIN_LOBBY, payload);
-
-        List<LobbyMessage> responses = lobbyService.handle(joinMessage);
-
-        assertEquals(1, responses.size());
-        LobbyMessage response = responses.get(0);
-        assertEquals(LobbyMessageType.LOBBY_UPDATE, response.getType());
-
-        LobbyUpdatePayload update = (LobbyUpdatePayload) response.getPayload();
-        assertNotNull(update);
-        assertEquals(1, update.getPlayers().size());
-        assertEquals("TestUser", update.getPlayers().get(0).getNickname());
-    }
-
-    @Test
-    void testHandleJoinLobbyInvalidPayload() {
-        LobbyMessage joinMessage = new LobbyMessage(LobbyMessageType.JOIN_LOBBY, Map.of("unexpectedField", "xxxxxx"));
-
-        List<LobbyMessage> responses = lobbyService.handle(joinMessage);
-
-        assertEquals(1, responses.size());
-        assertEquals(LobbyMessageType.ERROR, responses.get(0).getType());
+    void testHandleNullMessage() {
+        List<Object> result = lobbyService.handle(null);
+        assertEquals(1, result.size());
+        LobbyMessage response = (LobbyMessage) result.get(0);
+        assertEquals(LobbyMessageType.ERROR, response.getType());
     }
 
 
     @Test
-    void testHandleStartGameNotEnoughPlayers() {
-        LobbyMessage startMessage = new LobbyMessage(LobbyMessageType.START_GAME, null);
-
-        List<LobbyMessage> responses = lobbyService.handle(startMessage);
-
-        assertEquals(1, responses.size());
-        assertEquals(LobbyMessageType.ERROR, responses.get(0).getType());
-        assertTrue(responses.get(0).getPayload().toString().contains("Mindestens 2 Spieler"));
+    void testHandleKnownRequest() {
+        // PLAYER_INIT ist registriert
+        LobbyMessage message = new LobbyMessage(LobbyMessageType.PLAYER_INIT, "Thomas");
+        List<Object> result = lobbyService.handle(message);
+        assertEquals(1, result.size());
+        assertTrue(result.get(0) instanceof LobbyMessage);
     }
 
-
     @Test
-    void testHandleUnknownType() {
-        LobbyMessage unknownMessage = new LobbyMessage(null, null);
+    void testHandleStartGameAppendsExtraMessages() {
+        LobbyMessage message = new LobbyMessage(LobbyMessageType.START_GAME, null);
 
-        List<LobbyMessage> responses = lobbyService.handle(unknownMessage);
+        GameMessage extraMessage = new GameMessage(MessageType.START_GAME, new GameStartedPayload(List.of()));
+        when(mockGameHandler.getExtraMessages()).thenReturn(List.of(extraMessage));
 
-        assertEquals(1, responses.size());
-        assertEquals(LobbyMessageType.ERROR, responses.get(0).getType());
+        List<Object> result = lobbyService.handle(message);
+        assertEquals(2, result.size());
+        assertTrue(result.get(0) instanceof LobbyMessage);
+        assertTrue(result.get(1) instanceof GameMessage);
     }
 }
