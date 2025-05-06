@@ -12,6 +12,11 @@ public class InitPlayerRequest implements LobbyHandlerInterface {
     private static int nextId = 1;
 
     @Override
+    public LobbyMessageType getType() {
+        return LobbyMessageType.PLAYER_INIT;
+    }
+
+    @Override
     public LobbyMessage execute(GameState gameState, Object parameter) {
         if (!(parameter instanceof String nickname) || nickname.isBlank()) {
             return new LobbyMessage(LobbyMessageType.ERROR, "Ungültiger Spielername.");

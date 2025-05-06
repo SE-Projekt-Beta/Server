@@ -3,54 +3,99 @@ package at.aau.serg.websocketdemoserver.service;
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.LobbyMessage;
 import at.aau.serg.websocketdemoserver.dto.LobbyMessageType;
-import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
-import at.aau.serg.websocketdemoserver.service.lobby_request.*;
+import at.aau.serg.websocketdemoserver.model.Lobby;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class LobbyService {
 
-    private final GameState gameState;
-    private final GameHandler gameHandler;
-    private final Map<LobbyMessageType, LobbyHandlerInterface> handlerMap = new HashMap<>();
+    private final LobbyManager lobbyManager;
+    private final Map<LobbyMessageType, LobbyHandlerInterface> handlerMap;
 
-    public LobbyService(GameState gameState, GameHandler gameHandler) {
-        this.gameState = gameState;
-        this.gameHandler = gameHandler;
-        registerHandlers();
+    public LobbyService(LobbyManager lobbyManager,
+                        List<LobbyHandlerInterface> handlers) {
+        this.lobbyManager = lobbyManager;
+        // build a map from message‐type to the handler that declared it
+        this.handlerMap = handlers.stream()
+                .collect(Collectors.toMap(
+                        LobbyHandlerInterface::getType,
+                        Function.identity()
+                ));
     }
 
-    private void registerHandlers() {
-        handlerMap.put(LobbyMessageType.JOIN_LOBBY, new JoinLobbyRequest());
-        handlerMap.put(LobbyMessageType.LEAVE_LOBBY, new LeaveLobbyRequest());
-        handlerMap.put(LobbyMessageType.START_GAME, new StartGameRequest(gameHandler));
-        handlerMap.put(LobbyMessageType.PLAYER_INIT, new InitPlayerRequest());
-    }
-
+    /**
+     * Entry point for all lobby‐scoped messages.
+     * Returns a mix of LobbyMessage (for lobby‐protocol responses)
+     * and GameMessage (for the START_GAME extra payloads).
+     */
     public List<Object> handle(LobbyMessage message) {
-        List<Object> results = new ArrayList<>();
+        List<Object> responses = new ArrayList<>();
 
+        // sanity check
         if (message == null || message.getType() == null) {
-            results.add(new LobbyMessage(LobbyMessageType.ERROR, "Ungültige Nachricht."));
-            return results;
+            responses.add(new LobbyMessage(
+                    LobbyMessageType.ERROR,
+                    null,
+                    "Ungültige Nachricht."
+            ));
+            return responses;
         }
 
+        // CREATE_LOBBY is special: no existing lobbyId needed
+        if (message.getType() == LobbyMessageType.CREATE_LOBBY) {
+            String name = (String) message.getPayload();
+            Lobby lobby = lobbyManager.createLobby(name);
+            responses.add(new LobbyMessage(
+                    LobbyMessageType.LOBBY_CREATED,
+                    lobby.getId(),
+                    lobby.getName()
+            ));
+            return responses;
+        }
+
+        // for everything else we need a valid lobbyId
+        String lobbyId = message.getLobbyId();
+        Lobby lobby = lobbyManager.getLobby(lobbyId);
+        if (lobby == null) {
+            responses.add(new LobbyMessage(
+                    LobbyMessageType.ERROR,
+                    lobbyId,
+                    "Lobby nicht gefunden: " + lobbyId
+            ));
+            return responses;
+        }
+
+        // delegate to the right handler
         LobbyHandlerInterface handler = handlerMap.get(message.getType());
         if (handler == null) {
-            results.add(new LobbyMessage(LobbyMessageType.ERROR, "Unbekannter Nachrichtentyp: " + message.getType()));
-            return results;
+            responses.add(new LobbyMessage(
+                    LobbyMessageType.ERROR,
+                    lobbyId,
+                    "Unhandled message type: " + message.getType()
+            ));
+            return responses;
         }
 
-        LobbyMessage result = handler.execute(gameState, message.getPayload());
-        results.add(result);
+        // execute against *this* lobby's GameState
+        LobbyMessage result = handler.execute(
+                lobby.getGameState(),
+                message.getPayload()
+        );
+        // stamp the response with our lobbyId
+        result.setLobbyId(lobbyId);
+        responses.add(result);
 
+        // if we just started the game, also pull out the queued GameMessages
         if (message.getType() == LobbyMessageType.START_GAME) {
-            // zusätzlich GameMessage (START_GAME mit GameStartedPayload) anfügen
-            results.addAll(gameHandler.getExtraMessages());
+            for (GameMessage gm : lobby.getGameHandler().getExtraMessages()) {
+                responses.add(gm);
+            }
         }
 
-        return results;
+        return responses;
     }
 }

@@ -6,5 +6,7 @@ public enum LobbyMessageType {
     LOBBY_UPDATE,
     START_GAME,
     PLAYER_INIT,
-    ERROR
+    ERROR,
+    CREATE_LOBBY,
+    LOBBY_CREATED,
 }

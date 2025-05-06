@@ -10,6 +10,11 @@ import java.util.stream.Collectors;
 public class JoinLobbyRequest implements LobbyHandlerInterface {
 
     @Override
+    public LobbyMessageType getType() {
+        return LobbyMessageType.JOIN_LOBBY;
+    }
+
+    @Override
     public LobbyMessage execute(GameState gameState, Object parameter) {
         if (!(parameter instanceof JoinLobbyPayload payload)) {
             return new LobbyMessage(LobbyMessageType.ERROR, "Ungültiges Payload-Format.");

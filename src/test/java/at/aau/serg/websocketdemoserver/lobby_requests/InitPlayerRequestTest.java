@@ -33,6 +33,11 @@ class InitPlayerRequestTest {
     }
 
     @Test
+    void testGetType() {
+        assertEquals(LobbyMessageType.PLAYER_INIT, request.getType());
+    }
+
+    @Test
     void testParameterNotAString_returnsError() {
         LobbyMessage result = request.execute(gameState, 123); // Integer statt String
         assertEquals(LobbyMessageType.ERROR, result.getType());
