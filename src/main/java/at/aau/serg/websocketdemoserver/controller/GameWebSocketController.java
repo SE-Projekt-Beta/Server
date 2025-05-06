@@ -1,7 +1,8 @@
 package at.aau.serg.websocketdemoserver.controller;
 
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
-import at.aau.serg.websocketdemoserver.model.Lobby;
+import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
+import at.aau.serg.websocketdemoserver.service.GameHandler;
 import at.aau.serg.websocketdemoserver.service.LobbyManager;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -14,6 +15,9 @@ public class GameWebSocketController {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final LobbyManager lobbyManager;
+
+    //mage game handler
+     private final GameHandler gameHandler = new GameHandler();
 
     public GameWebSocketController(SimpMessagingTemplate messagingTemplate,
                                    LobbyManager lobbyManager) {
@@ -30,14 +34,14 @@ public class GameWebSocketController {
                                   @Payload GameMessage message) {
 
         // 1) Look up the lobby
-        Lobby lobby = lobbyManager.getLobby(lobbyId);
-        if (lobby == null) {
+        GameState gameState = lobbyManager.getLobby(lobbyId);
+        if (gameState == null) {
             // optionally send an error back
             return;
         }
 
         // 2) Dispatch to *this* lobby's handler
-        GameMessage response = lobby.getGameHandler().handle(message);
+        GameMessage response = gameHandler.handle(gameState, message);
 
         // 3) Broadcast the primary response
         messagingTemplate.convertAndSend(
@@ -46,7 +50,7 @@ public class GameWebSocketController {
         );
 
         // 4) Broadcast any extra messages (e.g. START_GAME payloads)
-        for (GameMessage extra : lobby.getGameHandler().getExtraMessages()) {
+        for (GameMessage extra : gameHandler.getExtraMessages()) {
             messagingTemplate.convertAndSend(
                     "/topic/lobby/" + lobbyId + "/game",
                     extra

@@ -4,10 +4,12 @@ import at.aau.serg.websocketdemoserver.dto.*;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.service.LobbyHandlerInterface;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Component
 public class LeaveLobbyRequest implements LobbyHandlerInterface {
 
 
@@ -18,6 +20,7 @@ public class LeaveLobbyRequest implements LobbyHandlerInterface {
 
     @Override
     public LobbyMessage execute(GameState gameState, Object parameter) {
+        String lobbyId = gameState.getId();
         if (!(parameter instanceof Integer playerId)) {
             return new LobbyMessage(LobbyMessageType.ERROR, "Ungültige Spieler-ID.");
         }

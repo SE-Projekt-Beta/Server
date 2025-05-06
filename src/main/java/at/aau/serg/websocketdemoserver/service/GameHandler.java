@@ -15,12 +15,10 @@ import java.util.*;
 @Service
 public class GameHandler {
 
-    private final GameState gameState;
     private final Map<MessageType, GameHandlerInterface> handlerMap = new HashMap<>();
     private final List<GameMessage> extraMessages = new ArrayList<>();
 
-    public GameHandler(GameState gameState) {
-        this.gameState = gameState;
+    public GameHandler() {
         registerHandlers();
     }
 
@@ -49,7 +47,7 @@ public class GameHandler {
         handlerMap.put(MessageType.BUILD_HOTEL, new BuildHotelRequest());
     }
 
-    public GameMessage handle(GameMessage message) {
+    public GameMessage handle(GameState gameState, GameMessage message) {
         extraMessages.clear();
 
         if (message == null || message.getType() == null) {

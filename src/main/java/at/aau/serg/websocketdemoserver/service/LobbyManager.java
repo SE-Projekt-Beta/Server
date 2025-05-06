@@ -1,34 +1,30 @@
 package at.aau.serg.websocketdemoserver.service;
 
-import at.aau.serg.websocketdemoserver.model.Lobby;
+import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
 
 @Service
 public class LobbyManager {
-    private final ConcurrentHashMap<String, Lobby> lobbies = new ConcurrentHashMap<>();
+    private final ArrayList<GameState> gameStates = new ArrayList<>();
 
-    /** Create and register a new lobby */
-    public Lobby createLobby(String name) {
-        Lobby lobby = new Lobby(name);
-        lobbies.put(lobby.getId(), lobby);
-        return lobby;
+    public GameState createLobby(String name) {
+        GameState gameState = new GameState(name);
+        gameStates.add(gameState);
+        return gameState;
     }
 
-    /** Lookup by ID */
-    public Lobby getLobby(String lobbyId) {
-        return lobbies.get(lobbyId);
+    public ArrayList<GameState> listLobbies() {
+        return gameStates;
     }
 
-    /** Remove a lobby entirely */
-    public void removeLobby(String lobbyId) {
-        lobbies.remove(lobbyId);
-    }
-
-    /** List all active lobbies */
-    public Collection<Lobby> listLobbies() {
-        return lobbies.values();
+    public GameState getLobby(String lobbyId) {
+        for (GameState gameState : gameStates) {
+            if (gameState.getLobbyId().equals(lobbyId)) {
+                return gameState;
+            }
+        }
+        return null;
     }
 }

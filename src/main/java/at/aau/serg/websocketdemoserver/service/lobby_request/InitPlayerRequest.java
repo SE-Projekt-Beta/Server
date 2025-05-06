@@ -6,7 +6,9 @@ import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.service.LobbyHandlerInterface;
+import org.springframework.stereotype.Component;
 
+@Component
 public class InitPlayerRequest implements LobbyHandlerInterface {
 
     private static int nextId = 1;

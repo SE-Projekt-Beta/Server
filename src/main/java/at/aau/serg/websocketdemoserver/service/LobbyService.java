@@ -3,7 +3,7 @@ package at.aau.serg.websocketdemoserver.service;
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.LobbyMessage;
 import at.aau.serg.websocketdemoserver.dto.LobbyMessageType;
-import at.aau.serg.websocketdemoserver.model.Lobby;
+import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -19,7 +19,6 @@ public class LobbyService {
     public LobbyService(LobbyManager lobbyManager,
                         List<LobbyHandlerInterface> handlers) {
         this.lobbyManager = lobbyManager;
-        // build a map from message‐type to the handler that declared it
         this.handlerMap = handlers.stream()
                 .collect(Collectors.toMap(
                         LobbyHandlerInterface::getType,
@@ -27,11 +26,6 @@ public class LobbyService {
                 ));
     }
 
-    /**
-     * Entry point for all lobby‐scoped messages.
-     * Returns a mix of LobbyMessage (for lobby‐protocol responses)
-     * and GameMessage (for the START_GAME extra payloads).
-     */
     public List<Object> handle(LobbyMessage message) {
         List<Object> responses = new ArrayList<>();
 
@@ -45,22 +39,40 @@ public class LobbyService {
             return responses;
         }
 
-        // CREATE_LOBBY is special: no existing lobbyId needed
+        // CREATE_LOBBY
         if (message.getType() == LobbyMessageType.CREATE_LOBBY) {
-            String name = (String) message.getPayload();
-            Lobby lobby = lobbyManager.createLobby(name);
+            Map<String, Object> payload = (Map<String, Object>) message.getPayload();
+            String name = (String) payload.get("lobbyName");
+            GameState gamestate = lobbyManager.createLobby(name);
             responses.add(new LobbyMessage(
                     LobbyMessageType.LOBBY_CREATED,
-                    lobby.getId(),
-                    lobby.getName()
+                    gamestate.getLobbyId(),
+                    gamestate.getLobbyName()
             ));
             return responses;
         }
 
-        // for everything else we need a valid lobbyId
+        // LIST_LOBBIES
+        if (message.getType() == LobbyMessageType.LIST_LOBBIES) {
+            List<Map<String, Object>> lobbyList = lobbyManager.listLobbies().stream()
+                    .map(lobby -> {
+                        Map<String, Object> lobbyInfo = new HashMap<>();
+                        lobbyInfo.put("lobbyId", lobby.getLobbyId());
+                        lobbyInfo.put("lobbyName", lobby.getLobbyName());
+                        lobbyInfo.put("playerCount", lobby.getPlayers().size());
+                        return lobbyInfo;
+                    }).collect(Collectors.toList());
+            responses.add(new LobbyMessage(
+                    LobbyMessageType.LOBBY_LIST,
+                    lobbyList
+            ));
+            return responses;
+        }
+
+        // everything else: route by lobbyId
         String lobbyId = message.getLobbyId();
-        Lobby lobby = lobbyManager.getLobby(lobbyId);
-        if (lobby == null) {
+        GameState gameState = lobbyManager.getLobby(lobbyId);
+        if (gameState == null) {
             responses.add(new LobbyMessage(
                     LobbyMessageType.ERROR,
                     lobbyId,
@@ -69,7 +81,6 @@ public class LobbyService {
             return responses;
         }
 
-        // delegate to the right handler
         LobbyHandlerInterface handler = handlerMap.get(message.getType());
         if (handler == null) {
             responses.add(new LobbyMessage(
@@ -80,18 +91,16 @@ public class LobbyService {
             return responses;
         }
 
-        // execute against *this* lobby's GameState
+        // ← pass lobbyId here
         LobbyMessage result = handler.execute(
-                lobby.getGameState(),
+                gameState,
                 message.getPayload()
         );
-        // stamp the response with our lobbyId
         result.setLobbyId(lobbyId);
         responses.add(result);
 
-        // if we just started the game, also pull out the queued GameMessages
         if (message.getType() == LobbyMessageType.START_GAME) {
-            for (GameMessage gm : lobby.getGameHandler().getExtraMessages()) {
+            for (GameMessage gm : gameState.getGameHandler().getExtraMessages()) {
                 responses.add(gm);
             }
         }

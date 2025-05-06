@@ -7,17 +7,30 @@ import at.aau.serg.websocketdemoserver.dto.MessageType;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
 import at.aau.serg.websocketdemoserver.model.board.StreetTile;
 import at.aau.serg.websocketdemoserver.model.board.Tile;
+import at.aau.serg.websocketdemoserver.service.GameHandler;
+import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+
 
 public class GameState {
 
+    @Getter
+    private final String LobbyId;
+    @Getter
+    private final String LobbyName;
     private final List<Player> players = new ArrayList<>();
     private int currentPlayerIndex = 0;
     private boolean gameStarted = false;
+
+    public GameState(String lobbyName) {
+        this.LobbyId = UUID.randomUUID().toString();
+        this.LobbyName = lobbyName;
+    }
+
+    public String getId() {
+        return LobbyId;
+    }
 
     public void addPlayer(Player player) {
         if (!gameStarted) {

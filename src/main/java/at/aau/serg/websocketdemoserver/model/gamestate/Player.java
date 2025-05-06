@@ -5,17 +5,27 @@ import at.aau.serg.websocketdemoserver.dto.MessageType;
 import at.aau.serg.websocketdemoserver.dto.PlayerLostPayload;
 import at.aau.serg.websocketdemoserver.model.board.StreetTile;
 import at.aau.serg.websocketdemoserver.model.board.Tile;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Player {
 
+    @Getter
     private final int id;
+    @Getter
     private final String nickname;
+    @Setter
+    @Getter
     private Tile currentTile;
+    @Setter
+    @Getter
     private int cash;
+    @Setter
     private boolean escapeCard;
+    @Getter
     private int suspensionRounds;
     private final List<StreetTile> ownedStreets;
 
@@ -29,44 +39,12 @@ public class Player {
         this.ownedStreets = new ArrayList<>();
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public String getNickname() {
-        return nickname;
-    }
-
-    public Tile getCurrentTile() {
-        return currentTile;
-    }
-
-    public void setCurrentTile(Tile tile) {
-        this.currentTile = tile;
-    }
-
-    public int getCash() {
-        return cash;
-    }
-
-    public void setCash(int cash) {
-        this.cash = cash;
-    }
-
     public boolean hasEscapeCard() {
         return escapeCard;
     }
 
-    public void setEscapeCard(boolean hasCard) {
-        this.escapeCard = hasCard;
-    }
-
     public boolean isSuspended() {
         return suspensionRounds > 0;
-    }
-
-    public int getSuspensionRounds() {
-        return suspensionRounds;
     }
 
     public void suspendForRounds(int rounds) {

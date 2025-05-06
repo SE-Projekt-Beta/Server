@@ -9,4 +9,6 @@ public enum LobbyMessageType {
     ERROR,
     CREATE_LOBBY,
     LOBBY_CREATED,
+    LIST_LOBBIES,
+    LOBBY_LIST,
 }
