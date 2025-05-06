@@ -24,11 +24,6 @@ class LeaveLobbyRequestTest {
     }
 
     @Test
-    void testGetType() {
-        assertEquals(LobbyMessageType.LEAVE_LOBBY, request.getType());
-    }
-
-    @Test
     void testInvalidParameter_returnsError() {
         LobbyMessage result = request.execute(gameState, "wrong-type");
         assertEquals(LobbyMessageType.ERROR, result.getType());

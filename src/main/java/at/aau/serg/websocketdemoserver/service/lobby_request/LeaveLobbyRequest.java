@@ -10,12 +10,6 @@ import java.util.stream.Collectors;
 
 public class LeaveLobbyRequest implements LobbyHandlerInterface {
 
-
-    @Override
-    public LobbyMessageType getType() {
-        return LobbyMessageType.LEAVE_LOBBY;
-    }
-
     @Override
     public LobbyMessage execute(GameState gameState, Object parameter) {
         if (!(parameter instanceof Integer playerId)) {
