@@ -27,6 +27,11 @@ class StartGameRequestTest {
     }
 
     @Test
+    void testGetType() {
+        assertEquals(LobbyMessageType.START_GAME, request.getType());
+    }
+
+    @Test
     void testGameNotReady_returnsError() {
         when(gameState.isReadyToStart()).thenReturn(false);
 

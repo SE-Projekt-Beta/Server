@@ -24,6 +24,11 @@ class JoinLobbyRequestTest {
     }
 
     @Test
+    void testGetType() {
+        assertEquals(LobbyMessageType.JOIN_LOBBY, request.getType());
+    }
+
+    @Test
     void testInvalidParameterType_returnsError() {
         LobbyMessage result = request.execute(gameState, 42); // kein JoinLobbyPayload
         assertEquals(LobbyMessageType.ERROR, result.getType());
