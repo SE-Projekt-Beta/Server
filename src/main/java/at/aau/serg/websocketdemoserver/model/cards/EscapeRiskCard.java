@@ -1,5 +1,8 @@
 package at.aau.serg.websocketdemoserver.model.cards;
 
+import at.aau.serg.websocketdemoserver.dto.PlayerOutOfJailCardPayload;
+import at.aau.serg.websocketdemoserver.dto.GameMessage;
+import at.aau.serg.websocketdemoserver.dto.MessageType;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 
 public class EscapeRiskCard extends RiskCard {
@@ -9,8 +12,9 @@ public class EscapeRiskCard extends RiskCard {
     }
 
     @Override
-    public void execute(Player player) {
+    public GameMessage execute(Player player) {
         player.setEscapeCard(true);
-        System.out.println("EscapeRiskCard granted to " + player.getNickname());
+        PlayerOutOfJailCardPayload payload = new PlayerOutOfJailCardPayload(player.getId(), player.getNickname());
+        return new GameMessage(MessageType.PLAYER_OUT_OF_JAIL_CARD, payload);
     }
 }

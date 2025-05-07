@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Handles all in-game messages, now routing every GameMessage through its lobbyId.
@@ -30,7 +31,7 @@ public class GameHandler {
     public GameHandler() {
         this.gameState = new GameState();
         this.tileActionHandler = new TileActionHandler(
-                new EventCardService(new BankCardDeck(), new RiskCardDeck())
+                new EventCardService(BankCardDeck.get(), RiskCardDeck.get())
         );
         this.dice = new Dice(1, 6);
     }
@@ -66,9 +67,14 @@ public class GameHandler {
      * Initialize the game state with the given players.
      */
     public void initGame(List<PlayerDTO> players) {
-        gameState.addPlayers(players);
-        System.out.println("[INIT] Game started with " + players.size() + " players.");
+        List<Player> playerModels = players.stream()
+                .map(dto -> new Player(dto.getId(), dto.getNickname(), gameState.getBoard()))
+                .collect(Collectors.toList());
+
+        gameState.startGame(playerModels);
+        System.out.println("Game initialized with players: " + playerModels);
     }
+
 
     public String getCurrentPlayerId() {
         Player current = gameState.getCurrentPlayer();
@@ -168,4 +174,12 @@ public class GameHandler {
             return MessageFactory.error(lobbyId, "Fehler beim Kaufen: " + e.getMessage());
         }
     }
+    public GameHandler(GameState gameState) {
+        this.gameState = gameState;
+        this.tileActionHandler = new TileActionHandler(
+                new EventCardService(BankCardDeck.get(), RiskCardDeck.get())
+        );
+        this.dice = new Dice(1, 6);
+    }
+
 }

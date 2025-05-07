@@ -13,10 +13,10 @@ public class EventCardService {
     }
 
     public BankCard drawBankCard() {
-        return bankDeck.drawRandomBankCard();
+        return bankDeck.drawCard();
     }
 
     public RiskCard drawRiskCard() {
-        return riskDeck.drawRandomRiskCard();
+        return riskDeck.drawCard();
     }
 }

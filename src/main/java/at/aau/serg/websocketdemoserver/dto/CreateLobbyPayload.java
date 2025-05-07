@@ -8,4 +8,7 @@ import lombok.Setter;
 public class CreateLobbyPayload {
     private String lobbyName;
 
+    public String getLobbyName() {
+        return lobbyName;
+    }
 }

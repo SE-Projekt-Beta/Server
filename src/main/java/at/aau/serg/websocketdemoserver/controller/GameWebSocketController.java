@@ -1,6 +1,7 @@
 package at.aau.serg.websocketdemoserver.controller;
 
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
+import at.aau.serg.websocketdemoserver.service.GameManager;
 import at.aau.serg.websocketdemoserver.service.LobbyService;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -31,7 +32,8 @@ public class GameWebSocketController {
                                   @Payload GameMessage message) {
         System.out.println("Game " + lobbyId + ": " + message.getType());
         message.setLobbyId(lobbyId);
-        var handler = lobbyService.getGameHandler(lobbyId);
+
+        var handler = GameManager.getInstance().getHandler(lobbyId);
         GameMessage result = handler.handle(message);
         if (result != null) {
             messagingTemplate.convertAndSend("/topic/dkt/" + lobbyId, result);
@@ -40,4 +42,5 @@ public class GameWebSocketController {
                 messagingTemplate.convertAndSend("/topic/dkt/" + lobbyId, extra)
         );
     }
+
 }

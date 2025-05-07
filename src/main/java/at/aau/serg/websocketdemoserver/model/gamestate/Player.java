@@ -2,7 +2,6 @@ package at.aau.serg.websocketdemoserver.model.gamestate;
 
 import at.aau.serg.websocketdemoserver.model.board.StreetTile;
 import at.aau.serg.websocketdemoserver.model.board.Tile;
-import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
 import at.aau.serg.websocketdemoserver.model.board.BuildingType;
 
 import java.util.ArrayList;
@@ -22,14 +21,24 @@ public class Player implements Comparable<Player> {
     private boolean cheatFlag;
     private final GameBoard board;
 
+    // Konstruktor mit automatisch generierter ID
     public Player(String nickname, GameBoard board) {
         this.id = idCounter++;
         this.nickname = nickname;
-        this.cash = 3000; // Startkapital
-        this.suspensionRounds = 0;
-        this.hasEscapeCard = false;
-        this.cheatFlag = false;
+        this.cash = 3000;
         this.board = board;
+    }
+
+    // Neuer Konstruktor mit übergebener fixer ID (z. B. aus DTO)
+    public Player(int id, String nickname, GameBoard board) {
+        this.id = id;
+        this.nickname = nickname;
+        this.cash = 3000;
+        this.board = board;
+        // WICHTIG: idCounter hochsetzen, damit keine ID-Kollision passiert
+        if (id >= idCounter) {
+            idCounter = id + 1;
+        }
     }
 
     public int getId() {
@@ -78,12 +87,8 @@ public class Player implements Comparable<Player> {
         }
     }
 
-    public void resetSuspension() {
-        suspensionRounds = 0;
-    }
-
     public void suspendForRounds(int rounds) {
-        suspensionRounds = rounds;
+        this.suspensionRounds = rounds;
     }
 
     public int getSuspensionRounds() {
@@ -97,8 +102,7 @@ public class Player implements Comparable<Player> {
     public boolean purchaseStreet(int position) {
         Tile tile = board.getTile(position);
         if (!(tile instanceof StreetTile street)) return false;
-        if (street.getOwner() != null) return false;
-        if (street.getPrice() > cash) return false;
+        if (street.getOwner() != null || street.getPrice() > cash) return false;
 
         cash -= street.getPrice();
         street.setOwner(this);
@@ -109,7 +113,7 @@ public class Player implements Comparable<Player> {
     public boolean sellStreet(int position) {
         Tile tile = board.getTile(position);
         if (!(tile instanceof StreetTile street)) return false;
-        if (street.getOwner() == null || street.getOwner().getId() != this.id) return false;
+        if (!ownedStreets.contains(street)) return false;
 
         cash += street.calculateSellValue();
         street.setOwner(null);
@@ -121,9 +125,7 @@ public class Player implements Comparable<Player> {
     public void moveToTile(int index) {
         if (!isSuspended()) {
             Tile destination = board.getTile(index % board.getTiles().size());
-            if (destination != null) {
-                this.currentTile = destination;
-            }
+            this.currentTile = destination;
         }
     }
 

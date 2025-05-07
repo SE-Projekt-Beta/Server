@@ -1,14 +1,13 @@
 package at.aau.serg.websocketdemoserver.model.gamestate;
 
 import at.aau.serg.websocketdemoserver.dto.PlayerDTO;
-import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
 import java.util.*;
 
 public class GameState {
 
     private final GameBoard board;
-    private final List<Player> turnOrder; // Reihenfolge der Spieler
-    private final Map<Integer, Player> playersById; // ID -> Player
+    private final List<Player> turnOrder;
+    private final Map<Integer, Player> playersById;
     private int currentPlayerIndex;
     private int currentRound;
     private final List<Player> rankingList;
@@ -22,22 +21,41 @@ public class GameState {
         this.rankingList = new ArrayList<>();
     }
 
-    public void addPlayers(List<PlayerDTO> playerDTOs) {
+    /**
+     * Startet das Spiel mit einer zufälligen Reihenfolge
+     */
+    public void startGame(List<Player> players) {
         turnOrder.clear();
         playersById.clear();
         Player.resetIdCounter();
 
-        for (PlayerDTO dto : playerDTOs) {
-            Player player = new Player(dto.getNickname(), this.board);
-            playersById.put(dto.getId(), player); // Player-ID bleibt DTO-ID
+        Collections.shuffle(players);
+        for (Player player : players) {
+            playersById.put(player.getId(), player);
+            turnOrder.add(player);
+        }
+
+        currentPlayerIndex = 0;
+        currentRound = 1;
+    }
+
+    public void setPlayers(List<Player> players) {
+        turnOrder.clear();
+        playersById.clear();
+        for (Player player : players) {
+            playersById.put(player.getId(), player);
             turnOrder.add(player);
         }
     }
 
-
     public Player getCurrentPlayer() {
         if (turnOrder.isEmpty()) return null;
         return turnOrder.get(currentPlayerIndex);
+    }
+
+    public int getCurrentPlayerId() {
+        Player p = getCurrentPlayer();
+        return (p != null) ? p.getId() : -1;
     }
 
     public Player getPlayer(int id) {
