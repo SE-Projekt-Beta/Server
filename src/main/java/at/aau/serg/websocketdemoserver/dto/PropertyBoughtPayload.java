@@ -1,14 +1,17 @@
 package at.aau.serg.websocketdemoserver.dto;
 
-public class BuyPropertyPayload {
+public class PropertyBoughtPayload {
     private String playerId;
     private int tilePos;
+    private String tileName;
 
-    public BuyPropertyPayload() {}
+    public PropertyBoughtPayload() {
+    }
 
-    public BuyPropertyPayload(String playerId, int tilePos) {
+    public PropertyBoughtPayload(String playerId, int tilePos, String tileName) {
         this.playerId = playerId;
         this.tilePos = tilePos;
+        this.tileName = tileName;
     }
 
     public String getPlayerId() {
@@ -25,5 +28,13 @@ public class BuyPropertyPayload {
 
     public void setTilePos(int tilePos) {
         this.tilePos = tilePos;
+    }
+
+    public String getTileName() {
+        return tileName;
+    }
+
+    public void setTileName(String tileName) {
+        this.tileName = tileName;
     }
 }

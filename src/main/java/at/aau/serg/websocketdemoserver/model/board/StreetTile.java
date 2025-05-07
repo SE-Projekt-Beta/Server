@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+
 public class StreetTile extends Tile {
 
     private final int price;
@@ -40,7 +41,7 @@ public class StreetTile extends Tile {
             case PREMIUM -> 1.5;
         };
 
-        if (buildings.contains(BuildingType.HOTEL)) {
+        if (buildings.get(0) == BuildingType.HOTEL) {
             return (int) (baseRent + baseRent * factor * 6);
         }
 
@@ -48,16 +49,15 @@ public class StreetTile extends Tile {
     }
 
     public boolean addHouse() {
-        if (buildings.contains(BuildingType.HOTEL)) return false;
+        if (!buildings.isEmpty() && buildings.get(0) == BuildingType.HOTEL) return false;
         if (buildings.size() >= 4) return false;
         buildings.add(BuildingType.HOUSE);
         return true;
     }
 
     public boolean addHotel() {
-        if (buildings.contains(BuildingType.HOTEL)) return false;
-        if (getHouseCount() < 4) return false;
-        buildings.clear();
+        if (buildings.size() > 0 && buildings.size() < 4) return false;
+        if (buildings.size() == 4) buildings.clear();
         buildings.add(BuildingType.HOTEL);
         return true;
     }
@@ -116,30 +116,4 @@ public class StreetTile extends Tile {
     public List<BuildingType> getBuildings() {
         return new ArrayList<>(buildings);
     }
-
-    @Override
-    public TileType getType() {
-        return TileType.STREET;
-    }
-
-    public boolean buildHouse() {
-        return addHouse();
-    }
-
-    public boolean buildHotel() {
-        return addHotel();
-    }
-    public String getName() {
-        return getLabel(); // da label im Super-Tile gesetzt wird
-    }
-
-    public int getOwnerId() {
-        return (owner != null) ? owner.getId() : -1;
-    }
-
-    public String getOwnerName() {
-        return (owner != null) ? owner.getNickname() : "BANK";
-    }
-
-
 }

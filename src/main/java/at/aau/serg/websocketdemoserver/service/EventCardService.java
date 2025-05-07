@@ -1,25 +1,22 @@
 package at.aau.serg.websocketdemoserver.service;
 
-import at.aau.serg.websocketdemoserver.model.cards.BankCard;
-import at.aau.serg.websocketdemoserver.model.cards.BankCardDeck;
-import at.aau.serg.websocketdemoserver.model.cards.RiskCard;
-import at.aau.serg.websocketdemoserver.model.cards.RiskCardDeck;
+import at.aau.serg.websocketdemoserver.model.cards.*;
 
 public class EventCardService {
 
-    private static final EventCardService instance = new EventCardService();
+    private final BankCardDeck bankDeck;
+    private final RiskCardDeck riskDeck;
 
-    private EventCardService() {}
-
-    public static EventCardService get() {
-        return instance;
+    public EventCardService(BankCardDeck bankDeck, RiskCardDeck riskDeck) {
+        this.bankDeck = bankDeck;
+        this.riskDeck = riskDeck;
     }
 
     public BankCard drawBankCard() {
-        return BankCardDeck.get().drawCard();
+        return bankDeck.drawRandomBankCard();
     }
 
     public RiskCard drawRiskCard() {
-        return RiskCardDeck.get().drawCard();
+        return riskDeck.drawRandomRiskCard();
     }
 }

@@ -27,3 +27,4 @@ public class LobbyMessage {
         this.payload = payload;
     }
 }
+
