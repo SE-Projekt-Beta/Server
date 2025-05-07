@@ -1,47 +1,40 @@
 package at.aau.serg.websocketdemoserver.service;
 
-import at.aau.serg.websocketdemoserver.model.cards.*;
+import at.aau.serg.websocketdemoserver.model.cards.CashRiskCard;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
+import static org.junit.jupiter.api.Assertions.*;
+
+import at.aau.serg.websocketdemoserver.model.cards.BankCard;
+import at.aau.serg.websocketdemoserver.model.cards.BankCardDeck;
+import at.aau.serg.websocketdemoserver.model.cards.RiskCard;
+import at.aau.serg.websocketdemoserver.model.cards.RiskCardDeck;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class EventCardServiceTest {
 
-    @Test
-    void testGetInstance() {
-        EventCardService service1 = EventCardService.get();
-        EventCardService service2 = EventCardService.get();
-        assertNotNull(service1);
-        assertSame(service1, service2, "Singleton-Instanz muss gleich sein");
+    private EventCardService service;
+
+    @BeforeEach
+    void setup() {
+        BankCardDeck bankDeck = new BankCardDeck();
+        RiskCardDeck riskDeck = new RiskCardDeck();
+        service = new EventCardService(bankDeck, riskDeck);
     }
 
     @Test
-    void testDrawBankCard() {
-        BankCard expectedCard = mock(BankCard.class);
-        BankCardDeck mockDeck = mock(BankCardDeck.class);
-        when(mockDeck.drawCard()).thenReturn(expectedCard);
-
-        try (MockedStatic<BankCardDeck> staticMock = mockStatic(BankCardDeck.class)) {
-            staticMock.when(BankCardDeck::get).thenReturn(mockDeck);
-
-            BankCard actual = EventCardService.get().drawBankCard();
-            assertEquals(expectedCard, actual);
-        }
+    void testDrawBankCardReturnsCard() {
+        BankCard card = service.drawBankCard();
+        assertNotNull(card);
+        assertTrue(card instanceof BankCard);
     }
 
     @Test
-    void testDrawRiskCard() {
-        RiskCard expectedCard = mock(RiskCard.class);
-        RiskCardDeck mockDeck = mock(RiskCardDeck.class);
-        when(mockDeck.drawCard()).thenReturn(expectedCard);
-
-        try (MockedStatic<RiskCardDeck> staticMock = mockStatic(RiskCardDeck.class)) {
-            staticMock.when(RiskCardDeck::get).thenReturn(mockDeck);
-
-            RiskCard actual = EventCardService.get().drawRiskCard();
-            assertEquals(expectedCard, actual);
-        }
+    void testDrawRiskCardReturnsCard() {
+        RiskCard card = service.drawRiskCard();
+        assertNotNull(card);
+        assertTrue(card instanceof RiskCard);
     }
 }

@@ -1,45 +1,35 @@
 package at.aau.serg.websocketdemoserver.model.gamestate;
 
-import at.aau.serg.websocketdemoserver.model.board.Tile;
-import at.aau.serg.websocketdemoserver.model.board.TileFactory;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import at.aau.serg.websocketdemoserver.model.board.Tile;
+import at.aau.serg.websocketdemoserver.model.board.*;
 
 public class GameBoard {
-
-    private static GameBoard instance;
-
     private final List<Tile> tiles;
 
-    private GameBoard() {
+    public GameBoard() {
         this.tiles = TileFactory.createTiles();
     }
 
-    public static GameBoard get() {
-        if (instance == null) {
-            instance = new GameBoard();
-        }
-        return instance;
-    }
-
-    public List<Tile> getTiles() {
-        return Collections.unmodifiableList(tiles);
-    }
-
+    /**
+     * Retrieves a tile by its index.
+     *
+     * @param index the position on the board
+     * @return the corresponding tile or null if not found
+     */
     public Tile getTile(int index) {
-        return tiles.stream()
-                .filter(tile -> tile.getIndex() == index)
-                .findFirst()
-                .orElseThrow(() -> new IndexOutOfBoundsException("Ungültiger Tile-Index: " + index));
+        Optional<Tile> tile = tiles.stream().filter(t -> t.getIndex() == index).findFirst();
+        return tile.orElse(null);
     }
 
-    public int size() {
-        return tiles.size();
+    /**
+     * Retrieves all tiles on the board.
+     *
+     * @return list of all tiles
+     */
+    public List<Tile> getTiles() {
+        return tiles;
     }
-
-    public static void setInstance(GameBoard customInstance) {
-        instance = customInstance;
-    }
-
 }

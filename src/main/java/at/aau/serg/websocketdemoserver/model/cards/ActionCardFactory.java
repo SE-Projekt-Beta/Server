@@ -4,22 +4,22 @@ import at.aau.serg.websocketdemoserver.model.board.BankTile;
 import at.aau.serg.websocketdemoserver.model.board.RiskTile;
 import at.aau.serg.websocketdemoserver.model.board.Tile;
 
-import java.util.Optional;
-
 public class ActionCardFactory {
 
-    // ActionCardFactory.java
-    private static final RiskCardDeck riskDeck = RiskCardDeck.get();
-    private static final BankCardDeck bankDeck = BankCardDeck.get();
+    private static final RiskCardDeck riskDeck = new RiskCardDeck();
+    private static final BankCardDeck bankDeck = new BankCardDeck();
 
-    public static Optional<ActionCard> drawCard(Tile tile) {
-        if (tile instanceof RiskTile) {
-            return Optional.ofNullable(riskDeck.drawCard());
-        }
-        if (tile instanceof BankTile) {
-            return Optional.ofNullable(bankDeck.drawCard());
-        }
-        return Optional.empty();
+    private ActionCardFactory() {
+        // prevent instantiation
     }
 
+    public static ActionCard drawCard(Tile tile) {
+        if (tile instanceof RiskTile) {
+            return riskDeck.drawRandomRiskCard();
+        }
+        if (tile instanceof BankTile) {
+            return bankDeck.drawRandomBankCard();
+        }
+        return null;
+    }
 }

@@ -2,41 +2,16 @@ package at.aau.serg.websocketdemoserver.dto;
 
 public enum MessageType {
     ROLL_DICE,
-    MOVE_PLAYER,
-    DICE_ROLLED,
-
-    START_MONEY,
-    TURN_CONTINUES,
-
-    CAN_BUY_PROPERTY,
     BUY_PROPERTY,
-    PROPERTY_BOUGHT,
-    PROPERTY_LIST_UPDATE,
-
-    MUST_PAY_RENT,
-    RENT_PAID,
-
-    PAY_TAX,
-    TAX_PAID,
-
-    GO_TO_JAIL,
-    PRISON_TASK,
-    PLAYER_OUT_OF_JAIL_CARD,
-
     PLAYER_MOVED,
-    PLAYER_LOST,
-    START_GAME,
-    END_GAME,
-
-    DRAW_EVENT_BANK_CARD,
+    CAN_BUY_PROPERTY,
+    MUST_PAY_RENT,
+    PROPERTY_BOUGHT,
+    PAY_TAX,
     DRAW_EVENT_RISIKO_CARD,
-    EVENT_CARD_DRAWN,
-
-    BUILD_HOUSE,
-    BUILD_HOTEL,
-
-    CASH_TASK,
-    SKIPPED_TURN,
-
-    ERROR
+    DRAW_EVENT_BANK_CARD,
+    GO_TO_JAIL,
+    SKIPPED,
+    ERROR,
+    CURRENT_PLAYER
 }
