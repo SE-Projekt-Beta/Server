@@ -1,8 +1,12 @@
 package at.aau.serg.websocketdemoserver.dto;
 
 public enum LobbyMessageType {
+    CREATE_LOBBY,
+    LIST_LOBBIES,
     JOIN_LOBBY,
     START_GAME,
-    ERROR,
-    LOBBY_UPDATE
+    LOBBY_CREATED,
+    LOBBY_LIST,
+    LOBBY_UPDATE,
+    ERROR
 }
