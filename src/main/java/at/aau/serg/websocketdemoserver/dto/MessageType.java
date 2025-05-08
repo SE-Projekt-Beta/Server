@@ -18,5 +18,6 @@ public enum MessageType {
     DRAW_EVENT_BANK_CARD,
     PLAYER_OUT_OF_JAIL_CARD,
     REQUEST_GAME_STATE,
+    GAME_STARTED,
     GAME_STATE
 }
