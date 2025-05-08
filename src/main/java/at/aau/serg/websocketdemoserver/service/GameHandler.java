@@ -14,8 +14,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import static at.aau.serg.websocketdemoserver.dto.MessageType.*;
 
 /**
  * Handles all in-game messages, now routing every GameMessage through its lobbyId.
@@ -56,6 +60,7 @@ public class GameHandler {
         }
 
         return switch (message.getType()) {
+            case REQUEST_GAME_STATE -> handleRequestGameState(lobbyId);
             case ROLL_DICE     -> handleRollDice(lobbyId, message.getPayload());
             case BUY_PROPERTY  -> handleBuyProperty(lobbyId, message.getPayload());
             default             -> MessageFactory.error(lobbyId,
@@ -80,6 +85,40 @@ public class GameHandler {
         Player current = gameState.getCurrentPlayer();
         return current != null ? String.valueOf(current.getId()) : null;
     }
+
+    private GameMessage handleRequestGameState(int lobbyId) {
+        // get current game state
+        List<Map<String,Object>> players = gameState.getAllPlayers().stream()
+                .map(p -> {
+                    Map<String,Object> m = new HashMap<>();
+                    m.put("id",       p.getId());
+                    m.put("nickname", p.getNickname());
+                    m.put("cash",     p.getCash());
+                    return m;
+                })
+                .collect(Collectors.toList());
+
+        // build a Map payload instead of JSONObject
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("currentPlayerId", gameState.getCurrentPlayerId());
+        payload.put("players", players);
+        payload.put("currentRound", gameState.getCurrentRound());
+
+        List<Map<String, Object>> boardTiles = gameState.getBoard().getTiles().stream()
+                .map(tile -> {
+                    Map<String, Object> t = new HashMap<>();
+                    t.put("label", tile.getLabel());
+                    t.put("type", tile.getClass().getSimpleName());
+                    t.put("index", tile.getIndex());
+                    return t;
+                })
+                .collect(Collectors.toList());
+        payload.put("board", boardTiles);
+
+        return new GameMessage(lobbyId, GAME_STATE, payload);
+    }
+
+
 
     /**
      * Handles a ROLL_DICE message for a specific lobby.

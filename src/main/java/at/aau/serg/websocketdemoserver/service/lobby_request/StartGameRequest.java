@@ -65,6 +65,7 @@ public class StartGameRequest implements LobbyRequest {
     }
 
     private void sendCurrentPlayer(int lobbyId, int playerId) {
+        System.out.println("Sending player " + playerId + " to lobby " + lobbyId);
         GameMessage currentPlayerMessage = new GameMessage(
                 lobbyId,
                 MessageType.CURRENT_PLAYER,
