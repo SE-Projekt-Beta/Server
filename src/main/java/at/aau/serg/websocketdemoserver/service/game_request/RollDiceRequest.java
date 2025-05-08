@@ -17,6 +17,8 @@ public class RollDiceRequest implements GameRequest {
 
     private final Dice dice;
     private final TileActionHandler tileActionHandler;
+    private static final int MAX_ROUNDS = 15; // optionales Limit
+    private static final boolean USE_ROUND_LIMIT = false; // aktivieren wenn gewünscht
 
     public RollDiceRequest(TileActionHandler tileActionHandler) {
         this.dice = new Dice(1, 6);
@@ -26,21 +28,23 @@ public class RollDiceRequest implements GameRequest {
     @Override
     public GameMessage handle(int lobbyId, Object payload, GameState gameState, List<GameMessage> extraMessages) {
         try {
-            // Payload verarbeiten
+            // Payload extrahieren
             ObjectMapper mapper = new ObjectMapper();
             String json = mapper.writeValueAsString(payload);
             JSONObject obj = new JSONObject(json);
 
             int playerId = obj.getInt("playerId");
             Player player = gameState.getPlayer(playerId);
+
             if (player == null) {
                 return MessageFactory.error(lobbyId, "Spieler nicht gefunden.");
             }
 
-            if (player.getId() != gameState.getCurrentPlayer().getId()) {
+            if (player.getId() != gameState.getCurrentPlayerId()) {
                 return MessageFactory.error(lobbyId, "Nicht dein Zug!");
             }
 
+            // Würfeln und bewegen
             int diceRoll = dice.roll();
             int oldIndex = (player.getCurrentTile() != null) ? player.getCurrentTile().getIndex() : 0;
             int newIndex = (oldIndex + diceRoll) % gameState.getBoard().getTiles().size();
@@ -50,18 +54,28 @@ public class RollDiceRequest implements GameRequest {
             String tileName = tile.getLabel();
             String tileType = tile.getClass().getSimpleName();
 
-            // Nachricht 1: Bewegung
+            // Nachricht 1: Spieler bewegt sich
             GameMessage moveMessage = MessageFactory.playerMoved(
                     lobbyId, playerId, newIndex, diceRoll, tileName, tileType
             );
 
-            // Nachricht 2: Feldaktion
+            // Nachricht 2: Aktion auf dem Feld
             GameMessage actionMessage = tileActionHandler.handleTileLanding(player, tile);
             actionMessage.setLobbyId(lobbyId);
             extraMessages.add(actionMessage);
 
-            // Nachricht 3: Zugweitergabe
+            // Rundenlogik
             gameState.advanceTurn();
+
+            /* Spielende prüfen (optional)
+            if (USE_ROUND_LIMIT && gameState.isGameOver(MAX_ROUNDS, true)) {
+                extraMessages.add(MessageFactory.gameOver(lobbyId, "Maximale Rundenanzahl erreicht."));
+                return moveMessage;
+            }
+            
+             */
+
+            // Nachricht 3: Nächster Spieler ist am Zug
             Player next = gameState.getCurrentPlayer();
             extraMessages.add(MessageFactory.currentPlayer(lobbyId, next.getId()));
 
