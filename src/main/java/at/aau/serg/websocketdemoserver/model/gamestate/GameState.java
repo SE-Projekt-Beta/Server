@@ -1,6 +1,5 @@
 package at.aau.serg.websocketdemoserver.model.gamestate;
 
-import at.aau.serg.websocketdemoserver.dto.PlayerDTO;
 import java.util.*;
 
 public class GameState {
@@ -22,40 +21,28 @@ public class GameState {
     }
 
     /**
-     * Startet das Spiel mit einer zufälligen Reihenfolge
+     * Initialisiert das Spiel mit zufälliger Spielerreihenfolge.
      */
     public void startGame(List<Player> players) {
-        turnOrder.clear();
-        playersById.clear();
-        Player.resetIdCounter();
-
+        resetGame();
         Collections.shuffle(players);
         for (Player player : players) {
             playersById.put(player.getId(), player);
             turnOrder.add(player);
         }
-
-        currentPlayerIndex = 0;
-        currentRound = 1;
     }
 
-    public void setPlayers(List<Player> players) {
-        turnOrder.clear();
-        playersById.clear();
-        for (Player player : players) {
-            playersById.put(player.getId(), player);
-            turnOrder.add(player);
-        }
-    }
-
+    /**
+     * Gibt den aktuellen Spieler.
+     */
     public Player getCurrentPlayer() {
         if (turnOrder.isEmpty()) return null;
         return turnOrder.get(currentPlayerIndex);
     }
 
     public int getCurrentPlayerId() {
-        Player p = getCurrentPlayer();
-        return (p != null) ? p.getId() : -1;
+        Player current = getCurrentPlayer();
+        return current != null ? current.getId() : -1;
     }
 
     public Player getPlayer(int id) {
@@ -70,12 +57,16 @@ public class GameState {
         return board;
     }
 
+    /**
+     * Führt den Rundenwechsel durch – überspringt gesperrte Spieler.
+     */
     public void advanceTurn() {
         if (turnOrder.isEmpty()) return;
 
+        int initialIndex = currentPlayerIndex;
         do {
             currentPlayerIndex = (currentPlayerIndex + 1) % turnOrder.size();
-            if (currentPlayerIndex == 0) {
+            if (currentPlayerIndex == 0 && currentPlayerIndex != initialIndex) {
                 currentRound++;
             }
         } while (getCurrentPlayer().isSuspended());
@@ -85,6 +76,9 @@ public class GameState {
         return currentRound;
     }
 
+    /**
+     * Liefert das Ranking (nach Reichtum) zurück.
+     */
     public List<Player> getRankingList() {
         rankingList.clear();
         rankingList.addAll(playersById.values());
@@ -92,6 +86,9 @@ public class GameState {
         return rankingList;
     }
 
+    /**
+     * Überprüft, ob das Spiel beendet ist (nur bei aktiviertem Rundensystem).
+     */
     public boolean isGameOver(int maxRounds, boolean roundsModeEnabled) {
         return roundsModeEnabled && currentRound > maxRounds;
     }
