@@ -14,11 +14,6 @@ public class Dice {
         this.random = new Random();
     }
 
-    /**
-     * Rolls the dice and returns a random number between min and max.
-     *
-     * @return the result of the dice roll
-     */
     public int roll() {
         return random.nextInt((max - min) + 1) + min;
     }

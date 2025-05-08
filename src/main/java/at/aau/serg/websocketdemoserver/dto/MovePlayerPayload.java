@@ -1,29 +1,19 @@
 package at.aau.serg.websocketdemoserver.dto;
 
-public class PlayerMovePayload {
-    private String playerId;
-    private int pos;
-    private int dice;
-    private String tileName;
-    private String tileType;
+public class MovePlayerPayload {
+    private int playerId;
+    private int pos;            // neue Position nach Bewegung
+    private int dice;           // gewürfelte Zahl
+    private String tileName;    // Name des Feldes
+    private String tileType;    // Typ des Feldes (z. B. StreetTile, RiskTile)
 
-    public PlayerMovePayload() {
-    }
+    public MovePlayerPayload() {}
 
-    public PlayerMovePayload(String playerId, int pos, int dice, String tileName, String tileType) {
-        this.playerId = playerId;
-        this.pos = pos;
-        this.dice = dice;
-        this.tileName = tileName;
-        this.tileType = tileType;
-    }
-
-    // Getter und Setter
-    public String getPlayerId() {
+    public int getPlayerId() {
         return playerId;
     }
 
-    public void setPlayerId(String playerId) {
+    public void setPlayerId(int playerId) {
         this.playerId = playerId;
     }
 

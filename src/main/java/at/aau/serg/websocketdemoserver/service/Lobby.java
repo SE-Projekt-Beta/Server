@@ -43,4 +43,7 @@ public class Lobby {
         players.clear();
     }
 
+    public String getLobbyName() {
+        return lobbyName;
+    }
 }
