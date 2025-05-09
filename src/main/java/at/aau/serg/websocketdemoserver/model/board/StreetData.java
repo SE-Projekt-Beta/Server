@@ -13,6 +13,7 @@ public class StreetData {
             new StreetDefinition(10, "Joseph-Haydn-Gasse", 100, 24, StreetLevel.CHEAP, 50, 100),
             new StreetDefinition(12, "Schlossgrund", 220, 80, StreetLevel.CHEAP, 160, 320),
             new StreetDefinition(13, "Dampf-Schifffahrt", 300, 70, StreetLevel.PREMIUM, 400, 500),
+            new StreetDefinition(14, "Seilabhn", 250, 96, StreetLevel.NORMAL, 150, 300),
             new StreetDefinition(15, "Kärntner Straße", 380, 200, StreetLevel.PREMIUM, 220, 440),
             new StreetDefinition(16, "Mariahilfer Straße", 350, 160, StreetLevel.PREMIUM, 220, 440),
             new StreetDefinition(17, "Kobenzlstraße", 250, 96, StreetLevel.NORMAL, 150, 300),

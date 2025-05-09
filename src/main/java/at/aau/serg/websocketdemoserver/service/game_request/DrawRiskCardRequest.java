@@ -70,7 +70,7 @@ public class DrawRiskCardRequest implements GameRequest {
                     player.setEscapeCard(false);
                     extraMessages.add(new GameMessage(
                             lobbyId,
-                            MessageType.EVENT_CARD_DRAWN,
+                            MessageType.DRAW_RISK_CARD,
                             new EventCardDrawnPayload(
                                     "Freiheitskarte verwendet",
                                     "Du hast eine Freiheitskarte eingesetzt und musst nicht ins Gefängnis.")
