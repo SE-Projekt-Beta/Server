@@ -2,7 +2,9 @@ package at.aau.serg.websocketdemoserver.model.gamestate;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
 
+@Component
 public class GameState {
 
     private final GameBoard board;
