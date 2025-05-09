@@ -1,17 +1,12 @@
 package at.aau.serg.websocketdemoserver.service;
 
-import at.aau.serg.websocketdemoserver.model.cards.CashRiskCard;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import at.aau.serg.websocketdemoserver.model.cards.BankCard;
 import at.aau.serg.websocketdemoserver.model.cards.BankCardDeck;
 import at.aau.serg.websocketdemoserver.model.cards.RiskCard;
-import at.aau.serg.websocketdemoserver.model.cards.RiskCardDeck;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class EventCardServiceTest {
 

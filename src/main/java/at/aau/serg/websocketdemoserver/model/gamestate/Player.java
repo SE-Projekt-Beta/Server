@@ -15,27 +15,26 @@ public class Player implements Comparable<Player> {
     private String nickname;
     private Tile currentTile;
     private int cash;
+    private boolean alive;
     private final List<StreetTile> ownedStreets = new ArrayList<>();
     private int suspensionRounds;
     private boolean hasEscapeCard;
-    private boolean cheatFlag;
     private final GameBoard board;
 
-    // Konstruktor mit automatisch generierter ID
     public Player(String nickname, GameBoard board) {
         this.id = idCounter++;
         this.nickname = nickname;
         this.cash = 3000;
+        this.alive = true;
         this.board = board;
     }
 
-    // Neuer Konstruktor mit übergebener fixer ID (z. B. aus DTO)
     public Player(int id, String nickname, GameBoard board) {
         this.id = id;
         this.nickname = nickname;
         this.cash = 3000;
+        this.alive = true;
         this.board = board;
-        // WICHTIG: idCounter hochsetzen, damit keine ID-Kollision passiert
         if (id >= idCounter) {
             idCounter = id + 1;
         }
@@ -65,8 +64,42 @@ public class Player implements Comparable<Player> {
         return cash;
     }
 
-    public void setCash(int cash) {
-        this.cash = cash;
+    public void setCash(int newCash) {
+        this.cash = newCash;
+        if (this.cash < 0) {
+            eliminate();
+        }
+    }
+
+    public void addCash(int amount) {
+        setCash(this.cash + amount);
+    }
+
+    public void deductCash(int amount) {
+        setCash(this.cash - amount);
+    }
+    public boolean adjustCash(int delta) {
+        this.cash += delta;
+        if (this.cash < 0) {
+            eliminate();
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isAlive() {
+        return alive;
+    }
+
+    public void eliminate() {
+        this.alive = false;
+        this.cash = 0;
+        // alle Streets freigeben
+        for (StreetTile street : ownedStreets) {
+            street.setOwner(null);
+            street.clearBuildings();
+        }
+        ownedStreets.clear();
     }
 
     public boolean hasEscapeCard() {
@@ -104,7 +137,7 @@ public class Player implements Comparable<Player> {
         if (!(tile instanceof StreetTile street)) return false;
         if (street.getOwner() != null || street.getPrice() > cash) return false;
 
-        cash -= street.getPrice();
+        deductCash(street.getPrice());
         street.setOwner(this);
         ownedStreets.add(street);
         return true;
@@ -115,7 +148,7 @@ public class Player implements Comparable<Player> {
         if (!(tile instanceof StreetTile street)) return false;
         if (!ownedStreets.contains(street)) return false;
 
-        cash += street.calculateSellValue();
+        addCash(street.calculateSellValue());
         street.setOwner(null);
         street.clearBuildings();
         ownedStreets.remove(street);
@@ -149,18 +182,8 @@ public class Player implements Comparable<Player> {
     }
 
     public void transferCash(Player receiver, int amount) {
-        if (this.cash >= amount) {
-            this.cash -= amount;
-            receiver.cash += amount;
-        }
-    }
-
-    public boolean hasCheated() {
-        return cheatFlag;
-    }
-
-    public void setCheatFlag(boolean cheatFlag) {
-        this.cheatFlag = cheatFlag;
+        this.deductCash(amount);
+        receiver.addCash(amount);
     }
 
     public static void resetIdCounter() {

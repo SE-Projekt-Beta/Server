@@ -12,9 +12,7 @@ public class EscapeRiskCard extends RiskCard {
     }
 
     @Override
-    public GameMessage execute(Player player) {
-        player.setEscapeCard(true);
-        PlayerOutOfJailCardPayload payload = new PlayerOutOfJailCardPayload(player.getId(), player.getNickname());
-        return new GameMessage(MessageType.PLAYER_OUT_OF_JAIL_CARD, payload);
+    public RiskCardEffect getEffect() {
+        return RiskCardEffect.ESCAPE_CARD;
     }
 }

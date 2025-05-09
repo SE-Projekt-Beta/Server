@@ -1,9 +1,5 @@
 package at.aau.serg.websocketdemoserver.model.cards;
 
-import at.aau.serg.websocketdemoserver.dto.CashTaskPayload;
-import at.aau.serg.websocketdemoserver.dto.GameMessage;
-import at.aau.serg.websocketdemoserver.dto.MessageType;
-import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 
 public class CashRiskCard extends RiskCard {
     private final int amount;
@@ -13,12 +9,12 @@ public class CashRiskCard extends RiskCard {
         this.amount = amount;
     }
 
-    @Override
-    public GameMessage execute(Player player) {
-        int oldCash = player.getCash();
-        player.setCash(oldCash + amount);
+    public int getAmount() {
+        return amount;
+    }
 
-        CashTaskPayload payload = new CashTaskPayload(player.getId(), amount, player.getCash());
-        return new GameMessage(MessageType.CASH_TASK, payload);
+    @Override
+    public RiskCardEffect getEffect() {
+        return RiskCardEffect.CASH;
     }
 }

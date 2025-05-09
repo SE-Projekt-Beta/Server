@@ -31,6 +31,10 @@ public class StreetTile extends Tile {
         this.hotelCost = hotelCost;
     }
 
+    // --------------------------------------------
+    // Mieten / Wert
+    // --------------------------------------------
+
     public int calculateRent() {
         if (buildings.isEmpty()) return baseRent;
 
@@ -47,20 +51,47 @@ public class StreetTile extends Tile {
         return (int) (baseRent + baseRent * buildings.size() * factor);
     }
 
-    public boolean addHouse() {
+    public int calculateRawValue() {
+        return price + getHouseCount() * houseCost + getHotelCount() * hotelCost;
+    }
+
+    public int calculateSellValue() {
+        double value = price * 0.5;
+        value += getHouseCount() * houseCost * 0.25;
+        value += getHotelCount() * hotelCost * 0.25;
+        return (int) value;
+    }
+
+    // --------------------------------------------
+    // Haus / Hotel-Logik
+    // --------------------------------------------
+
+    public boolean buildHouse(Player player) {
+        if (!isOwner(player)) return false;
         if (buildings.contains(BuildingType.HOTEL)) return false;
-        if (buildings.size() >= 4) return false;
+        if (getHouseCount() >= 4) return false;
+        if (player.getCash() < houseCost) return false;
+
         buildings.add(BuildingType.HOUSE);
+        player.setCash(player.getCash() - houseCost);
         return true;
     }
 
-    public boolean addHotel() {
+    public boolean buildHotel(Player player) {
+        if (!isOwner(player)) return false;
         if (buildings.contains(BuildingType.HOTEL)) return false;
         if (getHouseCount() < 4) return false;
+        if (player.getCash() < hotelCost) return false;
+
         buildings.clear();
         buildings.add(BuildingType.HOTEL);
+        player.setCash(player.getCash() - hotelCost);
         return true;
     }
+
+    // --------------------------------------------
+    // Zugriff und Utility
+    // --------------------------------------------
 
     public void clearBuildings() {
         buildings.clear();
@@ -74,24 +105,29 @@ public class StreetTile extends Tile {
         return Collections.frequency(buildings, BuildingType.HOTEL);
     }
 
-    public int calculateRawValue() {
-        return price + getHouseCount() * houseCost + getHotelCount() * hotelCost;
+    public boolean isOwner(Player player) {
+        return owner != null && owner.getId() == player.getId();
     }
 
-    public int calculateSellValue() {
-        double value = price * 0.5;
-        value += getHouseCount() * houseCost * 0.25;
-        value += getHotelCount() * hotelCost * 0.25;
-        return (int) value;
+    public Player getOwner() {
+        return owner;
     }
 
     public void setOwner(Player owner) {
         this.owner = owner;
     }
 
-    public Player getOwner() {
-        return owner;
+    public int getOwnerId() {
+        return (owner != null) ? owner.getId() : -1;
     }
+
+    public String getOwnerName() {
+        return (owner != null) ? owner.getNickname() : "BANK";
+    }
+
+    // --------------------------------------------
+    // Meta-Infos
+    // --------------------------------------------
 
     public int getPrice() {
         return price;
@@ -117,29 +153,12 @@ public class StreetTile extends Tile {
         return new ArrayList<>(buildings);
     }
 
+    public String getName() {
+        return getLabel(); // Label kommt aus Tile
+    }
+
     @Override
     public TileType getType() {
         return TileType.STREET;
     }
-
-    public boolean buildHouse() {
-        return addHouse();
-    }
-
-    public boolean buildHotel() {
-        return addHotel();
-    }
-    public String getName() {
-        return getLabel(); // da label im Super-Tile gesetzt wird
-    }
-
-    public int getOwnerId() {
-        return (owner != null) ? owner.getId() : -1;
-    }
-
-    public String getOwnerName() {
-        return (owner != null) ? owner.getNickname() : "BANK";
-    }
-
-
 }

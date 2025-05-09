@@ -1,20 +1,31 @@
 package at.aau.serg.websocketdemoserver.model.cards;
 
-import at.aau.serg.websocketdemoserver.dto.EventCardDrawnPayload;
-import at.aau.serg.websocketdemoserver.dto.GameMessage;
-import at.aau.serg.websocketdemoserver.dto.MessageType;
-import at.aau.serg.websocketdemoserver.model.gamestate.Player;
+public class BankCard {
+    private final int id;
+    private final String title;
+    private final String description;
+    private final int amount;
 
-public class BankCard extends ActionCard {
-
-    public BankCard(int id, String title, String description) {
-        super(id, title, description);
+    public BankCard(int id, String title, String description, int amount) {
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.amount = amount;
     }
 
-    @Override
-    public GameMessage execute(Player player) {
-        EventCardDrawnPayload payload = new EventCardDrawnPayload(getTitle(), getDescription());
-        return new GameMessage(MessageType.EVENT_CARD_DRAWN, payload);
+    public int getId() {
+        return id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public int getAmount() {
+        return amount;
     }
 }
-

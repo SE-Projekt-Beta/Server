@@ -3,7 +3,6 @@ package at.aau.serg.websocketdemoserver.service;
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.model.board.*;
 import at.aau.serg.websocketdemoserver.model.cards.BankCardDeck;
-import at.aau.serg.websocketdemoserver.model.cards.RiskCardDeck;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import org.junit.jupiter.api.BeforeEach;

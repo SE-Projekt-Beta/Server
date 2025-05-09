@@ -7,17 +7,16 @@ import java.util.List;
 public class BankCardDeck {
 
     private static BankCardDeck instance;
-
-    private final List<BankCard> bankCards;
+    private final List<BankCard> cards;
 
     private BankCardDeck() {
-        bankCards = new ArrayList<>();
-        bankCards.add(new BankCard(1, "Parkstrafe", "Du musst eine Parkstrafe zahlen."));
-        bankCards.add(new CashBankCard(2, "Bankirrtum", "Ein Bankirrtum zu deinen Gunsten.", 200));
-        bankCards.add(new CashBankCard(3, "Versicherungsprämie", "Du erhältst eine Versicherungsprämie.", 100));
-        bankCards.add(new CashBankCard(4, "Autoreparatur", "Du musst eine Autoreparatur bezahlen.", -150));
-        bankCards.add(new CashBankCard(5, "Erbschaft", "Du erhältst eine Erbschaft.", 300));
-        bankCards.add(new CashBankCard(6, "Spendenzahlung", "Du spendest für einen guten Zweck.", -100));
+        cards = new ArrayList<>();
+        cards.add(new BankCard(1, "Parkstrafe", "Du musst eine Parkstrafe zahlen.", -50));
+        cards.add(new BankCard(2, "Bankirrtum", "Ein Bankirrtum zu deinen Gunsten.", 200));
+        cards.add(new BankCard(3, "Versicherungsprämie", "Du erhältst eine Versicherungsprämie.", 100));
+        cards.add(new BankCard(4, "Autoreparatur", "Du musst eine Autoreparatur bezahlen.", -150));
+        cards.add(new BankCard(5, "Erbschaft", "Du erhältst eine Erbschaft.", 300));
+        cards.add(new BankCard(6, "Spendenzahlung", "Du spendest für einen guten Zweck.", -100));
     }
 
     public static BankCardDeck get() {
@@ -28,7 +27,7 @@ public class BankCardDeck {
     }
 
     public BankCard drawCard() {
-        Collections.shuffle(bankCards);
-        return bankCards.get(0);
+        Collections.shuffle(cards);
+        return cards.get(0);
     }
 }

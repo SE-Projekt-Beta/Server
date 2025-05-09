@@ -1,224 +1,80 @@
-// src/main/java/at/aau/serg/websocketdemoserver/service/GameHandler.java
 package at.aau.serg.websocketdemoserver.service;
 
-import at.aau.serg.websocketdemoserver.dto.*;
-import at.aau.serg.websocketdemoserver.model.board.*;
+import at.aau.serg.websocketdemoserver.dto.GameMessage;
+import at.aau.serg.websocketdemoserver.dto.MessageType;
+import at.aau.serg.websocketdemoserver.dto.PlayerDTO;
+import at.aau.serg.websocketdemoserver.model.board.Tile;
 import at.aau.serg.websocketdemoserver.model.cards.BankCardDeck;
 import at.aau.serg.websocketdemoserver.model.cards.RiskCardDeck;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.model.util.Dice;
+import at.aau.serg.websocketdemoserver.service.game_request.*;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
 
 import static at.aau.serg.websocketdemoserver.dto.MessageType.*;
 
-/**
- * Handles all in-game messages, now routing every GameMessage through its lobbyId.
- */
 @Service
 public class GameHandler {
 
     private final GameState gameState;
-    private final TileActionHandler tileActionHandler;
-    private final Dice dice;
+    private final Map<MessageType, GameRequest> requestMap = new HashMap<>();
     private final List<GameMessage> extraMessages = new ArrayList<>();
 
-    public GameHandler() {
-        this.gameState = new GameState();
-        this.tileActionHandler = new TileActionHandler(
-                new EventCardService(BankCardDeck.get(), RiskCardDeck.get())
-        );
-        this.dice = new Dice(1, 6);
+    public GameHandler(GameState gameState) {
+        this.gameState = gameState;
+        Tile jailTile = gameState.getBoard().getTile(31);
+
+        // Mapping aller MessageTypes zu den zugehörigen Requests
+        requestMap.put(ROLL_DICE, new RollDiceRequest(new Dice(1,6)));
+        requestMap.put(BUY_PROPERTY, new BuyPropertyRequest());
+        requestMap.put(DRAW_BANK_CARD, new DrawBankCardRequest(BankCardDeck.get()));
+        requestMap.put(DRAW_RISK_CARD, new DrawRiskCardRequest(RiskCardDeck.get(), jailTile));
+        requestMap.put(PAY_TAX, new PayTaxRequest());
+        requestMap.put(GO_TO_JAIL, new GoToJailRequest(jailTile));
+        requestMap.put(PAY_RENT, new PayRentRequest());
+        requestMap.put(BUILD_HOUSE, new BuildHouseRequest());
+        requestMap.put(BUILD_HOTEL, new BuildHotelRequest());
+        requestMap.put(PASS_START, new PassedStartRequest());
     }
 
-    /**
-     * Returns any additional messages generated during the last handle(...) call.
-     */
-    public List<GameMessage> getExtraMessages() {
-        return new ArrayList<>(extraMessages);
-    }
-
-    /**
-     * Main entry point for game messages.
-     * Extracts lobbyId and dispatches to the correct handler.
-     */
     public GameMessage handle(GameMessage message) {
         extraMessages.clear();
         int lobbyId = message.getLobbyId();
 
         if (message == null || message.getType() == null) {
-            return MessageFactory.error(lobbyId, "Ungültige oder fehlende Nachricht.");
+            return MessageFactory.error(lobbyId, "Ungültige Nachricht.");
         }
 
-        return switch (message.getType()) {
-            case REQUEST_GAME_STATE -> handleRequestGameState(lobbyId);
-            case ROLL_DICE     -> handleRollDice(lobbyId, message.getPayload());
-            case BUY_PROPERTY  -> handleBuyProperty(lobbyId, message.getPayload());
-            default             -> MessageFactory.error(lobbyId,
-                    "Unbekannter Nachrichtentyp: " + message.getType());
-        };
+        if (message.getType() == REQUEST_GAME_STATE) {
+            return MessageFactory.gameState(lobbyId, gameState);
+        }
+
+        GameRequest request = requestMap.get(message.getType());
+        if (request == null) {
+            return MessageFactory.error(lobbyId, "Unbekannter Nachrichtentyp: " + message.getType());
+        }
+
+        return request.execute(lobbyId, message.getPayload(), gameState, extraMessages);
     }
 
-    /**
-     * Initialize the game state with the given players.
-     */
     public void initGame(List<PlayerDTO> players) {
         List<Player> playerModels = players.stream()
                 .map(dto -> new Player(dto.getId(), dto.getNickname(), gameState.getBoard()))
-                .collect(Collectors.toList());
+                .toList();
 
         gameState.startGame(playerModels);
-        System.out.println("Game initialized with players: " + playerModels);
     }
 
+    public List<GameMessage> getExtraMessages() {
+        return new ArrayList<>(extraMessages);
+    }
 
     public String getCurrentPlayerId() {
         Player current = gameState.getCurrentPlayer();
         return current != null ? String.valueOf(current.getId()) : null;
     }
-
-    private GameMessage handleRequestGameState(int lobbyId) {
-        // get current game state
-        List<Map<String,Object>> players = gameState.getAllPlayers().stream()
-                .map(p -> {
-                    Map<String,Object> m = new HashMap<>();
-                    m.put("id",       p.getId());
-                    m.put("nickname", p.getNickname());
-                    m.put("cash",     p.getCash());
-                    return m;
-                })
-                .collect(Collectors.toList());
-
-        // build a Map payload instead of JSONObject
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("currentPlayerId", gameState.getCurrentPlayerId());
-        payload.put("players", players);
-        payload.put("currentRound", gameState.getCurrentRound());
-
-        List<Map<String, Object>> boardTiles = gameState.getBoard().getTiles().stream()
-                .map(tile -> {
-                    Map<String, Object> t = new HashMap<>();
-                    t.put("label", tile.getLabel());
-                    t.put("type", tile.getClass().getSimpleName());
-                    t.put("index", tile.getIndex());
-                    return t;
-                })
-                .collect(Collectors.toList());
-        payload.put("board", boardTiles);
-
-        return new GameMessage(lobbyId, GAME_STATE, payload);
-    }
-
-
-
-    /**
-     * Handles a ROLL_DICE message for a specific lobby.
-     */
-    private GameMessage handleRollDice(int lobbyId, Object payload) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            String jsonPayload = mapper.writeValueAsString(payload);  // this converts {playerId=fdghfdh} to {"playerId":"fdghfdh"}
-
-            JSONObject obj = new JSONObject(jsonPayload);  // now it's valid
-            System.out.println("[ROLL] Parsed JSON: " + obj.toString(2));
-            int playerId = obj.getInt("playerId");
-
-            Player player = gameState.getPlayer(playerId);
-            if (player == null) {
-                return MessageFactory.error(lobbyId, "Spieler nicht gefunden.");
-            }
-            if (player.getId() != gameState.getCurrentPlayer().getId()) {
-                return MessageFactory.error(lobbyId, "Nicht dein Zug!");
-            }
-
-            int diceRoll = dice.roll();
-            int newIndex = (player.getCurrentTile() == null ? 0 : player.getCurrentTile().getIndex()) + diceRoll;
-            newIndex %= gameState.getBoard().getTiles().size();
-            player.moveToTile(newIndex);
-
-            Tile tile = gameState.getBoard().getTile(newIndex);
-            String tileName = tile.getLabel();
-            String tileType = tile.getClass().getSimpleName();
-            System.out.println("[ROLL] " + player.getNickname() + " rolled " + diceRoll + " → " + tileName);
-
-            // 1) Movement message scoped to this lobby
-            GameMessage moveMessage = MessageFactory.playerMoved(
-                    lobbyId,
-                    player.getId(),
-                    newIndex,
-                    diceRoll,
-                    tileName,
-                    tileType
-            );
-
-            // 2) Action message from landing on the tile
-            GameMessage actionMessage = tileActionHandler.handleTileLanding(player, tile);
-            actionMessage.setLobbyId(lobbyId);
-            extraMessages.add(actionMessage);
-
-            // 3) Advance turn and notify next player
-            gameState.advanceTurn();
-            Player next = gameState.getCurrentPlayer();
-            extraMessages.add(MessageFactory.currentPlayer(
-                    lobbyId,
-                    next.getId()
-            ));
-
-            return moveMessage;
-        } catch (Exception e) {
-            System.out.println("[ROLL] Error: " + e.getMessage());
-            // which line is the error?
-            e.printStackTrace();
-            return MessageFactory.error(lobbyId, "Fehler beim Würfeln: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Handles a BUY_PROPERTY message for a specific lobby.
-     */
-    private GameMessage handleBuyProperty(int lobbyId, Object payload) {
-        try {
-            JSONObject obj = new JSONObject(payload.toString());
-            int playerId = obj.getInt("playerId");
-            int tilePos  = obj.getInt("tilePos");
-
-            Player player = gameState.getPlayer(playerId);
-            if (player == null) {
-                return MessageFactory.error(lobbyId, "Spieler nicht gefunden.");
-            }
-
-            boolean success = player.purchaseStreet(tilePos);
-            if (success) {
-                Tile tile = gameState.getBoard().getTile(tilePos);
-                System.out.println("[BUY] " + player.getNickname() + " bought " + tile.getLabel());
-                return MessageFactory.propertyBought(
-                        lobbyId,
-                        playerId,
-                        tilePos,
-                        tile.getLabel()
-                );
-            } else {
-                return MessageFactory.error(lobbyId, "Kauf fehlgeschlagen.");
-            }
-        } catch (Exception e) {
-            return MessageFactory.error(lobbyId, "Fehler beim Kaufen: " + e.getMessage());
-        }
-    }
-    public GameHandler(GameState gameState) {
-        this.gameState = gameState;
-        this.tileActionHandler = new TileActionHandler(
-                new EventCardService(BankCardDeck.get(), RiskCardDeck.get())
-        );
-        this.dice = new Dice(1, 6);
-    }
-
 }
