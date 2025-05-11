@@ -164,9 +164,9 @@ public class Player implements Comparable<Player> {
 
     public void moveSteps(int steps) {
         if (!isSuspended()) {
-            int currentIndex = (currentTile != null) ? currentTile.getIndex() : 0;
+            int currentIndex = (currentTile != null) ? currentTile.getIndex() : -1;
             int totalTiles = board.getTiles().size();
-            int newIndex = (currentIndex + steps) % totalTiles;
+            int newIndex = (currentIndex + steps + 1) % totalTiles;
             moveToTile(newIndex);
         }
     }
