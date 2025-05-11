@@ -38,6 +38,7 @@ public class BuildHotelRequest implements GameRequest {
             if (!success) {
                 return MessageFactory.error(lobbyId, "Hotelbau nicht möglich (nicht genug Geld oder weniger als 4 Häuser).");
             }
+            gameState.advanceTurn();
 
             return MessageFactory.gameState(lobbyId, gameState);
 

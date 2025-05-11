@@ -43,6 +43,7 @@ public class PayRentRequest implements GameRequest {
                 extraMessages.add(MessageFactory.playerLost(lobbyId, playerId));
             }
 
+            gameState.advanceTurn();
             return MessageFactory.gameState(lobbyId, gameState);
 
         } catch (Exception e) {

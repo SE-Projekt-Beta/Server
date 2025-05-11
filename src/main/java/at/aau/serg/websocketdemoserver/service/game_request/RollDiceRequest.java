@@ -38,10 +38,9 @@ public class RollDiceRequest implements GameRequest {
             int steps = dice.roll();
             player.moveSteps(steps);
 
-            // Optionale Extra-Nachricht: z. B. was gewürfelt wurde
             extraMessages.add(new GameMessage(
                     lobbyId,
-                    MessageType.CASH_TASK, // oder eigener MessageType.WURF_RESULT, wenn gewünscht
+                    MessageType.DICE_ROLLED,
                     new JSONObject().put("playerId", playerId).put("steps", steps).toMap()
             ));
 

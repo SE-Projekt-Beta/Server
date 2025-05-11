@@ -81,6 +81,7 @@ public class DrawRiskCardRequest implements GameRequest {
                 }
             }
 
+            gameState.advanceTurn();
             return MessageFactory.gameState(lobbyId, gameState);
 
         } catch (Exception e) {

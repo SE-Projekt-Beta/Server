@@ -51,6 +51,7 @@ public class DrawBankCardRequest implements GameRequest {
                 extraMessages.add(MessageFactory.playerLost(lobbyId, player.getId()));
             }
 
+            gameState.advanceTurn();
             return MessageFactory.gameState(lobbyId, gameState);
 
         } catch (Exception e) {

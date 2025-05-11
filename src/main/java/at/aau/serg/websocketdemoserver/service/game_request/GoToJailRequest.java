@@ -34,6 +34,7 @@ public class GoToJailRequest implements GameRequest {
             // Verarbeite den Gefängnisaufenthalt
             handleGoToJail(player, lobbyId, extraMessages);
 
+            gameState.advanceTurn();
             return MessageFactory.gameState(lobbyId, gameState);
 
         } catch (Exception e) {

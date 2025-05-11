@@ -37,6 +37,7 @@ public class PassedStartRequest implements GameRequest {
                     new CashTaskPayload(player.getId(), bonus, player.getCash())
             ));
 
+            gameState.advanceTurn();
             return MessageFactory.gameState(lobbyId, gameState);
 
         } catch (Exception e) {

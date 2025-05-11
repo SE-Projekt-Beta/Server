@@ -39,6 +39,7 @@ public class BuildHouseRequest implements GameRequest {
                 return MessageFactory.error(lobbyId, "Hausbau nicht möglich (z. B. max. Häuserzahl oder zu wenig Geld).");
             }
 
+            gameState.advanceTurn();
             return MessageFactory.gameState(lobbyId, gameState);
 
         } catch (Exception e) {
