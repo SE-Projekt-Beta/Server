@@ -23,7 +23,12 @@ public class RollDiceRequest implements GameRequest {
     @Override
     public GameMessage execute(int lobbyId, Object payload, GameState gameState, List<GameMessage> extraMessages) {
         try {
+            System.out.println(payload);
+            System.out.println(payload.toString());
+            System.out.println(payload.getClass());
+            //get playerid from linkedhasmap
             JSONObject obj = new JSONObject(payload.toString());
+            System.out.println(obj.toString());
             int playerId = obj.getInt("playerId");
 
             Player player = gameState.getPlayer(playerId);
