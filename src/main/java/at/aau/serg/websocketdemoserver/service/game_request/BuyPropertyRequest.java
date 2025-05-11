@@ -10,13 +10,17 @@ import at.aau.serg.websocketdemoserver.service.MessageFactory;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Map;
 
 public class BuyPropertyRequest implements GameRequest {
 
     @Override
     public GameMessage execute(int lobbyId, Object payload, GameState gameState, List<GameMessage> extraMessages) {
         try {
-            JSONObject obj = new JSONObject(payload.toString());
+            @SuppressWarnings("unchecked")
+            Map<String, Object> map = (Map<String, Object>) payload;
+            JSONObject obj = new JSONObject(map);
+
             int playerId = obj.getInt("playerId");
             int tilePos = obj.getInt("tilePos");
 

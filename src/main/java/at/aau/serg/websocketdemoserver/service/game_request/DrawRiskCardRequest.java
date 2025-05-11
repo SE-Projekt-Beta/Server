@@ -10,6 +10,7 @@ import at.aau.serg.websocketdemoserver.service.MessageFactory;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Map;
 
 public class DrawRiskCardRequest implements GameRequest {
 
@@ -24,7 +25,10 @@ public class DrawRiskCardRequest implements GameRequest {
     @Override
     public GameMessage execute(int lobbyId, Object payload, GameState gameState, List<GameMessage> extraMessages) {
         try {
-            JSONObject obj = new JSONObject(payload.toString());
+            @SuppressWarnings("unchecked")
+            Map<String, Object> map = (Map<String, Object>) payload;
+            JSONObject obj = new JSONObject(map);
+
             int playerId = obj.getInt("playerId");
 
             Player player = gameState.getPlayer(playerId);
@@ -33,23 +37,17 @@ public class DrawRiskCardRequest implements GameRequest {
             }
 
             RiskCard card = deck.drawCard();
+            String title = card.getTitle();
+            String description = card.getDescription();
 
-            // Immer Info-Nachricht zur gezogenen Karte
-            extraMessages.add(new GameMessage(
-                    lobbyId,
-                    MessageType.DRAW_RISK_CARD,
-                    new EventCardDrawnPayload(card.getTitle(), card.getDescription())
-            ));
-
-            // Effekt ausführen
             if (card instanceof CashRiskCard cashCard) {
                 int amount = cashCard.getAmount();
                 boolean isBankrupt = player.adjustCash(amount);
 
                 extraMessages.add(new GameMessage(
                         lobbyId,
-                        MessageType.CASH_TASK,
-                        new CashTaskPayload(player.getId(), amount, player.getCash())
+                        MessageType.DRAW_RISK_CARD,
+                        new RiskCardPayload(player.getId(), amount, player.getCash(), title, description)
                 ));
 
                 if (isBankrupt) {
@@ -58,6 +56,12 @@ public class DrawRiskCardRequest implements GameRequest {
 
             } else if (card instanceof EscapeRiskCard) {
                 player.setEscapeCard(true);
+
+                extraMessages.add(new GameMessage(
+                        lobbyId,
+                        MessageType.DRAW_RISK_CARD,
+                        new RiskCardPayload(player.getId(), 0, player.getCash(), title, description)
+                ));
 
                 extraMessages.add(new GameMessage(
                         lobbyId,
@@ -71,13 +75,19 @@ public class DrawRiskCardRequest implements GameRequest {
                     extraMessages.add(new GameMessage(
                             lobbyId,
                             MessageType.DRAW_RISK_CARD,
-                            new EventCardDrawnPayload(
+                            new RiskCardPayload(player.getId(), 0, player.getCash(),
                                     "Freiheitskarte verwendet",
                                     "Du hast eine Freiheitskarte eingesetzt und musst nicht ins Gefängnis.")
                     ));
                 } else {
                     player.setCurrentTile(jailTile);
                     player.suspendForRounds(3);
+
+                    extraMessages.add(new GameMessage(
+                            lobbyId,
+                            MessageType.DRAW_RISK_CARD,
+                            new RiskCardPayload(player.getId(), 0, player.getCash(), title, description)
+                    ));
                 }
             }
 

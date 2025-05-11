@@ -1,8 +1,8 @@
 package at.aau.serg.websocketdemoserver.service.game_request;
 
-import at.aau.serg.websocketdemoserver.dto.EventCardDrawnPayload;
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
+import at.aau.serg.websocketdemoserver.dto.RiskCardPayload;
 import at.aau.serg.websocketdemoserver.model.board.Tile;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
@@ -11,6 +11,7 @@ import at.aau.serg.websocketdemoserver.service.MessageFactory;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Map;
 
 public class GoToJailRequest implements GameRequest {
 
@@ -23,7 +24,10 @@ public class GoToJailRequest implements GameRequest {
     @Override
     public GameMessage execute(int lobbyId, Object payload, GameState gameState, List<GameMessage> extraMessages) {
         try {
-            JSONObject obj = new JSONObject(payload.toString());
+            @SuppressWarnings("unchecked")
+            Map<String, Object> map = (Map<String, Object>) payload;
+            JSONObject obj = new JSONObject(map);
+
             int playerId = obj.getInt("playerId");
 
             Player player = gameState.getPlayer(playerId);
@@ -31,8 +35,25 @@ public class GoToJailRequest implements GameRequest {
                 return MessageFactory.error(lobbyId, "Spieler ungültig oder ausgeschieden.");
             }
 
-            // Verarbeite den Gefängnisaufenthalt
-            handleGoToJail(player, lobbyId, extraMessages);
+            if (player.hasEscapeCard()) {
+                player.setEscapeCard(false);
+                extraMessages.add(new GameMessage(
+                        lobbyId,
+                        MessageType.DRAW_RISK_CARD,
+                        new RiskCardPayload(playerId, 0, player.getCash(),
+                                "Freiheitskarte verwendet",
+                                "Du hast eine Freiheitskarte genutzt und musst nicht ins Gefängnis.")
+                ));
+            } else {
+                player.setCurrentTile(jailTile);
+                player.suspendForRounds(3);
+                extraMessages.add(new GameMessage(
+                        lobbyId,
+                        MessageType.DRAW_RISK_CARD,
+                        new RiskCardPayload(playerId, 0, player.getCash(),
+                                "Gefängnis", "Du wurdest ins Gefängnis geschickt und setzt 3 Runden aus.")
+                ));
+            }
 
             gameState.advanceTurn();
             return MessageFactory.gameState(lobbyId, gameState);
@@ -40,22 +61,6 @@ public class GoToJailRequest implements GameRequest {
         } catch (Exception e) {
             e.printStackTrace();
             return MessageFactory.error(lobbyId, "Fehler bei Gefängnisanweisung: " + e.getMessage());
-        }
-    }
-
-    private void handleGoToJail(Player player, int lobbyId, List<GameMessage> extraMessages) {
-        if (player.hasEscapeCard()) {
-            player.setEscapeCard(false);
-            extraMessages.add(new GameMessage(
-                    lobbyId,
-                    MessageType.DRAW_RISK_CARD,
-                    new EventCardDrawnPayload(
-                            "Freiheitskarte verwendet",
-                            "Du hast eine Freiheitskarte genutzt und musst nicht ins Gefängnis.")
-            ));
-        } else {
-            player.setCurrentTile(jailTile);
-            player.suspendForRounds(3);
         }
     }
 }

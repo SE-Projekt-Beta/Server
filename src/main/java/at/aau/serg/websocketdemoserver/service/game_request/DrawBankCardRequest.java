@@ -1,5 +1,6 @@
 package at.aau.serg.websocketdemoserver.service.game_request;
 
+import at.aau.serg.websocketdemoserver.dto.BankCardPayload;
 import at.aau.serg.websocketdemoserver.dto.CashTaskPayload;
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
@@ -12,6 +13,7 @@ import at.aau.serg.websocketdemoserver.service.MessageFactory;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Map;
 
 public class DrawBankCardRequest implements GameRequest {
 
@@ -24,7 +26,10 @@ public class DrawBankCardRequest implements GameRequest {
     @Override
     public GameMessage execute(int lobbyId, Object payload, GameState gameState, List<GameMessage> extraMessages) {
         try {
-            JSONObject obj = new JSONObject(payload.toString());
+            @SuppressWarnings("unchecked")
+            Map<String, Object> map = (Map<String, Object>) payload;
+            JSONObject obj = new JSONObject(map);
+
             int playerId = obj.getInt("playerId");
 
             Player player = gameState.getPlayer(playerId);
@@ -35,18 +40,18 @@ public class DrawBankCardRequest implements GameRequest {
             // Karte ziehen
             BankCard card = bankCardDeck.drawCard();
             int amount = card.getAmount();
+            String description = card.getDescription();
 
             // Geld anwenden
             boolean isBankrupt = player.adjustCash(amount);
 
-            // CASH_TASK Nachricht
+            // Nachricht senden
             extraMessages.add(new GameMessage(
                     lobbyId,
-                    MessageType.CASH_TASK,
-                    new CashTaskPayload(player.getId(), amount, player.getCash())
+                    MessageType.DRAW_BANK_CARD,
+                    new BankCardPayload(player.getId(), amount, player.getCash(), description)
             ));
 
-            // Optional: Spieler bankrott
             if (isBankrupt) {
                 extraMessages.add(MessageFactory.playerLost(lobbyId, player.getId()));
             }
