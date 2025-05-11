@@ -12,11 +12,22 @@ public class UserManager {
 
     public synchronized PlayerDTO createUser(String nickname) {
         PlayerDTO newPlayer = new PlayerDTO(playerIdCounter, nickname);
+        players.add(newPlayer);
         playerIdCounter++;
         return newPlayer;
     }
 
     public synchronized List<PlayerDTO> getPlayers() {
         return Collections.unmodifiableList(players);
+    }
+
+    //get player for id
+    public synchronized PlayerDTO getPlayer(int playerId) {
+        for (PlayerDTO player : players) {
+            if (player.getId() == playerId) {
+                return player;
+            }
+        }
+        return null; // Player not found
     }
 }

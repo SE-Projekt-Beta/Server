@@ -26,7 +26,7 @@ public class LobbyService {
         requestHandlers.put(LobbyMessageType.CREATE_USER, new CreateUserRequest(userManager));
         requestHandlers.put(LobbyMessageType.CREATE_LOBBY, new CreateLobbyRequest(lobbyManager));
         requestHandlers.put(LobbyMessageType.LIST_LOBBIES, new ListLobbiesRequest(lobbyManager));
-        requestHandlers.put(LobbyMessageType.JOIN_LOBBY, new JoinLobbyRequest(lobbyManager));
+        requestHandlers.put(LobbyMessageType.JOIN_LOBBY, new JoinLobbyRequest(lobbyManager, userManager));
         requestHandlers.put(LobbyMessageType.START_GAME, new StartGameRequest(lobbyManager, messagingTemplate));
     }
 

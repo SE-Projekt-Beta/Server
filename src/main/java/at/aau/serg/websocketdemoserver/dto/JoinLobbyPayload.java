@@ -1,22 +1,13 @@
 package at.aau.serg.websocketdemoserver.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
 public class JoinLobbyPayload {
+    @Getter
+    @Setter
     private int lobbyId;
-    private String username;
-
-    public int getLobbyId() {
-        return lobbyId;
-    }
-
-    public void setLobbyId(int lobbyId) {
-        this.lobbyId = lobbyId;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
+    @Getter
+    @Setter
+    private Integer playerId;
 }
