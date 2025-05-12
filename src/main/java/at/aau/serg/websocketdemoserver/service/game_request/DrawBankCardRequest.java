@@ -1,7 +1,6 @@
 package at.aau.serg.websocketdemoserver.service.game_request;
 
-import at.aau.serg.websocketdemoserver.dto.BankCardPayload;
-import at.aau.serg.websocketdemoserver.dto.CashTaskPayload;
+import at.aau.serg.websocketdemoserver.dto.BankCardDrawnPayload;
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
 import at.aau.serg.websocketdemoserver.model.cards.BankCard;
@@ -45,18 +44,22 @@ public class DrawBankCardRequest implements GameRequest {
             // Geld anwenden
             boolean isBankrupt = player.adjustCash(amount);
 
-            // Nachricht senden
-            extraMessages.add(new GameMessage(
-                    lobbyId,
-                    MessageType.DRAW_BANK_CARD,
-                    new BankCardPayload(player.getId(), amount, player.getCash(), description)
-            ));
+            // Spezifische Nachricht mit vollständigem Payload
+            BankCardDrawnPayload payloadToSend = new BankCardDrawnPayload(
+                    player.getId(),
+                    amount,
+                    player.getCash(),
+                    description
+            );
+            extraMessages.add(new GameMessage(lobbyId, MessageType.DRAW_BANK_CARD, payloadToSend));
 
             if (isBankrupt) {
                 extraMessages.add(MessageFactory.playerLost(lobbyId, player.getId()));
             }
 
+            // Runde beenden
             gameState.advanceTurn();
+
             return MessageFactory.gameState(lobbyId, gameState);
 
         } catch (Exception e) {

@@ -2,7 +2,7 @@ package at.aau.serg.websocketdemoserver.service.game_request;
 
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
-import at.aau.serg.websocketdemoserver.dto.RiskCardPayload;
+import at.aau.serg.websocketdemoserver.dto.RiskCardDrawnPayload;
 import at.aau.serg.websocketdemoserver.model.board.Tile;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
@@ -40,7 +40,7 @@ public class GoToJailRequest implements GameRequest {
                 extraMessages.add(new GameMessage(
                         lobbyId,
                         MessageType.DRAW_RISK_CARD,
-                        new RiskCardPayload(playerId, 0, player.getCash(),
+                        new RiskCardDrawnPayload(playerId, 0, player.getCash(),
                                 "Freiheitskarte verwendet",
                                 "Du hast eine Freiheitskarte genutzt und musst nicht ins Gefängnis.")
                 ));
@@ -50,7 +50,7 @@ public class GoToJailRequest implements GameRequest {
                 extraMessages.add(new GameMessage(
                         lobbyId,
                         MessageType.DRAW_RISK_CARD,
-                        new RiskCardPayload(playerId, 0, player.getCash(),
+                        new RiskCardDrawnPayload(playerId, 0, player.getCash(),
                                 "Gefängnis", "Du wurdest ins Gefängnis geschickt und setzt 3 Runden aus.")
                 ));
             }

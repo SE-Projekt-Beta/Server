@@ -4,6 +4,5 @@ public enum RiskCardEffect {
     CASH,
     ESCAPE_CARD,
     GOTO_JAIL,
-    TEXT_ONLY
 }
 

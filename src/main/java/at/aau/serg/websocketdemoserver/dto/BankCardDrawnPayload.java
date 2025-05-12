@@ -1,17 +1,15 @@
 package at.aau.serg.websocketdemoserver.dto;
 
-public class RiskCardPayload {
+public class BankCardDrawnPayload {
     private int playerId;
     private int amount;
     private int newCash;
-    private String title;
     private String description;
 
-    public RiskCardPayload(int playerId, int amount, int newCash, String title, String description) {
+    public BankCardDrawnPayload(int playerId, int amount, int newCash, String description) {
         this.playerId = playerId;
         this.amount = amount;
         this.newCash = newCash;
-        this.title = title;
         this.description = description;
     }
 
@@ -25,10 +23,6 @@ public class RiskCardPayload {
 
     public int getNewCash() {
         return newCash;
-    }
-
-    public String getTitle() {
-        return title;
     }
 
     public String getDescription() {

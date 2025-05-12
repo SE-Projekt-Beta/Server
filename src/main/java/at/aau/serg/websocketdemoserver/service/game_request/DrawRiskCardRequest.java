@@ -47,7 +47,7 @@ public class DrawRiskCardRequest implements GameRequest {
                 extraMessages.add(new GameMessage(
                         lobbyId,
                         MessageType.DRAW_RISK_CARD,
-                        new RiskCardPayload(player.getId(), amount, player.getCash(), title, description)
+                        new RiskCardDrawnPayload(player.getId(), amount, player.getCash(), title, description)
                 ));
 
                 if (isBankrupt) {
@@ -60,7 +60,7 @@ public class DrawRiskCardRequest implements GameRequest {
                 extraMessages.add(new GameMessage(
                         lobbyId,
                         MessageType.DRAW_RISK_CARD,
-                        new RiskCardPayload(player.getId(), 0, player.getCash(), title, description)
+                        new RiskCardDrawnPayload(player.getId(), 0, player.getCash(), title, description)
                 ));
 
                 extraMessages.add(new GameMessage(
@@ -75,7 +75,7 @@ public class DrawRiskCardRequest implements GameRequest {
                     extraMessages.add(new GameMessage(
                             lobbyId,
                             MessageType.DRAW_RISK_CARD,
-                            new RiskCardPayload(player.getId(), 0, player.getCash(),
+                            new RiskCardDrawnPayload(player.getId(), 0, player.getCash(),
                                     "Freiheitskarte verwendet",
                                     "Du hast eine Freiheitskarte eingesetzt und musst nicht ins Gefängnis.")
                     ));
@@ -86,7 +86,7 @@ public class DrawRiskCardRequest implements GameRequest {
                     extraMessages.add(new GameMessage(
                             lobbyId,
                             MessageType.DRAW_RISK_CARD,
-                            new RiskCardPayload(player.getId(), 0, player.getCash(), title, description)
+                            new RiskCardDrawnPayload(player.getId(), 0, player.getCash(), title, description)
                     ));
                 }
             }
