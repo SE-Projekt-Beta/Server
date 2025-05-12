@@ -1,7 +1,10 @@
 package at.aau.serg.websocketdemoserver.model.gamestate;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
 
+@Component
 public class GameState {
 
     private final GameBoard board;
@@ -53,12 +56,18 @@ public class GameState {
         return playersById.values();
     }
 
+    public List<Player> getAlivePlayers() {
+        return turnOrder.stream()
+                .filter(Player::isAlive)
+                .collect(Collectors.toList());
+    }
+
     public GameBoard getBoard() {
         return board;
     }
 
     /**
-     * Führt den Rundenwechsel durch – überspringt gesperrte Spieler.
+     * Führt den Rundenwechsel durch – überspringt gesperrte oder ausgeschiedene Spieler.
      */
     public void advanceTurn() {
         if (turnOrder.isEmpty()) return;
@@ -69,7 +78,7 @@ public class GameState {
             if (currentPlayerIndex == 0 && currentPlayerIndex != initialIndex) {
                 currentRound++;
             }
-        } while (getCurrentPlayer().isSuspended());
+        } while (!getCurrentPlayer().isAlive() || getCurrentPlayer().isSuspended());
     }
 
     public int getCurrentRound() {
@@ -99,5 +108,12 @@ public class GameState {
         playersById.clear();
         currentPlayerIndex = 0;
         currentRound = 1;
+    }
+
+    /**
+     * Nützlich für Clients: Prüft, ob der angegebene Spieler an der Reihe ist.
+     */
+    public boolean isPlayersTurn(int playerId) {
+        return getCurrentPlayerId() == playerId;
     }
 }

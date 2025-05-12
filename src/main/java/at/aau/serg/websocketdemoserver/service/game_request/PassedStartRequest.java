@@ -1,11 +1,10 @@
 package at.aau.serg.websocketdemoserver.service.game_request;
 
+import at.aau.serg.websocketdemoserver.dto.CashTaskPayload;
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
-import at.aau.serg.websocketdemoserver.model.board.Tile;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
-import at.aau.serg.websocketdemoserver.model.util.Dice;
 import at.aau.serg.websocketdemoserver.service.GameRequest;
 import at.aau.serg.websocketdemoserver.service.MessageFactory;
 import org.json.JSONObject;
@@ -13,44 +12,42 @@ import org.json.JSONObject;
 import java.util.List;
 import java.util.Map;
 
-public class RollDiceRequest implements GameRequest {
+public class PassedStartRequest implements GameRequest {
 
-    private final Dice dice;
-
-    public RollDiceRequest(Dice dice) {
-        this.dice = dice;
-    }
+    private static final int START_CASH = 200;
+    private static final int EXACT_START_CASH = 400;
+    private static final int START_TILE_INDEX = 1;
 
     @Override
     public GameMessage execute(int lobbyId, Object payload, GameState gameState, List<GameMessage> extraMessages) {
         try {
-            JSONObject obj = new JSONObject((Map<?, ?>) payload);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> map = (Map<String, Object>) payload;
+            JSONObject obj = new JSONObject(map);
+
             int playerId = obj.getInt("playerId");
 
             Player player = gameState.getPlayer(playerId);
-            if (player == null) {
-                return MessageFactory.error(lobbyId, "Spieler nicht gefunden.");
+            if (player == null || !player.isAlive()) {
+                return MessageFactory.error(lobbyId, "Spieler ungültig oder ausgeschieden.");
             }
 
-            if (playerId != gameState.getCurrentPlayerId()) {
-                return MessageFactory.error(lobbyId, "Nicht dein Zug.");
-            }
-
-            int steps = dice.roll();
-            player.moveSteps(steps);
+            int bonus = (player.getCurrentTile().getIndex() == START_TILE_INDEX) ? EXACT_START_CASH : START_CASH;
+            player.addCash(bonus);
 
             extraMessages.add(new GameMessage(
                     lobbyId,
-                    MessageType.DICE_ROLLED,
-                    new JSONObject().put("playerId", playerId).put("steps", steps).toMap()
+                    MessageType.CASH_TASK,
+                    new CashTaskPayload(player.getId(), bonus, player.getCash())
             ));
 
-            // Kein advanceTurn() hier – Zug ist **noch nicht beendet**.
+            gameState.advanceTurn();
             return MessageFactory.gameState(lobbyId, gameState);
 
         } catch (Exception e) {
             e.printStackTrace();
-            return MessageFactory.error(lobbyId, "Fehler beim Würfeln: " + e.getMessage());
+            return MessageFactory.error(lobbyId, "Fehler beim Startbonus: " + e.getMessage());
         }
     }
 }
+

@@ -5,7 +5,6 @@ import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import java.util.HashMap;
 import java.util.Map;
 
-// GameManager.java
 public class GameManager {
     private static final GameManager instance = new GameManager();
     private final Map<Integer, GameHandler> handlers = new HashMap<>();

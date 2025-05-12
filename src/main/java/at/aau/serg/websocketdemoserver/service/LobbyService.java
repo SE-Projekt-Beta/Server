@@ -17,14 +17,16 @@ import java.util.Map;
 public class LobbyService {
 
     private final LobbyManager lobbyManager = new LobbyManager();
+    private final UserManager userManager = new UserManager();
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<LobbyMessageType, LobbyRequest> requestHandlers = new HashMap<>();
 
     public LobbyService(SimpMessagingTemplate messagingTemplate) {
         // Alle LobbyRequests registrieren
+        requestHandlers.put(LobbyMessageType.CREATE_USER, new CreateUserRequest(userManager));
         requestHandlers.put(LobbyMessageType.CREATE_LOBBY, new CreateLobbyRequest(lobbyManager));
         requestHandlers.put(LobbyMessageType.LIST_LOBBIES, new ListLobbiesRequest(lobbyManager));
-        requestHandlers.put(LobbyMessageType.JOIN_LOBBY, new JoinLobbyRequest(lobbyManager));
+        requestHandlers.put(LobbyMessageType.JOIN_LOBBY, new JoinLobbyRequest(lobbyManager, userManager));
         requestHandlers.put(LobbyMessageType.START_GAME, new StartGameRequest(lobbyManager, messagingTemplate));
     }
 

@@ -1,19 +1,28 @@
 package at.aau.serg.websocketdemoserver.model.cards;
 
-import at.aau.serg.websocketdemoserver.dto.EventCardDrawnPayload;
-import at.aau.serg.websocketdemoserver.dto.GameMessage;
-import at.aau.serg.websocketdemoserver.dto.MessageType;
-import at.aau.serg.websocketdemoserver.model.gamestate.Player;
-
-public class RiskCard extends ActionCard {
+public abstract class RiskCard {
+    private final int id;
+    private final String title;
+    private final String description;
 
     public RiskCard(int id, String title, String description) {
-        super(id, title, description);
+        this.id = id;
+        this.title = title;
+        this.description = description;
     }
 
-    @Override
-    public GameMessage execute(Player player) {
-        EventCardDrawnPayload payload = new EventCardDrawnPayload(getTitle(), getDescription());
-        return new GameMessage(MessageType.EVENT_CARD_DRAWN, payload);
+    public int getId() {
+        return id;
     }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    // Effekt wird im Request verarbeitet
+    public abstract RiskCardEffect getEffect();
 }

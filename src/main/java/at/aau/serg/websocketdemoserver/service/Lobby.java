@@ -18,16 +18,10 @@ public class Lobby {
         this.lobbyName = lobbyName;
     }
 
-    public synchronized PlayerDTO addPlayer(String nickname) {
-        for (PlayerDTO player : players) {
-            if (player.getNickname().equalsIgnoreCase(nickname)) {
-                return player; // Player already exists
-            }
-        }
-        int newId = players.size() + 1; // Simple ID generation
-        PlayerDTO newPlayer = new PlayerDTO(newId, nickname);
-        players.add(newPlayer);
-        return newPlayer;
+    public synchronized PlayerDTO addPlayer(PlayerDTO player) {
+        System.out.println("Adding player " + player);
+        players.add(player);
+        return player;
     }
 
     public synchronized List<PlayerDTO> getPlayers() {

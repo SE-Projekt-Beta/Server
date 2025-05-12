@@ -2,154 +2,83 @@ package at.aau.serg.websocketdemoserver.service;
 
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
-import at.aau.serg.websocketdemoserver.dto.PlayerMovePayload;
-import at.aau.serg.websocketdemoserver.dto.PropertyBoughtPayload;
+import at.aau.serg.websocketdemoserver.model.board.StreetTile;
+import at.aau.serg.websocketdemoserver.model.board.Tile;
+import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
+import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
-/**
- * Utility class for building GameMessage instances.
- * Now includes lobbyId on every message for multi-lobby routing.
- */
 public class MessageFactory {
 
-    private MessageFactory() {
-        // Utility class – no instances
+    public static GameMessage error(int lobbyId, String reason) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("reason", reason);
+        return new GameMessage(lobbyId, MessageType.ERROR, payload);
     }
 
-    /**
-     * Notify that a player moved.
-     */
-    public static GameMessage playerMoved(int lobbyId, int playerId, int newPos, int diceRoll, String tileName, String tileType) {
-        return new GameMessage(
-                lobbyId,
-                MessageType.PLAYER_MOVED,
-                new PlayerMovePayload(
-                        String.valueOf(playerId),
-                        newPos,
-                        diceRoll,
-                        tileName,
-                        tileType
-                )
-        );
+    public static GameMessage gameState(int lobbyId, GameState gameState) {
+        List<Map<String, Object>> players = gameState.getAllPlayers().stream()
+                .map(MessageFactory::mapPlayer)
+                .collect(Collectors.toList());
+
+        List<Map<String, Object>> boardTiles = gameState.getBoard().getTiles().stream()
+                .map(MessageFactory::mapTile)
+                .collect(Collectors.toList());
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("currentPlayerId", gameState.getCurrentPlayerId());
+        payload.put("players", players);
+        payload.put("currentRound", gameState.getCurrentRound());
+        payload.put("board", boardTiles);
+
+        return new GameMessage(lobbyId, MessageType.GAME_STATE, payload);
     }
 
-    /**
-     * Notify whose turn it is.
-     */
-    public static GameMessage currentPlayer(int lobbyId, int playerId) {
-        return new GameMessage(
-                lobbyId,
-                MessageType.CURRENT_PLAYER,
-                Map.of("playerId", String.valueOf(playerId))
-        );
+    public static GameMessage playerLost(int lobbyId, int playerId) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("playerId", playerId);
+        return new GameMessage(lobbyId, MessageType.PLAYER_LOST, payload);
     }
 
-    /**
-     * Notify that a property was bought.
-     */
-    public static GameMessage propertyBought(int lobbyId, int playerId, int tilePos, String tileName) {
-        return new GameMessage(
-                lobbyId,
-                MessageType.PROPERTY_BOUGHT,
-                new PropertyBoughtPayload(
-                        String.valueOf(playerId),
-                        tilePos,
-                        tileName
-                )
-        );
+    public static GameMessage gameOver(int lobbyId, List<Integer> ranking) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("ranking", ranking);
+        return new GameMessage(lobbyId, MessageType.GAME_OVER, payload);
     }
 
-    /**
-     * Offer the player the chance to buy a property.
-     */
-    public static GameMessage canBuyProperty(int lobbyId, int playerId, int tilePos, String tileName, int price) {
-        return new GameMessage(
-                lobbyId,
-                MessageType.CAN_BUY_PROPERTY,
-                Map.of(
-                        "playerId", playerId,
-                        "tilePos", tilePos,
-                        "tileName", tileName,
-                        "price", price
-                )
-        );
+    // ---------------------
+    // Hilfsmethoden
+    // ---------------------
+
+    private static Map<String, Object> mapPlayer(Player p) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("id",         p.getId());
+        m.put("nickname",   p.getNickname());
+        m.put("cash",       p.getCash());
+        m.put("alive",      p.isAlive());
+        m.put("position",   (p.getCurrentTile() != null ? p.getCurrentTile().getIndex() : -1));
+        m.put("suspended",  p.isSuspended());
+        m.put("escapeCard", p.hasEscapeCard());
+        return m;
     }
 
-    /**
-     * Notify that rent must be paid.
-     */
-    public static GameMessage mustPayRent(int lobbyId, int playerId, int ownerId, int tilePos, String tileName, int rent) {
-        return new GameMessage(
-                lobbyId,
-                MessageType.MUST_PAY_RENT,
-                Map.of(
-                        "playerId", playerId,
-                        "ownerId", ownerId,
-                        "tilePos", tilePos,
-                        "tileName", tileName,
-                        "amount", rent
-                )
-        );
-    }
+    private static Map<String, Object> mapTile(Tile tile) {
+        Map<String, Object> t = new HashMap<>();
+        t.put("label", tile.getLabel());
+        t.put("type",  tile.getClass().getSimpleName());
+        t.put("index", tile.getIndex());
 
-    /**
-     * Draw an event card (bank or risiko).
-     */
-    public static GameMessage drawEventCard(int lobbyId, String eventType, String title, String description) {
-        MessageType type = switch (eventType) {
-            case "bank"   -> MessageType.DRAW_EVENT_BANK_CARD;
-            case "risiko"-> MessageType.DRAW_EVENT_RISIKO_CARD;
-            default       -> MessageType.ERROR;
-        };
-        return new GameMessage(
-                lobbyId,
-                type,
-                Map.of(
-                        "title", title,
-                        "description", description
-                )
-        );
-    }
+        if (tile instanceof StreetTile s) {
+            t.put("ownerId",     s.getOwnerId());
+            t.put("price",       s.getPrice());
+            t.put("baseRent",    s.getBaseRent());
+            t.put("houseCount",  s.getHouseCount());
+            t.put("hotelCount",  s.getHotelCount());
+            t.put("level",       s.getLevel().name());
+        }
 
-    /**
-     * Send the player to jail.
-     */
-    public static GameMessage goToJail(int lobbyId, int playerId) {
-        return new GameMessage(
-                lobbyId,
-                MessageType.GO_TO_JAIL,
-                Map.of(
-                        "playerId", playerId,
-                        "tilePos", 10,       // assumed jail position
-                        "tileName", "Gefängnis"
-                )
-        );
-    }
-
-    /**
-     * Notify that the player skipped their turn.
-     */
-    public static GameMessage skippedTurn(int lobbyId, int playerId, int tilePos, String tileName) {
-        return new GameMessage(
-                lobbyId,
-                MessageType.SKIPPED,
-                Map.of(
-                        "playerId", playerId,
-                        "tilePos", tilePos,
-                        "tileName", tileName
-                )
-        );
-    }
-
-    /**
-     * Send an error message.
-     */
-    public static GameMessage error(int lobbyId, String errorMessage) {
-        return new GameMessage(
-                lobbyId,
-                MessageType.ERROR,
-                errorMessage
-        );
+        return t;
     }
 }

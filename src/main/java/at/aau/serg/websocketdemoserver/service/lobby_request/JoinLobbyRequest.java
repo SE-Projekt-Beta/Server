@@ -4,6 +4,7 @@ import at.aau.serg.websocketdemoserver.dto.*;
 import at.aau.serg.websocketdemoserver.service.Lobby;
 import at.aau.serg.websocketdemoserver.service.LobbyManager;
 import at.aau.serg.websocketdemoserver.service.LobbyRequest;
+import at.aau.serg.websocketdemoserver.service.UserManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.*;
@@ -11,10 +12,12 @@ import java.util.*;
 public class JoinLobbyRequest implements LobbyRequest {
 
     private final LobbyManager lobbyManager;
+    private final UserManager userManager;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public JoinLobbyRequest(LobbyManager lobbyManager) {
+    public JoinLobbyRequest(LobbyManager lobbyManager, UserManager userManager) {
         this.lobbyManager = lobbyManager;
+        this.userManager = userManager;
     }
 
     @Override
@@ -22,13 +25,18 @@ public class JoinLobbyRequest implements LobbyRequest {
         try {
             JoinLobbyPayload payload = objectMapper.convertValue(message.getPayload(), JoinLobbyPayload.class);
             int lobbyId = payload.getLobbyId();
+            int playerId = payload.getPlayerId();
             Lobby lobby = lobbyManager.getLobby(lobbyId);
 
             if (lobby == null) {
                 return List.of(new LobbyMessage(LobbyMessageType.ERROR, "Lobby not found."));
             }
 
-            lobby.addPlayer(payload.getUsername());
+            PlayerDTO player = userManager.getPlayer(playerId);
+
+            System.out.println("Joining player: " + player);
+
+            lobby.addPlayer(player);
 
             List<Map<String, Object>> lobbyList = lobbyManager.getLobbyIds().stream()
                     .map(id -> {

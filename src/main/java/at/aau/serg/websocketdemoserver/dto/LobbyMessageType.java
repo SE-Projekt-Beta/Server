@@ -1,6 +1,8 @@
 package at.aau.serg.websocketdemoserver.dto;
 
 public enum LobbyMessageType {
+    CREATE_USER,
+    USER_CREATED,
     CREATE_LOBBY,
     LIST_LOBBIES,
     JOIN_LOBBY,
