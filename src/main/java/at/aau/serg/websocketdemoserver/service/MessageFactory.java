@@ -29,12 +29,21 @@ public class MessageFactory {
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("currentPlayerId", gameState.getCurrentPlayerId());
+
+        Player current = gameState.getCurrentPlayer();
+        if (current != null) {
+            payload.put("currentPlayerName", current.getNickname());
+        } else {
+            payload.put("currentPlayerName", "X");
+        }
+
         payload.put("players", players);
         payload.put("currentRound", gameState.getCurrentRound());
         payload.put("board", boardTiles);
 
         return new GameMessage(lobbyId, MessageType.GAME_STATE, payload);
     }
+
 
     public static GameMessage playerLost(int lobbyId, int playerId) {
         Map<String, Object> payload = new HashMap<>();

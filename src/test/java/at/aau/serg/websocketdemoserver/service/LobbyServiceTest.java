@@ -1,78 +1,59 @@
 package at.aau.serg.websocketdemoserver.service;
 
-import at.aau.serg.websocketdemoserver.dto.*;
+import at.aau.serg.websocketdemoserver.dto.LobbyMessage;
+import at.aau.serg.websocketdemoserver.dto.LobbyMessageType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import at.aau.serg.websocketdemoserver.dto.*;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class LobbyServiceTest {
 
     private LobbyService lobbyService;
+    private SimpMessagingTemplate messagingTemplate;
 
     @BeforeEach
-    void setup() {
-        lobbyService = new LobbyService(new GameHandler());
+    void setUp() {
+        messagingTemplate = mock(SimpMessagingTemplate.class);
+        lobbyService = new LobbyService(messagingTemplate);
     }
 
     @Test
-    void testHandleJoinLobbySuccess() {
-        JoinLobbyPayload payload = new JoinLobbyPayload("TestUser");
-        LobbyMessage joinMessage = new LobbyMessage(LobbyMessageType.JOIN_LOBBY, payload);
+    void handleReturnsErrorWhenMessageIsNull() {
+        List<LobbyMessage> result = lobbyService.handle(null);
 
-        List<LobbyMessage> responses = lobbyService.handle(joinMessage);
-
-        assertEquals(1, responses.size());
-        LobbyMessage response = responses.get(0);
-        assertEquals(LobbyMessageType.LOBBY_UPDATE, response.getType());
-
-        LobbyUpdatePayload update = (LobbyUpdatePayload) response.getPayload();
-        assertNotNull(update);
-        assertEquals(1, update.getPlayers().size());
-        assertEquals("TestUser", update.getPlayers().get(0).getNickname());
+        assertEquals(1, result.size());
+        assertEquals(LobbyMessageType.ERROR, result.get(0).getType());
+        assertTrue(result.get(0).getPayload().toString().contains("Missing or invalid"));
     }
 
     @Test
-    void testHandleJoinLobbyInvalidPayload() {
-        LobbyMessage joinMessage = new LobbyMessage(LobbyMessageType.JOIN_LOBBY, Map.of("unexpectedField", "xxxxxx"));
+    void handleReturnsErrorWhenMessageTypeIsNull() {
+        LobbyMessage message = new LobbyMessage();
+        message.setType(null);
 
-        List<LobbyMessage> responses = lobbyService.handle(joinMessage);
+        List<LobbyMessage> result = lobbyService.handle(message);
 
-        assertEquals(1, responses.size());
-        assertEquals(LobbyMessageType.ERROR, responses.get(0).getType());
+        assertEquals(1, result.size());
+        assertEquals(LobbyMessageType.ERROR, result.get(0).getType());
+        assertTrue(result.get(0).getPayload().toString().contains("Missing or invalid"));
     }
-
 
     @Test
-    void testHandleStartGameNotEnoughPlayers() {
-        LobbyMessage startMessage = new LobbyMessage(LobbyMessageType.START_GAME, null);
+    void handleReturnsErrorWhenHandlerNotFound() {
+        LobbyMessage message = new LobbyMessage();
+        message.setType(LobbyMessageType.LOBBY_UPDATE); // kein Handler dafür registriert
 
-        List<LobbyMessage> responses = lobbyService.handle(startMessage);
+        List<LobbyMessage> result = lobbyService.handle(message);
 
-        assertEquals(1, responses.size());
-        assertEquals(LobbyMessageType.ERROR, responses.get(0).getType());
-        assertTrue(responses.get(0).getPayload().toString().contains("Mindestens 2 Spieler"));
+        assertEquals(1, result.size());
+        assertEquals(LobbyMessageType.ERROR, result.get(0).getType());
+        assertTrue(result.get(0).getPayload().toString().contains("No handler"));
     }
 
-
-    @Test
-    void testHandleUnknownType() {
-        LobbyMessage unknownMessage = new LobbyMessage(null, null);
-
-        List<LobbyMessage> responses = lobbyService.handle(unknownMessage);
-
-        assertEquals(1, responses.size());
-        assertEquals(LobbyMessageType.ERROR, responses.get(0).getType());
-    }
 }
