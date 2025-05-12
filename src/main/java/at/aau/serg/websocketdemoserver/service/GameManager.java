@@ -27,4 +27,8 @@ public class GameManager {
     public void removeGame(int lobbyId) {
         handlers.remove(lobbyId);
     }
+    public void reset() {
+        handlers.clear();
+    }
+
 }

@@ -2,60 +2,66 @@ package at.aau.serg.websocketdemoserver.controller;
 
 import at.aau.serg.websocketdemoserver.dto.LobbyMessage;
 import at.aau.serg.websocketdemoserver.dto.LobbyMessageType;
-import at.aau.serg.websocketdemoserver.service.GameHandler;
 import at.aau.serg.websocketdemoserver.service.LobbyService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
+import org.mockito.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-public class LobbyWebSocketControllerTest {
+class LobbyWebSocketControllerTest {
 
-    private SimpMessagingTemplate messagingTemplate;
+    @Mock
     private LobbyService lobbyService;
+
+    @Mock
+    private SimpMessagingTemplate messagingTemplate;
+
+    @InjectMocks
     private LobbyWebSocketController controller;
 
     @BeforeEach
     void setUp() {
-        messagingTemplate = mock(SimpMessagingTemplate.class);
-        lobbyService = mock(LobbyService.class);
-
-        // Workaround: LobbyWebSocketController erstellt LobbyService im Konstruktor
-        // → wir verwenden hier einen Spy + Reflektion (oder du übergibst lobbyService direkt im echten Code).
-        GameHandler gameHandler = mock(GameHandler.class);
-        controller = new LobbyWebSocketController(messagingTemplate, gameHandler) {
-            @Override
-            public void handleLobbyMessage(LobbyMessage message) {
-                List<LobbyMessage> responses = lobbyService.handle(message);
-                for (LobbyMessage response : responses) {
-                    messagingTemplate.convertAndSend("/topic/lobby", response);
-                }
-            }
-        };
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void testHandleLobbyMessageSendsAllResponses() {
-        // given
-        LobbyMessage incoming = new LobbyMessage(LobbyMessageType.JOIN_LOBBY, null);
-        LobbyMessage expectedResponse = new LobbyMessage(LobbyMessageType.LOBBY_UPDATE, "Spieler A");
+    void handleGeneral_sendsAllMessagesToGlobalTopic() {
+        // Arrange
+        LobbyMessage input = new LobbyMessage(LobbyMessageType.CREATE_LOBBY, "Test");
+        LobbyMessage response1 = new LobbyMessage(LobbyMessageType.LOBBY_LIST, "L1");
+        LobbyMessage response2 = new LobbyMessage(LobbyMessageType.LOBBY_CREATED, "L2");
 
-        when(lobbyService.handle(incoming)).thenReturn(List.of(expectedResponse));
+        when(lobbyService.handle(input)).thenReturn(List.of(response1, response2));
 
-        // when
-        controller.handleLobbyMessage(incoming);
+        // Act
+        controller.handleGeneral(input);
 
-        // then
-        ArgumentCaptor<LobbyMessage> captor = ArgumentCaptor.forClass(LobbyMessage.class);
-        verify(messagingTemplate).convertAndSend(eq("/topic/lobby"), captor.capture());
+        // Assert
+        verify(lobbyService).handle(input);
+        verify(messagingTemplate).convertAndSend("/topic/lobby", response1);
+        verify(messagingTemplate).convertAndSend("/topic/lobby", response2);
+    }
 
-        LobbyMessage actual = captor.getValue();
-        assertEquals(expectedResponse.getType(), actual.getType());
-        assertEquals(expectedResponse.getPayload(), actual.getPayload());
+    @Test
+    void handleByLobby_sendsLobbyListGlobally_andOthersToLobbyTopic() {
+        // Arrange
+        int lobbyId = 42;
+        LobbyMessage input = new LobbyMessage(LobbyMessageType.JOIN_LOBBY, "Join");
+        LobbyMessage lobbyList = new LobbyMessage(LobbyMessageType.LOBBY_LIST, "List");
+        LobbyMessage lobbyUpdate = new LobbyMessage(lobbyId, LobbyMessageType.LOBBY_UPDATE, "Update");
+
+        when(lobbyService.handle(input)).thenReturn(List.of(lobbyList, lobbyUpdate));
+
+        // Act
+        controller.handleByLobby(lobbyId, input);
+
+        // Assert
+        verify(lobbyService).handle(input);
+        verify(messagingTemplate).convertAndSend("/topic/lobby", lobbyList);
+        verify(messagingTemplate).convertAndSend("/topic/lobby/" + lobbyId, lobbyUpdate);
     }
 }
