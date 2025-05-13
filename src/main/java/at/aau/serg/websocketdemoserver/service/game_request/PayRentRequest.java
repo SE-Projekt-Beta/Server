@@ -39,15 +39,22 @@ public class PayRentRequest implements GameRequest {
                 return MessageFactory.error(lobbyId, "Keine Miete zu zahlen.");
             }
 
+            // 🔐 Nur einmal pro Feld Miete zahlen
+            if (player.getLastPaidRentPosition() == tilePos) {
+                return MessageFactory.error(lobbyId, "Miete für dieses Feld bereits gezahlt.");
+            }
+
             int rent = street.calculateRent();
             player.transferCash(owner, rent);
 
-            // Falls Spieler jetzt bankrott ist
+            // Merken, dass für dieses Feld gezahlt wurde
+            player.setLastPaidRentPosition(tilePos);
+
+            // Bankrott prüfen
             if (!player.isAlive()) {
                 extraMessages.add(MessageFactory.playerLost(lobbyId, playerId));
             }
 
-            gameState.advanceTurn();
             return MessageFactory.gameState(lobbyId, gameState);
 
         } catch (Exception e) {
@@ -55,4 +62,5 @@ public class PayRentRequest implements GameRequest {
             return MessageFactory.error(lobbyId, "Fehler beim Miete zahlen: " + e.getMessage());
         }
     }
+
 }

@@ -36,16 +36,25 @@ public class RollDiceRequest implements GameRequest {
                 return MessageFactory.error(lobbyId, "Nicht dein Zug.");
             }
 
+            if (player.isSuspended()) {
+                player.decreaseSuspension();
+                gameState.advanceTurn();
+                return MessageFactory.gameState(lobbyId, gameState);
+            }
+
             int steps = dice.roll();
             player.moveSteps(steps);
 
             extraMessages.add(new GameMessage(
                     lobbyId,
                     MessageType.DICE_ROLLED,
-                    new JSONObject().put("playerId", playerId).put("steps", steps).toMap()
+                    new JSONObject()
+                            .put("playerId", playerId)
+                            .put("steps", steps)
+                            .toMap()
             ));
 
-            // Kein advanceTurn() hier – Zug ist **noch nicht beendet**.
+            // Noch kein advanceTurn() – passiert erst nach dem Feldereignis
             return MessageFactory.gameState(lobbyId, gameState);
 
         } catch (Exception e) {

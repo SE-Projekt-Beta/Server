@@ -41,14 +41,14 @@ public class PayTaxRequest implements GameRequest {
             int position = tile.getIndex();
             int taxAmount;
 
-            // Steuerbetrag dynamisch aus Position bestimmen
-            if (position == 21) {
+            if (position == 20) {
                 taxAmount = 200; // Sondersteuer
-            } else if (position == 33) {
+            } else if (position == 32) {
                 taxAmount = 400; // Vermögensabgabe
             } else {
                 return MessageFactory.error(lobbyId, "Unbekanntes Steuerfeld.");
             }
+
 
             boolean isBankrupt = player.adjustCash(-taxAmount);
             if (isBankrupt) {

@@ -20,6 +20,11 @@ public class Player implements Comparable<Player> {
     private int suspensionRounds;
     private boolean hasEscapeCard;
     private final GameBoard board;
+    // In Player.java hinzufügen:
+    private int lastPaidRentPosition = -1;
+
+
+
 
     public Player(String nickname, GameBoard board) {
         this.id = idCounter++;
@@ -164,12 +169,13 @@ public class Player implements Comparable<Player> {
 
     public void moveSteps(int steps) {
         if (!isSuspended()) {
-            int currentIndex = (currentTile != null) ? currentTile.getIndex() : -1;
+            int currentIndex = (currentTile != null) ? currentTile.getIndex() : 0;
             int totalTiles = board.getTiles().size();
-            int newIndex = (currentIndex + steps + 1) % totalTiles;
+            int newIndex = (currentIndex + steps) % totalTiles;
             moveToTile(newIndex);
         }
     }
+
 
     public int calculateWealth() {
         int total = cash;
@@ -193,5 +199,12 @@ public class Player implements Comparable<Player> {
     @Override
     public int compareTo(Player other) {
         return Integer.compare(this.id, other.id);
+    }
+    public int getLastPaidRentPosition() {
+        return lastPaidRentPosition;
+    }
+
+    public void setLastPaidRentPosition(int lastPaidRentPosition) {
+        this.lastPaidRentPosition = lastPaidRentPosition;
     }
 }
