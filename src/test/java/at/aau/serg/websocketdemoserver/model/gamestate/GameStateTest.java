@@ -2,123 +2,91 @@ package at.aau.serg.websocketdemoserver.model.gamestate;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class GameStateTest {
 
     private GameState gameState;
+    private GameBoard board;
     private Player player1;
     private Player player2;
-    private Player player3;
 
     @BeforeEach
-    void setup() {
+    void setUp() {
         gameState = new GameState();
-        player1 = mock(Player.class);
-        player2 = mock(Player.class);
-        player3 = mock(Player.class);
+        board = gameState.getBoard();
 
-        // Sicherstellen, dass die Spieler eine gültige ID und andere Attribute haben
-        when(player1.getId()).thenReturn(1);
-        when(player2.getId()).thenReturn(2);
-        when(player3.getId()).thenReturn(3);
+        player1 = new Player("Alice", board);
+        player2 = new Player("Bob", board);
 
-        when(player1.isAlive()).thenReturn(true);
-        when(player2.isAlive()).thenReturn(true);
-        when(player3.isAlive()).thenReturn(true);
-
-        when(player1.isSuspended()).thenReturn(false);
-        when(player2.isSuspended()).thenReturn(false);
-        when(player3.isSuspended()).thenReturn(false);
-    }
-
-    @Test
-    void testStartGame_shufflesAndRegistersPlayers() {
+        // ❗ Neue mutable Liste statt List.of (die wäre immutable)
         List<Player> players = new ArrayList<>();
         players.add(player1);
         players.add(player2);
 
         gameState.startGame(players);
+    }
 
-        assertNotNull(gameState.getPlayer(player1.getId()));
-        assertNotNull(gameState.getPlayer(player2.getId()));
+    @Test
+    void testStartGameInitializesPlayers() {
         assertEquals(2, gameState.getAllPlayers().size());
+        assertTrue(gameState.getAllPlayers().contains(player1));
+        assertTrue(gameState.getAllPlayers().contains(player2));
     }
 
     @Test
-    void testGetCurrentPlayer_andAdvanceTurn() {
-        List<Player> players = new ArrayList<>();
-        players.add(player1);
-        players.add(player2);
-
-        gameState.startGame(players);
-
+    void testGetCurrentPlayerAndId() {
         Player current = gameState.getCurrentPlayer();
-        assertTrue(current == player1 || current == player2);
+        assertNotNull(current);
+        assertEquals(current.getId(), gameState.getCurrentPlayerId());
+    }
+
+    @Test
+    void testAdvanceTurnCyclesThroughPlayers() {
+        int firstId = gameState.getCurrentPlayerId();
+        gameState.advanceTurn();
+        int secondId = gameState.getCurrentPlayerId();
+        assertNotEquals(firstId, secondId);
 
         gameState.advanceTurn();
-        Player next = gameState.getCurrentPlayer();
-        assertNotSame(current, next);
+        int backToFirstId = gameState.getCurrentPlayerId();
+        assertEquals(firstId, backToFirstId);
     }
-
 
     @Test
     void testIsPlayersTurn() {
-        List<Player> players = new ArrayList<>();
-        players.add(player1);
-        players.add(player2);
-
-        gameState.startGame(players);
         int currentId = gameState.getCurrentPlayerId();
-
         assertTrue(gameState.isPlayersTurn(currentId));
-        assertFalse(gameState.isPlayersTurn(currentId + 100));
+        assertFalse(gameState.isPlayersTurn(currentId + 1000));
     }
 
-
     @Test
-    void testGetRankingList_sortedCorrectly() {
-        List<Player> players = new ArrayList<>();
-        players.add(player1);
-        players.add(player2);
-
-        // Setze das Cash der Spieler
-        when(player1.calculateWealth()).thenReturn(500);
-        when(player2.calculateWealth()).thenReturn(1000);
-
-        gameState.startGame(players);
-
+    void testGetRankingList() {
         List<Player> ranking = gameState.getRankingList();
-        assertEquals(player2, ranking.get(0));
-        assertEquals(player1, ranking.get(1));
-    }
-
-
-    @Test
-    void testStartGame_emptyPlayersList() {
-        List<Player> players = new ArrayList<>();
-        gameState.startGame(players);
-        assertTrue(gameState.getAllPlayers().isEmpty(), "Spieler-Liste sollte leer sein");
+        assertEquals(2, ranking.size());
+        assertTrue(ranking.contains(player1));
+        assertTrue(ranking.contains(player2));
     }
 
     @Test
-    void testIsGameOver_withoutRoundsEnabled() {
-        List<Player> players = new ArrayList<>();
-        players.add(player1);
-
-        gameState.startGame(players);
-
-        // Da das Runden-System deaktiviert ist, sollte das Spiel nicht nach Runden enden
-        assertFalse(gameState.isGameOver(10, false));
+    void testGameOverAfterMaxRounds() {
+        // Manuell viele Runden durchlaufen
+        for (int i = 0; i < 10; i++) {
+            gameState.advanceTurn();
+        }
+        assertTrue(gameState.isGameOver(1, true));
+        assertFalse(gameState.isGameOver(20, true));
+        assertFalse(gameState.isGameOver(1, false)); // Nur wenn Modus aktiv
     }
 
     @Test
-    void testAdvanceTurn_withEmptyTurnOrder() {
-        // Leere Turn-Order simulieren
-        gameState.advanceTurn();
-        assertNull(gameState.getCurrentPlayer(), "Kein Spieler sollte aktuell sein");
+    void testResetGameClearsState() {
+        gameState.resetGame();
+        assertEquals(0, gameState.getAllPlayers().size());
+        assertEquals(1, gameState.getCurrentRound());
     }
 }

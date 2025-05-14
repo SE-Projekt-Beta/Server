@@ -1,9 +1,10 @@
 package at.aau.serg.websocketdemoserver.service.game_request;
 
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
-import at.aau.serg.websocketdemoserver.model.board.StreetTile;
-import at.aau.serg.websocketdemoserver.model.board.Tile;
+import at.aau.serg.websocketdemoserver.dto.MessageType;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
+import at.aau.serg.websocketdemoserver.model.board.StreetLevel;
+import at.aau.serg.websocketdemoserver.model.board.StreetTile;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,66 +18,120 @@ class BuildHouseRequestTest {
 
     private GameState gameState;
     private Player player;
-    private StreetTile tile;
+    private StreetTile street;
     private BuildHouseRequest request;
-    private int lobbyId;
 
     @BeforeEach
-    void setUp() {
+    void setup() {
         gameState = new GameState();
-        player = new Player("Tester", gameState.getBoard());
-        player.setCash(1000);
-        tile = new StreetTile(5, "Murplatz", 300, 120, null, 200);
-        tile.setOwner(player);
-        player.setCurrentTile(tile);
-        player.getOwnedStreets().add(tile);
+        GameBoard board = gameState.getBoard();
 
-        gameState.startGame(List.of(player));
-        lobbyId = 1;
+        player = new Player(1, "Alice", board);
+        gameState.startGame(new ArrayList<>(List.of(player)));
+
+        street = new StreetTile(0, "Teststraße", 200, 50, StreetLevel.NORMAL, 100, 200);
+        board.getTiles().set(0, street);
+        street.setOwner(player);
+        street.clearBuildings();
+
         request = new BuildHouseRequest();
     }
 
-    private Map<String, Object> buildPayload(int playerId, int tilePos) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("playerId", playerId);
-        map.put("tilePos", tilePos);
-        return map;
-    }
+    @Test
+    void testSuccessfulHouseBuild() {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("playerId", player.getId());
+        payload.put("tilePos", 0);
 
+        GameMessage result = request.execute(1, payload, gameState, new ArrayList<>());
+        assertEquals(MessageType.GAME_STATE, result.getType());
+        assertEquals(1, street.getHouseCount());
+    }
 
     @Test
     void testInvalidPlayer() {
-        GameMessage response = request.execute(lobbyId, buildPayload(999, tile.getIndex()), gameState, new ArrayList<>());
-        assertEquals("ERROR", response.getType().name());
-        assertTrue(response.getPayload().toString().contains("Spieler ungültig"));
+        Map<String, Object> payload = Map.of(
+                "playerId", 999,
+                "tilePos", 0
+        );
+
+        GameMessage result = request.execute(1, payload, gameState, new ArrayList<>());
+        assertEquals(MessageType.ERROR, result.getType());
     }
 
     @Test
-    void testTileNotStreet() {
-        Tile fakeTile = new Tile(99) {
-            @Override
-            public String getLabel() {
-                return "Fake";
-            }
+    void testInvalidTile() {
+        Map<String, Object> payload = Map.of(
+                "playerId", player.getId(),
+                "tilePos", 999
+        );
 
-            @Override
-            public at.aau.serg.websocketdemoserver.model.board.TileType getType() {
-                return null;
-            }
-        };
-        gameState.getBoard().getTiles().add(fakeTile);
-        GameMessage response = request.execute(lobbyId, buildPayload(player.getId(), 99), gameState, new ArrayList<>());
-        assertEquals("ERROR", response.getType().name());
-        assertTrue(response.getPayload().toString().contains("Kein baubares Feld"));
+        GameMessage result = request.execute(1, payload, gameState, new ArrayList<>());
+        assertEquals(MessageType.ERROR, result.getType());
     }
 
     @Test
-    void testExceptionHandling() {
-        // Passing malformed payload (e.g. missing playerId)
-        Map<String, Object> badPayload = Map.of("tilePos", tile.getIndex());
-        GameMessage response = request.execute(lobbyId, badPayload, gameState, new ArrayList<>());
-        assertEquals("ERROR", response.getType().name());
-        assertTrue(response.getPayload().toString().contains("Fehler beim Hausbau"));
+    void testTileNotOwned() {
+        Player other = new Player(2, "Bob", gameState.getBoard());
+        StreetTile otherTile = new StreetTile(1, "Fremdstraße", 200, 50, StreetLevel.NORMAL, 100, 200);
+        gameState.getBoard().getTiles().set(1, otherTile);
+
+        Map<String, Object> payload = Map.of(
+                "playerId", other.getId(),
+                "tilePos", 1
+        );
+
+        GameMessage result = request.execute(1, payload, gameState, new ArrayList<>());
+        assertEquals(MessageType.ERROR, result.getType());
+    }
+
+    @Test
+    void testTooManyHouses() {
+        for (int i = 0; i < 4; i++) {
+            street.buildHouse(player);
+        }
+
+        Map<String, Object> payload = Map.of(
+                "playerId", player.getId(),
+                "tilePos", 0
+        );
+
+        GameMessage result = request.execute(1, payload, gameState, new ArrayList<>());
+        assertEquals(MessageType.ERROR, result.getType());
+    }
+
+    @Test
+    void testNotEnoughMoney() {
+        player.setCash(0);
+
+        Map<String, Object> payload = Map.of(
+                "playerId", player.getId(),
+                "tilePos", 0
+        );
+
+        GameMessage result = request.execute(1, payload, gameState, new ArrayList<>());
+        assertEquals(MessageType.ERROR, result.getType());
+    }
+
+    @Test
+    void testAlreadyHasHotel() {
+        for (int i = 0; i < 4; i++) {
+            street.buildHouse(player);
+        }
+        street.buildHotel(player);
+
+        Map<String, Object> payload = Map.of(
+                "playerId", player.getId(),
+                "tilePos", 0
+        );
+
+        GameMessage result = request.execute(1, payload, gameState, new ArrayList<>());
+        assertEquals(MessageType.ERROR, result.getType());
+    }
+
+    @Test
+    void testMalformedPayload() {
+        GameMessage result = request.execute(1, "ungültig", gameState, new ArrayList<>());
+        assertEquals(MessageType.ERROR, result.getType());
     }
 }
-

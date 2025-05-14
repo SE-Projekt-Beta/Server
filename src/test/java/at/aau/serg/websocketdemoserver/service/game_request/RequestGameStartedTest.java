@@ -1,43 +1,50 @@
 package at.aau.serg.websocketdemoserver.service.game_request;
 
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
+import at.aau.serg.websocketdemoserver.dto.MessageType;
+import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class RequestGameStartedTest {
 
-    private RequestGameStarted request;
     private GameState gameState;
+    private RequestGameStarted request;
+    private int lobbyId = 1;
 
     @BeforeEach
     void setUp() {
-        request = new RequestGameStarted();
         gameState = new GameState();
 
-        // Spieler hinzufügen
-        Player p1 = new Player("A", gameState.getBoard());
-        Player p2 = new Player("B", gameState.getBoard());
-        gameState.startGame(java.util.List.of(p1, p2));
+        Player player1 = new Player(1, "Alice", gameState.getBoard());
+        Player player2 = new Player(2, "Bob", gameState.getBoard());
+
+        List<Player> players = new ArrayList<>(List.of(player1, player2));
+        gameState.startGame(players);
+
+        request = new RequestGameStarted();
     }
 
     @Test
-    void testExecute() {
-        GameMessage result = request.execute(123, null, gameState, new java.util.ArrayList<>());
+    void testExecuteReturnsCorrectGameMessage() {
+        GameMessage message = request.execute(lobbyId, null, gameState, new ArrayList<>());
 
-        assertEquals(123, result.getLobbyId());
-        assertEquals("GAME_STARTED", result.getType().name());
+        assertNotNull(message);
+        assertEquals(lobbyId, message.getLobbyId());
+        assertEquals(MessageType.GAME_STARTED, message.getType());
+        assertTrue(message.getPayload() instanceof Map);
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> payload = (Map<String, Object>) result.getPayload();
+        Map<String, Object> payload = (Map<String, Object>) message.getPayload();
 
-        assertEquals(2, payload.get("playerCount"));
         assertEquals(gameState.getCurrentRound(), payload.get("currentRound"));
+        assertEquals(gameState.getAllPlayers().size(), payload.get("playerCount"));
         assertEquals(gameState.getCurrentPlayerId(), payload.get("currentPlayerId"));
     }
 }

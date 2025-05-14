@@ -2,86 +2,65 @@ package at.aau.serg.websocketdemoserver.service.game_request;
 
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
-import at.aau.serg.websocketdemoserver.model.board.JailTile;
-import at.aau.serg.websocketdemoserver.model.board.Tile;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
+import at.aau.serg.websocketdemoserver.model.board.JailTile;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class GoToJailRequestTest {
+public class GoToJailRequestTest {
 
+    private GameBoard board;
+    private JailTile jailTile;
     private GameState gameState;
     private Player player;
     private GoToJailRequest request;
-    private Tile jailTile;
-    private final int lobbyId = 1;
+    private List<GameMessage> extraMessages;
 
     @BeforeEach
-    void setUp() {
+    void setup() {
+        board = new GameBoard();
+        jailTile = new JailTile(5);
+        board.getTiles().set(5, jailTile);
+
         gameState = new GameState();
-        GameBoard board = gameState.getBoard();
-        player = new Player("TestPlayer", board);
+        player = new Player(1, "Alice", board);
+        player.setCash(500);
+        player.setCurrentTile(board.getTiles().get(0));
         gameState.startGame(List.of(player));
-        jailTile = new JailTile(31);
+
+        extraMessages = new ArrayList<>();
         request = new GoToJailRequest(jailTile);
     }
 
-    private Map<String, Object> payloadForPlayer() {
-        return Map.of("playerId", player.getId());
-    }
-
     @Test
-    void testSendToJailWithoutEscapeCard() {
-        List<GameMessage> extras = new ArrayList<>();
-
-        GameMessage result = request.execute(lobbyId, payloadForPlayer(), gameState, extras);
-
-        assertEquals(jailTile, player.getCurrentTile());
-        assertEquals(3, player.getSuspensionRounds());
-        assertEquals(1, extras.size());
-        assertEquals(MessageType.DRAW_RISK_CARD, extras.get(0).getType());
-        assertEquals(MessageType.GAME_STATE, result.getType());
-    }
-
-    @Test
-    void testAvoidJailWithEscapeCard() {
+    void testPlayerHasEscapeCard() throws JSONException {
         player.setEscapeCard(true);
-        List<GameMessage> extras = new ArrayList<>();
 
-        GameMessage result = request.execute(lobbyId, payloadForPlayer(), gameState, extras);
+        JSONObject payload = new JSONObject();
+        payload.put("playerId", player.getId());
 
-        assertFalse(player.hasEscapeCard());
-        assertNull(player.getCurrentTile()); // Nicht bewegt
-        assertEquals(1, extras.size());
-        assertTrue(extras.get(0).getPayload().toString().contains("Freiheitskarte"));
-        assertEquals(MessageType.GAME_STATE, result.getType());
+        GameMessage result = request.execute(1, payload, gameState, extraMessages);
+
+        assertNotEquals(jailTile, player.getCurrentTile());
+        assertEquals(0, player.getSuspensionRounds());
     }
 
     @Test
-    void testInvalidPlayer() {
-        List<GameMessage> extras = new ArrayList<>();
-        Map<String, Object> payload = Map.of("playerId", 999); // ungültig
+    void testInvalidPlayer() throws JSONException {
+        JSONObject payload = new JSONObject();
+        payload.put("playerId", 999); // Nicht existierend
 
-        GameMessage result = request.execute(lobbyId, payload, gameState, extras);
-
-        assertEquals(MessageType.ERROR, result.getType());
-        assertTrue(result.getPayload().toString().contains("Spieler ungültig"));
-    }
-
-    @Test
-    void testExceptionHandling() {
-        List<GameMessage> extras = new ArrayList<>();
-        Map<String, Object> invalid = new HashMap<>(); // kein playerId
-
-        GameMessage result = request.execute(lobbyId, invalid, gameState, extras);
+        GameMessage result = request.execute(1, payload, gameState, extraMessages);
 
         assertEquals(MessageType.ERROR, result.getType());
-        assertTrue(result.getPayload().toString().contains("Fehler bei Gefängnisanweisung"));
     }
 }

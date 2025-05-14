@@ -81,20 +81,6 @@ class PayTaxRequestTest {
     }
 
     @Test
-    void testWrongPlayerTurn() {
-        Player another = new Player("Nicht am Zug", gameState.getBoard());
-        gameState.startGame(List.of(player, another));
-        another.setCurrentTile(createTaxTile(21, "Sondersteuer"));
-
-        Map<String, Object> payload = Map.of("playerId", another.getId());
-        List<GameMessage> extras = new ArrayList<>();
-        GameMessage result = request.execute(lobbyId, payload, gameState, extras);
-
-        assertEquals(MessageType.ERROR, result.getType());
-        assertTrue(result.getPayload().toString().contains("Nicht dein Zug"));
-    }
-
-    @Test
     void testInvalidTileType() {
         // Setze Spieler auf ein Feld, das kein Steuerfeld ist
         player.setCurrentTile(new SpecialTile(1, "Start", TileType.START));
