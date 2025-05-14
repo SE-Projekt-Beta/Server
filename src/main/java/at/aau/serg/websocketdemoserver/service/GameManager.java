@@ -31,4 +31,8 @@ public class GameManager {
         handlers.clear();
     }
 
+    // Nur für Tests
+    public Map<Integer, GameHandler> getHandlerMapForTesting() {
+        return handlers;
+    }
 }
