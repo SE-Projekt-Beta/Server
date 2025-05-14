@@ -16,7 +16,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class GoToJailRequestTest {
+class GoToJailRequestTest {
 
     private GameBoard board;
     private JailTile jailTile;
@@ -48,7 +48,7 @@ public class GoToJailRequestTest {
         JSONObject payload = new JSONObject();
         payload.put("playerId", player.getId());
 
-        GameMessage result = request.execute(1, payload, gameState, extraMessages);
+        request.execute(1, payload, gameState, extraMessages);
 
         assertNotEquals(jailTile, player.getCurrentTile());
         assertEquals(0, player.getSuspensionRounds());

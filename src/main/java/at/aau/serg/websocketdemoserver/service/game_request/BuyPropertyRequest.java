@@ -40,7 +40,7 @@ public class BuyPropertyRequest implements GameRequest {
 
             boolean success = player.purchaseStreet(tilePos);
             if (!success) {
-                return MessageFactory.error(lobbyId, "Kauf fehlgeschlagen (z. B. nicht genug Geld).");
+                return MessageFactory.error(lobbyId, "Kauf fehlgeschlagen (z.B. nicht genug Geld).");
             }
             street.setOwner(player);
 

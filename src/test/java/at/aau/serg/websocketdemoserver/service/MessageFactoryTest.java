@@ -2,8 +2,6 @@ package at.aau.serg.websocketdemoserver.service;
 
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
-import at.aau.serg.websocketdemoserver.model.board.StreetTile;
-import at.aau.serg.websocketdemoserver.model.board.TileType;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import org.junit.jupiter.api.BeforeEach;
