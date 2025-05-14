@@ -43,9 +43,15 @@ public class GameHandler {
 
     public GameMessage handle(GameMessage message) {
         extraMessages.clear();
+
+        if (message == null) {
+            // Kein Zugriff auf message.getLobbyId(), also -1 als Lobby zurückgeben
+            return MessageFactory.error(-1, "Ungültige Nachricht.");
+        }
+
         int lobbyId = message.getLobbyId();
 
-        if (message == null || message.getType() == null) {
+        if (message.getType() == null) {
             return MessageFactory.error(lobbyId, "Ungültige Nachricht.");
         }
 
