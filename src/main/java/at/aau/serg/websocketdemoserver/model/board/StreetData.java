@@ -3,6 +3,11 @@ package at.aau.serg.websocketdemoserver.model.board;
 import java.util.List;
 
 public class StreetData {
+
+    private StreetData() {
+        // prevent instantiation
+    }
+
     public static final List<StreetDefinition> STREETS = List.of(
             new StreetDefinition(2, "Amtsplatz", 220, 80, StreetLevel.CHEAP, 160, 320),
             new StreetDefinition(5, "Murplatz", 300, 120, StreetLevel.NORMAL, 200, 400),

@@ -21,17 +21,6 @@ public class CreateUserRequest implements LobbyRequest {
     @Override
     public List<LobbyMessage> handle(LobbyMessage message) {
         try {
-//            fun sendCreateUser(username: String) {
-//                val payload = JsonObject().apply {
-//                    addProperty("username", username);
-//                }
-//                val msg = LobbyMessage(null, LobbyMessageType.CREATE_USER, payload)
-//                scope.launch { session.sendText("/app/lobby", Gson().toJson(msg)) }
-//            }
-//            client code ^
-
-
-
             CreateUserPayload payload = objectMapper.convertValue(message.getPayload(), CreateUserPayload.class);
             String username = payload.getUsername();
             PlayerDTO player = userManager.createUser(username);

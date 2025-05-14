@@ -4,7 +4,7 @@ package at.aau.serg.websocketdemoserver.model.cards;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class BankCardTest {
+class BankCardTest {
 
     @Test
     void testBankCardFields() {

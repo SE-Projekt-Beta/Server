@@ -11,11 +11,16 @@ import org.springframework.stereotype.Controller;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Routes lobby‐related WebSocket messages.
  */
 @Controller
 public class LobbyWebSocketController {
+
+    private static final Logger logger = LoggerFactory.getLogger(LobbyWebSocketController.class);
 
     private final SimpMessagingTemplate messagingTemplate;
     private final LobbyService lobbyService;
@@ -32,7 +37,7 @@ public class LobbyWebSocketController {
      */
     @MessageMapping("/lobby")
     public void handleGeneral(@Payload LobbyMessage message) {
-        System.out.println("Lobby (general): " + message.getType());
+        logger.info("Lobby (general): {}", message.getType());
         List<LobbyMessage> responses = lobbyService.handle(message);
         responses.forEach(resp ->
                 messagingTemplate.convertAndSend("/topic/lobby", resp)
@@ -46,7 +51,7 @@ public class LobbyWebSocketController {
     @MessageMapping("/lobby/{lobbyId}")
     public void handleByLobby(@DestinationVariable int lobbyId,
                               @Payload LobbyMessage message) {
-        System.out.println("Lobby " + lobbyId + ": " + message.getType());
+        logger.info("Lobby {}: {}", lobbyId, message.getType());
         message.setLobbyId(lobbyId);
         List<LobbyMessage> responses = lobbyService.handle(message);
         for (var resp : responses) {

@@ -10,7 +10,6 @@ import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.model.util.Dice;
 import at.aau.serg.websocketdemoserver.service.game_request.*;
-import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import java.util.*;

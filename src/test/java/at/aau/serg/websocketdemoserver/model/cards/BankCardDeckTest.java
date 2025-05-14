@@ -3,7 +3,7 @@ package at.aau.serg.websocketdemoserver.model.cards;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class BankCardDeckTest {
+class BankCardDeckTest {
 
     @Test
     void testSingletonInstance() {

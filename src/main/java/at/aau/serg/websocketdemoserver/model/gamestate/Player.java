@@ -3,6 +3,7 @@ package at.aau.serg.websocketdemoserver.model.gamestate;
 import at.aau.serg.websocketdemoserver.model.board.StreetTile;
 import at.aau.serg.websocketdemoserver.model.board.Tile;
 import at.aau.serg.websocketdemoserver.model.board.BuildingType;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,8 +16,10 @@ public class Player implements Comparable<Player> {
     private String nickname;
     private Tile currentTile;
     private int cash;
+    @Getter
     private boolean alive;
     private final List<StreetTile> ownedStreets = new ArrayList<>();
+    @Getter
     private int suspensionRounds;
     private boolean hasEscapeCard;
     private final GameBoard board;
@@ -87,10 +90,6 @@ public class Player implements Comparable<Player> {
         return false;
     }
 
-    public boolean isAlive() {
-        return alive;
-    }
-
     public void eliminate() {
         this.alive = false;
         this.cash = 0;
@@ -122,10 +121,6 @@ public class Player implements Comparable<Player> {
 
     public void suspendForRounds(int rounds) {
         this.suspensionRounds = rounds;
-    }
-
-    public int getSuspensionRounds() {
-        return suspensionRounds;
     }
 
     public List<StreetTile> getOwnedStreets() {

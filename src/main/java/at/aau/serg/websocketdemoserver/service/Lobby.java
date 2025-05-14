@@ -7,7 +7,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 public class Lobby {
+
+    private static final Logger logger = LoggerFactory.getLogger(Lobby.class);
 
     private final List<PlayerDTO> players = new ArrayList<>();
 
@@ -19,7 +25,7 @@ public class Lobby {
     }
 
     public synchronized PlayerDTO addPlayer(PlayerDTO player) {
-        System.out.println("Adding player " + player);
+        logger.info("Adding player {}", player);
         players.add(player);
         return player;
     }
@@ -29,7 +35,7 @@ public class Lobby {
     }
 
     public synchronized boolean isReadyToStart() {
-        System.out.println("Lobby " + lobbyName + " is ready to start: " + (players.size() >= 2));
+        logger.info("Lobby {} is ready to start: {}", lobbyName, players.size() >= 2);
         return players.size() >= 2; // At least 2 players required
     }
 
