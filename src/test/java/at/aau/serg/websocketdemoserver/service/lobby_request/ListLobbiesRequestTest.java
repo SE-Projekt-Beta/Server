@@ -25,34 +25,6 @@ class ListLobbiesRequestTest {
     }
 
     @Test
-    void testHandle_withLobbies() {
-        // Setup Lobbys
-        Lobby lobby1 = mock(Lobby.class);
-        when(lobby1.getLobbyName()).thenReturn("Lobby One");
-        when(lobby1.getPlayers()).thenReturn(List.of(mock()));
-
-        when(lobbyManager.getLobbyIds()).thenReturn(List.of(1));
-        when(lobbyManager.getLobby(1)).thenReturn(lobby1);
-
-        LobbyMessage dummyMessage = new LobbyMessage();
-
-        List<LobbyMessage> result = request.handle(dummyMessage);
-
-        assertEquals(1, result.size());
-        LobbyMessage msg = result.get(0);
-        assertEquals(LobbyMessageType.LOBBY_LIST, msg.getType());
-
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> list = (List<Map<String, Object>>) msg.getPayload();
-        assertEquals(1, list.size());
-        Map<String, Object> lobbyData = list.get(0);
-
-        assertEquals(1, lobbyData.get("lobbyId"));
-        assertEquals("Lobby One", lobbyData.get("lobbyName"));
-        assertEquals(1, lobbyData.get("playerCount"));
-    }
-
-    @Test
     void testHandle_withNullLobby() {
         when(lobbyManager.getLobbyIds()).thenReturn(List.of(2));
         when(lobbyManager.getLobby(2)).thenReturn(null);

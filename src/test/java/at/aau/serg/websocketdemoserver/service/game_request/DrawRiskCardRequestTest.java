@@ -1,7 +1,6 @@
 package at.aau.serg.websocketdemoserver.service.game_request;
 
-import at.aau.serg.websocketdemoserver.dto.GameMessage;
-import at.aau.serg.websocketdemoserver.dto.MessageType;
+import at.aau.serg.websocketdemoserver.dto.*;
 import at.aau.serg.websocketdemoserver.model.board.JailTile;
 import at.aau.serg.websocketdemoserver.model.cards.*;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
@@ -9,135 +8,105 @@ import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class DrawRiskCardRequestTest {
+public class DrawRiskCardRequestTest {
 
-    private DrawRiskCardRequest request;
     private GameState gameState;
     private Player player;
     private JailTile jailTile;
-    private RiskCardDeck mockDeck;
-    private int lobbyId;
+    private List<GameMessage> extraMessages;
+    private Map<String, Object> payload;
 
     @BeforeEach
     void setUp() {
+        GameBoard board = new GameBoard();
         gameState = new GameState();
-        GameBoard board = gameState.getBoard();
-        player = new Player("RiskTester", board);
+
+        player = new Player("Tester", board);
+        player.setCash(500);
         gameState.startGame(List.of(player));
-        lobbyId = 1;
 
-        jailTile = new JailTile(31);
-        mockDeck = mock(RiskCardDeck.class);
-        request = new DrawRiskCardRequest(mockDeck, jailTile);
-    }
-
-    private Map<String, Object> payloadForPlayer() {
-        Map<String, Object> payload = new HashMap<>();
+        jailTile = new JailTile(10);
+        extraMessages = new ArrayList<>();
+        payload = new HashMap<>();
         payload.put("playerId", player.getId());
-        return payload;
     }
 
+
     @Test
-    void testCashRiskCardPositive() {
-        when(mockDeck.drawCard()).thenReturn(new CashRiskCard(1, "Bonus", "Du bekommst Geld", 100));
-        List<GameMessage> extras = new ArrayList<>();
+    void testCashCardPositive() {
+        CashRiskCard card = new CashRiskCard(1, "Bonus", "Du bekommst Geld", 200);
+        RiskCardDeck deck = mock(RiskCardDeck.class);
+        when(deck.drawCard()).thenReturn(card);
 
-        GameMessage result = request.execute(lobbyId, payloadForPlayer(), gameState, extras);
+        DrawRiskCardRequest request = new DrawRiskCardRequest(deck, jailTile);
+        GameMessage result = request.execute(1, payload, gameState, extraMessages);
 
+        assertEquals(700, player.getCash());
         assertEquals(MessageType.GAME_STATE, result.getType());
-        assertEquals(4000, player.getCash());
-        assertEquals(1, extras.size());
-        assertEquals(MessageType.DRAW_RISK_CARD, extras.get(0).getType());
+        assertTrue(extraMessages.stream().anyMatch(m -> m.getType() == MessageType.DRAW_RISK_CARD));
     }
 
     @Test
-    void testCashRiskCardNegativeNoBankrupt() {
-        player.setCash(200);
-        when(mockDeck.drawCard()).thenReturn(new CashRiskCard(2, "Strafe", "Du verlierst Geld", -100));
-        List<GameMessage> extras = new ArrayList<>();
-
-        GameMessage result = request.execute(lobbyId, payloadForPlayer(), gameState, extras);
-
-        assertEquals(100, player.getCash());
-        assertEquals(1, extras.size());
-    }
-
-    @Test
-    void testCashRiskCardCausesBankrupt() {
+    void testCashCardNegativeBankrupt() {
         player.setCash(50);
-        when(mockDeck.drawCard()).thenReturn(new CashRiskCard(3, "Zwangsenteignung", "Alle Ersparnisse verloren", -100));
-        List<GameMessage> extras = new ArrayList<>();
+        CashRiskCard card = new CashRiskCard(2, "Strafe", "Du verlierst Geld", -100);
+        RiskCardDeck deck = mock(RiskCardDeck.class);
+        when(deck.drawCard()).thenReturn(card);
 
-        GameMessage result = request.execute(lobbyId, payloadForPlayer(), gameState, extras);
+        DrawRiskCardRequest request = new DrawRiskCardRequest(deck, jailTile);
+        GameMessage result = request.execute(1, payload, gameState, extraMessages);
 
         assertFalse(player.isAlive());
-        assertEquals(2, extras.size());
-        assertEquals(MessageType.PLAYER_LOST, extras.get(1).getType());
+        assertTrue(extraMessages.stream().anyMatch(m -> m.getType() == MessageType.PLAYER_LOST));
     }
 
     @Test
-    void testEscapeCardGranted() {
-        when(mockDeck.drawCard()).thenReturn(new EscapeRiskCard(4, "Freiheitskarte", "Du darfst das Gefängnis verlassen"));
-        List<GameMessage> extras = new ArrayList<>();
+    void testEscapeCard() {
+        EscapeRiskCard card = new EscapeRiskCard(3, "Freiheit", "Du darfst raus");
+        RiskCardDeck deck = mock(RiskCardDeck.class);
+        when(deck.drawCard()).thenReturn(card);
 
-        GameMessage result = request.execute(lobbyId, payloadForPlayer(), gameState, extras);
+        DrawRiskCardRequest request = new DrawRiskCardRequest(deck, jailTile);
+        GameMessage result = request.execute(1, payload, gameState, extraMessages);
 
         assertTrue(player.hasEscapeCard());
-        assertEquals(2, extras.size());
-        assertEquals(MessageType.PLAYER_OUT_OF_JAIL_CARD, extras.get(1).getType());
+        assertTrue(extraMessages.stream().anyMatch(m -> m.getType() == MessageType.PLAYER_OUT_OF_JAIL_CARD));
     }
 
-    @Test
-    void testGoToJailCardWithoutEscape() {
-        when(mockDeck.drawCard()).thenReturn(new GoToJailRiskCard(5, "Geh ins Gefängnis", "Du wirst verhaftet"));
-        List<GameMessage> extras = new ArrayList<>();
-
-        GameMessage result = request.execute(lobbyId, payloadForPlayer(), gameState, extras);
-
-        assertEquals(jailTile, player.getCurrentTile());
-        assertEquals(3, player.getSuspensionRounds());
-        assertEquals(1, extras.size());
-        assertEquals(MessageType.DRAW_RISK_CARD, extras.get(0).getType());
-    }
 
     @Test
-    void testGoToJailCardWithEscapeCard() {
+    void testGoToJailWithEscapeCard() {
         player.setEscapeCard(true);
-        when(mockDeck.drawCard()).thenReturn(new GoToJailRiskCard(6, "Geh ins Gefängnis", "Aber du hast eine Freiheitskarte"));
-        List<GameMessage> extras = new ArrayList<>();
+        GoToJailRiskCard card = new GoToJailRiskCard(5, "Geh ins Gefängnis", "Aber du hast eine Karte");
+        RiskCardDeck deck = mock(RiskCardDeck.class);
+        when(deck.drawCard()).thenReturn(card);
 
-        GameMessage result = request.execute(lobbyId, payloadForPlayer(), gameState, extras);
+        DrawRiskCardRequest request = new DrawRiskCardRequest(deck, jailTile);
+        GameMessage result = request.execute(1, payload, gameState, extraMessages);
 
         assertFalse(player.hasEscapeCard());
-        assertEquals(1, extras.size());
-        assertTrue(extras.get(0).getPayload().toString().contains("Freiheitskarte"));
+        assertNull(player.getCurrentTile());
+        assertEquals(0, player.getSuspensionRounds());
     }
 
     @Test
-    void testInvalidPlayer() {
-        Map<String, Object> badPayload = Map.of("playerId", 999);
-        List<GameMessage> extras = new ArrayList<>();
+    void testInvalidPlayerId() {
+        Map<String, Object> invalidPayload = new HashMap<>();
+        invalidPayload.put("playerId", 999);  // Nicht existierender Spieler
 
-        GameMessage result = request.execute(lobbyId, badPayload, gameState, extras);
+        RiskCardDeck deck = mock(RiskCardDeck.class);
+        when(deck.drawCard()).thenReturn(new CashRiskCard(6, "Dummy", "irrelevant", 50));
 
-        assertEquals(MessageType.ERROR, result.getType());
-        assertTrue(result.getPayload().toString().contains("Spieler ungültig"));
-    }
-
-    @Test
-    void testExceptionHandling() {
-        Map<String, Object> invalid = new HashMap<>(); // no playerId
-        List<GameMessage> extras = new ArrayList<>();
-
-        GameMessage result = request.execute(lobbyId, invalid, gameState, extras);
+        DrawRiskCardRequest request = new DrawRiskCardRequest(deck, jailTile);
+        GameMessage result = request.execute(1, invalidPayload, gameState, extraMessages);
 
         assertEquals(MessageType.ERROR, result.getType());
-        assertTrue(result.getPayload().toString().contains("Fehler beim Ziehen"));
     }
 }

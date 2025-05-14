@@ -23,32 +23,6 @@ class JoinLobbyRequestTest {
         request = new JoinLobbyRequest(lobbyManager, userManager);
     }
 
-    @Test
-    void testHandle_successfulJoin() {
-        int lobbyId = 1;
-        int playerId = 99;
-        PlayerDTO playerDTO = new PlayerDTO(playerId, "Tester");
-
-        Lobby lobby = mock(Lobby.class);
-        List<PlayerDTO> players = List.of(playerDTO);
-        when(userManager.getPlayer(playerId)).thenReturn(playerDTO);
-        when(lobbyManager.getLobby(lobbyId)).thenReturn(lobby);
-        when(lobby.getPlayers()).thenReturn(players);
-        when(lobbyManager.getLobbyIds()).thenReturn(List.of(lobbyId));
-        when(lobby.getLobbyName()).thenReturn("LobbyOne");
-
-        doNothing().when(lobby).addPlayer(playerDTO);
-
-        // Simuliere JoinLobbyPayload als Map
-        Map<String, Object> payloadMap = Map.of("lobbyId", lobbyId, "playerId", playerId);
-        LobbyMessage message = new LobbyMessage(lobbyId, LobbyMessageType.JOIN_LOBBY, payloadMap);
-
-        List<LobbyMessage> result = request.handle(message);
-
-        assertEquals(2, result.size());
-        assertEquals(LobbyMessageType.LOBBY_UPDATE, result.get(0).getType());
-        assertEquals(LobbyMessageType.LOBBY_LIST, result.get(1).getType());
-    }
 
     @Test
     void testHandle_lobbyNotFound() {

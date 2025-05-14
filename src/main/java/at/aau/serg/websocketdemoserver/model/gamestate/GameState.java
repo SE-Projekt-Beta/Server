@@ -73,13 +73,31 @@ public class GameState {
         if (turnOrder.isEmpty()) return;
 
         int initialIndex = currentPlayerIndex;
+        int loopCounter = 0;
+
         do {
             currentPlayerIndex = (currentPlayerIndex + 1) % turnOrder.size();
             if (currentPlayerIndex == 0 && currentPlayerIndex != initialIndex) {
                 currentRound++;
             }
-        } while (!getCurrentPlayer().isAlive() || getCurrentPlayer().isSuspended());
+            Player current = getCurrentPlayer();
+
+            // Wenn Spieler im Gefängnis: Runde runterzählen, überspringen
+            if (current.isAlive() && current.getSuspensionRounds() > 0) {
+                current.decreaseSuspension();
+                loopCounter++;
+                continue;
+            }
+
+            // Nur lebende und nicht gesperrte Spieler dürfen spielen
+            if (current.isAlive() && current.getSuspensionRounds() == 0) {
+                return;
+            }
+
+            loopCounter++;
+        } while (loopCounter < turnOrder.size());
     }
+
 
     public int getCurrentRound() {
         return currentRound;
