@@ -1,10 +1,8 @@
 package at.aau.serg.websocketdemoserver.service.lobby_request;
 
 import at.aau.serg.websocketdemoserver.dto.*;
-import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.service.*;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.List;
@@ -12,10 +10,10 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class StartGameRequestTest {
+class StartGameRequestTest {
 
     @Test
-    public void testHandle_validStart() {
+    void testHandle_validStart() {
         // Mock Setup
         LobbyManager lobbyManager = mock(LobbyManager.class);
         SimpMessagingTemplate messagingTemplate = mock(SimpMessagingTemplate.class);
@@ -47,7 +45,7 @@ public class StartGameRequestTest {
     }
 
     @Test
-    public void testHandle_notEnoughPlayers() {
+    void testHandle_notEnoughPlayers() {
         LobbyManager lobbyManager = mock(LobbyManager.class);
         SimpMessagingTemplate messagingTemplate = mock(SimpMessagingTemplate.class);
         StartGameRequest request = new StartGameRequest(lobbyManager, messagingTemplate);
@@ -65,7 +63,7 @@ public class StartGameRequestTest {
     }
 
     @Test
-    public void testHandle_lobbyNotFound() {
+    void testHandle_lobbyNotFound() {
         LobbyManager lobbyManager = mock(LobbyManager.class);
         SimpMessagingTemplate messagingTemplate = mock(SimpMessagingTemplate.class);
         StartGameRequest request = new StartGameRequest(lobbyManager, messagingTemplate);
