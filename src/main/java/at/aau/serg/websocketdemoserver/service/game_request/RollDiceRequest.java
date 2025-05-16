@@ -29,15 +29,61 @@ public class RollDiceRequest implements GameRequest {
 
             Player player = gameState.getPlayer(playerId);
             if (player == null) {
+                System.out.println("Player with ID " + playerId + " not found.");
                 return MessageFactory.error(lobbyId, "Spieler nicht gefunden.");
             }
 
             if (playerId != gameState.getCurrentPlayerId()) {
+                System.out.println("Player " + player.getNickname() + " tried to roll the dice, but it's not their turn.");
                 return MessageFactory.error(lobbyId, "Nicht dein Zug.");
             }
 
+            // check if already rolled dice
+            if (player.isHasRolledDice()) {
+                System.out.println("Player " + player.getNickname() + " has already rolled the dice.");
+                return MessageFactory.error(lobbyId, "Du hast bereits geworfen.");
+            }
+
+            // get current tile
+            Tile currentTile = player.getCurrentTile();
+            System.out.println("Player " + player.getNickname() + " is on tile: " + (currentTile != null ? currentTile.getType() : "null"));
+
             int steps = dice.roll();
+            System.out.println("Player " + player.getNickname() + " rolled a " + steps);
             player.moveSteps(steps);
+
+            // check what the player has landed on
+            Tile newTile = player.getCurrentTile();
+
+            switch (newTile.getType()) {
+                case STREET:
+                    System.out.println("Player " + player.getNickname() + " landed on a street.");
+                    // send a message to ask if the player wants to buy the property
+                    extraMessages.add(new GameMessage(
+                            lobbyId,
+                            MessageType.ASK_BUY_PROPERTY,
+                            new JSONObject().put("playerId", playerId).put("fieldIndex", newTile.getIndex()))
+                    );
+                    break;
+                case GOTO_JAIL:
+                    System.out.println("Player " + player.getNickname() + " landed on GOTO_JAIL.");
+                    break;
+                case BANK:
+                    System.out.println("Player " + player.getNickname() + " landed on a bank tile.");
+                    break;
+                case RISK:
+                    System.out.println("Player " + player.getNickname() + " landed on a risk tile.");
+                    break;
+                case TAX:
+                    System.out.println("Player " + player.getNickname() + " landed on a tax tile.");
+                    break;
+                default:
+                    System.out.println("Player " + player.getNickname() + " landed on an unknown tile type.");
+            }
+
+
+            player.setHasRolledDice(true);
+
 
             extraMessages.add(new GameMessage(
                     lobbyId,
