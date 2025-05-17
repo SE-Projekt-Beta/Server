@@ -1,6 +1,5 @@
 package at.aau.serg.websocketdemoserver.model.gamestate;
 
-import at.aau.serg.websocketdemoserver.model.board.BuildingType;
 import at.aau.serg.websocketdemoserver.model.board.StreetTile;
 import at.aau.serg.websocketdemoserver.model.board.Tile;
 import org.junit.jupiter.api.BeforeEach;

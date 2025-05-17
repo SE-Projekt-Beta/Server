@@ -2,7 +2,6 @@ package at.aau.serg.websocketdemoserver.service.lobby_request;
 
 import at.aau.serg.websocketdemoserver.dto.LobbyMessage;
 import at.aau.serg.websocketdemoserver.dto.LobbyMessageType;
-import at.aau.serg.websocketdemoserver.service.Lobby;
 import at.aau.serg.websocketdemoserver.service.LobbyManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

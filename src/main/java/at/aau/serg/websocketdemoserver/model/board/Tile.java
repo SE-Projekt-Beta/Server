@@ -5,7 +5,7 @@ public abstract class Tile {
     private final int index;
     private String label = "";
 
-    public Tile(int index) {
+    protected Tile(int index) {
         this.index = index;
     }
 

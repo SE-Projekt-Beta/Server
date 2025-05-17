@@ -8,14 +8,13 @@ import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class DrawRiskCardRequestTest {
+class DrawRiskCardRequestTest {
 
     private GameState gameState;
     private Player player;
@@ -61,9 +60,10 @@ public class DrawRiskCardRequestTest {
         when(deck.drawCard()).thenReturn(card);
 
         DrawRiskCardRequest request = new DrawRiskCardRequest(deck, jailTile);
-        GameMessage result = request.execute(1, payload, gameState, extraMessages);
+        request.execute(1, payload, gameState, extraMessages);
 
         assertFalse(player.isAlive());
+        assertEquals(0, player.getCash());
         assertTrue(extraMessages.stream().anyMatch(m -> m.getType() == MessageType.PLAYER_LOST));
     }
 
@@ -74,7 +74,7 @@ public class DrawRiskCardRequestTest {
         when(deck.drawCard()).thenReturn(card);
 
         DrawRiskCardRequest request = new DrawRiskCardRequest(deck, jailTile);
-        GameMessage result = request.execute(1, payload, gameState, extraMessages);
+        request.execute(1, payload, gameState, extraMessages);
 
         assertTrue(player.hasEscapeCard());
         assertTrue(extraMessages.stream().anyMatch(m -> m.getType() == MessageType.PLAYER_OUT_OF_JAIL_CARD));
@@ -89,7 +89,7 @@ public class DrawRiskCardRequestTest {
         when(deck.drawCard()).thenReturn(card);
 
         DrawRiskCardRequest request = new DrawRiskCardRequest(deck, jailTile);
-        GameMessage result = request.execute(1, payload, gameState, extraMessages);
+        request.execute(1, payload, gameState, extraMessages);
 
         assertFalse(player.hasEscapeCard());
         assertNull(player.getCurrentTile());

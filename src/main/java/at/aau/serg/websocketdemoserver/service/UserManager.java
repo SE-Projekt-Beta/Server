@@ -3,7 +3,6 @@ package at.aau.serg.websocketdemoserver.service;
 import at.aau.serg.websocketdemoserver.dto.PlayerDTO;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class UserManager {
     // array list ofr players

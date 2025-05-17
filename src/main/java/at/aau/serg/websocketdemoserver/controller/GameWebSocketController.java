@@ -3,12 +3,15 @@ package at.aau.serg.websocketdemoserver.controller;
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.service.GameManager;
 import at.aau.serg.websocketdemoserver.service.LobbyService;
-import org.json.JSONObject;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * Routes game‐related WebSocket messages to the correct GameHandler.
@@ -16,13 +19,13 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class GameWebSocketController {
 
+    private static final Logger logger = LoggerFactory.getLogger(GameWebSocketController.class);
+
     private final SimpMessagingTemplate messagingTemplate;
-    private final LobbyService lobbyService;
 
     public GameWebSocketController(SimpMessagingTemplate messagingTemplate,
                                    LobbyService lobbyService) {
         this.messagingTemplate = messagingTemplate;
-        this.lobbyService = lobbyService;
     }
 
     /**
@@ -31,12 +34,12 @@ public class GameWebSocketController {
     @MessageMapping("/dkt/{lobbyId}")
     public void handleGameMessage(@DestinationVariable int lobbyId,
                                   @Payload GameMessage message) {
-        System.out.println("Game " + lobbyId + ": " + message.getType());
+        logger.info("Game {}: {}", lobbyId, message.getType());
         message.setLobbyId(lobbyId);
 
         var handler = GameManager.getInstance().getHandler(lobbyId);
         GameMessage result = handler.handle(message);
-        System.out.println("Sending result: " + message.getType() + " to " + lobbyId);
+        logger.info("Sending result: {} to {}", message.getType(), lobbyId);
         if (result != null) {
             messagingTemplate.convertAndSend("/topic/dkt/" + lobbyId, result);
         }

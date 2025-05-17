@@ -7,8 +7,6 @@ import at.aau.serg.websocketdemoserver.model.board.Tile;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +18,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
-public class GameHandlerTest {
+class GameHandlerTest {
 
     private GameHandler gameHandler;
     private GameState mockGameState;
@@ -48,7 +46,7 @@ public class GameHandlerTest {
     }
 
     @Test
-    void handle_withUnknownType_returnsError() throws JSONException {
+    void handle_withUnknownType_returnsError() {
         GameMessage msg = new GameMessage(1, null, null);
         GameMessage result = gameHandler.handle(msg);
 
@@ -67,7 +65,7 @@ public class GameHandlerTest {
     }
 
     @Test
-    void handle_withUnsupportedMessageType_returnsError() throws JSONException {
+    void handle_withUnsupportedMessageType_returnsError() {
         GameMessage msg = new GameMessage(2, MessageType.ERROR, null); // ERROR nicht im Map
 
         GameMessage result = gameHandler.handle(msg);

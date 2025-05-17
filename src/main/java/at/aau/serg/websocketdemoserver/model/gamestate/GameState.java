@@ -59,7 +59,7 @@ public class GameState {
     public List<Player> getAlivePlayers() {
         return turnOrder.stream()
                 .filter(Player::isAlive)
-                .collect(Collectors.toList());
+                .toList(); // Java 16+
     }
 
     public GameBoard getBoard() {
