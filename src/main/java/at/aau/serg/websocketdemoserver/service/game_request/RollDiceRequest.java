@@ -72,7 +72,7 @@ public class RollDiceRequest implements GameRequest {
                         int rent = streetTile.calculateRent();
                         player.transferCash(owner, rent);
                         System.out.println("Player " + player.getNickname() + " paid rent of " + rent + " to " + owner.getNickname());
-
+                        gameState.advanceTurn();
                     } else {
                         System.out.println("Player " + player.getNickname() + " landed on an unowned street.");
                         extraMessages.add(new GameMessage(
@@ -101,7 +101,7 @@ public class RollDiceRequest implements GameRequest {
 //                    break;
                 default:
                     System.out.println("Player " + player.getNickname() + " landed on an unknown tile type: " + newTile.getType());
-                    player.setHasRolledDice(false);
+                    gameState.advanceTurn();
             }
 
 
