@@ -32,7 +32,7 @@ public class StartGameRequest implements LobbyRequest {
         // Spieler-Daten in GamePlayer konvertieren
         GameBoard board = new GameBoard();
         List<Player> playerModels = lobby.getPlayers().stream()
-                .map(dto -> new Player(dto.getNickname(), board))
+                .map(dto -> new Player(dto.getId(), dto.getNickname(), board))
                 .collect(Collectors.toList());
 
         // GameState initialisieren
