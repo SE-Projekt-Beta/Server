@@ -75,30 +75,33 @@ public class RollDiceRequest implements GameRequest {
 
                     } else {
                         System.out.println("Player " + player.getNickname() + " landed on an unowned street.");
+                        extraMessages.add(new GameMessage(
+                                lobbyId,
+                                MessageType.ASK_BUY_PROPERTY,
+                                new JSONObject().put("playerId", playerId).put("fieldIndex", newTile.getIndex()).toMap()
+                        ));
                     }
 
-                    // send a message to ask if the player wants to buy the property
-                    extraMessages.add(new GameMessage(
-                            lobbyId,
-                            MessageType.ASK_BUY_PROPERTY,
-                            new JSONObject().put("playerId", playerId).put("fieldIndex", newTile.getIndex()).toMap()
-                    ));
                     break;
-                case GOTO_JAIL:
-                    System.out.println("Player " + player.getNickname() + " landed on GOTO_JAIL.");
-                    break;
-                case BANK:
-                    System.out.println("Player " + player.getNickname() + " landed on a bank tile.");
-                    break;
-                case RISK:
-                    System.out.println("Player " + player.getNickname() + " landed on a risk tile.");
-                    player.setHasRolledDice(false);
-                    break;
-                case TAX:
-                    System.out.println("Player " + player.getNickname() + " landed on a tax tile.");
-                    break;
+//                case GOTO_JAIL:
+//                    System.out.println("Player " + player.getNickname() + " landed on GOTO_JAIL.");
+//                    player.setHasRolledDice(false);
+//                    break;
+//                case BANK:
+//                    System.out.println("Player " + player.getNickname() + " landed on a bank tile.");
+//                    player.setHasRolledDice(false);
+//                    break;
+//                case RISK:
+//                    System.out.println("Player " + player.getNickname() + " landed on a risk tile.");
+//                    player.setHasRolledDice(false);
+//                    break;
+//                case TAX:
+//                    System.out.println("Player " + player.getNickname() + " landed on a tax tile.");
+//                    player.setHasRolledDice(false);
+//                    break;
                 default:
-                    System.out.println("Player " + player.getNickname() + " landed on an unknown tile type.");
+                    System.out.println("Player " + player.getNickname() + " landed on an unknown tile type: " + newTile.getType());
+                    player.setHasRolledDice(false);
             }
 
 
@@ -109,7 +112,6 @@ public class RollDiceRequest implements GameRequest {
                     new JSONObject().put("playerId", playerId).put("steps", steps).toMap()
             ));
 
-            // Kein advanceTurn() hier – Zug ist **noch nicht beendet**.
             return MessageFactory.gameState(lobbyId, gameState);
 
         } catch (Exception e) {
