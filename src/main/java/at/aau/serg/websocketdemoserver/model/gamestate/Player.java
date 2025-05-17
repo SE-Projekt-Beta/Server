@@ -1,31 +1,41 @@
 package at.aau.serg.websocketdemoserver.model.gamestate;
 
-import at.aau.serg.websocketdemoserver.model.board.StreetTile;
-import at.aau.serg.websocketdemoserver.model.board.Tile;
-import at.aau.serg.websocketdemoserver.model.board.BuildingType;
+import at.aau.serg.websocketdemoserver.model.board.*;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+// tile factory import
+
 
 public class Player implements Comparable<Player> {
 
     private static int idCounter = 1;
 
-    private final int id;
-    private String nickname;
-    private Tile currentTile;
-    private int cash;
     @Getter
+    private final int id;
+    @Setter
+    @Getter
+    private String nickname;
+    @Setter
+    @Getter
+    private Tile currentTile;
+    @Getter
+    private int cash;
     private boolean alive;
     private final List<StreetTile> ownedStreets = new ArrayList<>();
     @Getter
     private int suspensionRounds;
     private boolean hasEscapeCard;
+    @Getter
+    @Setter
+    private boolean hasRolledDice = false;
     private final GameBoard board;
 
     public Player(String nickname, GameBoard board) {
         this.id = idCounter++;
+        this.currentTile = new SpecialTile(1, "START", TileType.START);
         this.nickname = nickname;
         this.cash = 3000;
         this.alive = true;
@@ -34,6 +44,7 @@ public class Player implements Comparable<Player> {
 
     public Player(int id, String nickname, GameBoard board) {
         this.id = id;
+        this.currentTile = new SpecialTile(1, "START", TileType.START);
         this.nickname = nickname;
         this.cash = 3000;
         this.alive = true;
@@ -41,30 +52,6 @@ public class Player implements Comparable<Player> {
         if (id >= idCounter) {
             idCounter = id + 1;
         }
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public String getNickname() {
-        return nickname;
-    }
-
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
-    public Tile getCurrentTile() {
-        return currentTile;
-    }
-
-    public void setCurrentTile(Tile tile) {
-        this.currentTile = tile;
-    }
-
-    public int getCash() {
-        return cash;
     }
 
     public void setCash(int newCash) {
@@ -88,6 +75,10 @@ public class Player implements Comparable<Player> {
             return true;
         }
         return false;
+    }
+
+    public boolean isAlive() {
+        return alive;
     }
 
     public void eliminate() {
@@ -161,8 +152,9 @@ public class Player implements Comparable<Player> {
         if (!isSuspended()) {
             int currentIndex = (currentTile != null) ? currentTile.getIndex() : -1;
             int totalTiles = board.getTiles().size();
-            int newIndex = (currentIndex + steps + 1) % totalTiles;
+            int newIndex = (currentIndex + steps) % totalTiles;
             moveToTile(newIndex);
+            setHasRolledDice(true);
         }
     }
 

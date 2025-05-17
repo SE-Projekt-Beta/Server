@@ -81,6 +81,7 @@ public class GameState {
                 currentRound++;
             }
             Player current = getCurrentPlayer();
+            current.setHasRolledDice(false);
 
             // Wenn Spieler im Gefängnis: Runde runterzählen, überspringen
             if (current.isAlive() && current.getSuspensionRounds() > 0) {

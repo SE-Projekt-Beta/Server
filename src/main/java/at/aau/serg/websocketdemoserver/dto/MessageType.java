@@ -2,6 +2,9 @@ package at.aau.serg.websocketdemoserver.dto;
 
 public enum MessageType {
     ROLL_DICE,
+    GAME_STATE,
+    ASK_BUY_PROPERTY,
+
 
     BUY_PROPERTY,
     DRAW_BANK_CARD,
@@ -16,7 +19,6 @@ public enum MessageType {
     BUILD_HOTEL,
     REQUEST_GAME_STATE,
     GAME_STARTED,
-    GAME_STATE,
     PLAYER_LOST,
     GAME_OVER,
     CASH_TASK,
