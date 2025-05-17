@@ -2,6 +2,7 @@ package at.aau.serg.websocketdemoserver.service.game_request;
 
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
+import at.aau.serg.websocketdemoserver.model.board.StreetTile;
 import at.aau.serg.websocketdemoserver.model.board.Tile;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
@@ -58,12 +59,29 @@ public class RollDiceRequest implements GameRequest {
             switch (newTile.getType()) {
                 case STREET:
                     System.out.println("Player " + player.getNickname() + " landed on a street.");
+
+                    // cast to StreetTile
+                    StreetTile streetTile = (StreetTile) newTile;
+
+                    // check if the street is owned
+                    if (streetTile.getOwner() != null) {
+                        System.out.println("Player " + player.getNickname() + " landed on a street owned by " + streetTile.getOwner().getNickname());
+                        // send a message to pay rent
+                        extraMessages.add(new GameMessage(
+                                lobbyId,
+                                MessageType.PAY_RENT,
+                                new JSONObject().put("playerId", playerId).put("fieldIndex", newTile.getIndex()).toMap()
+                        ));
+                    } else {
+                        System.out.println("Player " + player.getNickname() + " landed on an unowned street.");
+                    }
+
                     // send a message to ask if the player wants to buy the property
                     extraMessages.add(new GameMessage(
                             lobbyId,
                             MessageType.ASK_BUY_PROPERTY,
-                            new JSONObject().put("playerId", playerId).put("fieldIndex", newTile.getIndex()))
-                    );
+                            new JSONObject().put("playerId", playerId).put("fieldIndex", newTile.getIndex()).toMap()
+                    ));
                     break;
                 case GOTO_JAIL:
                     System.out.println("Player " + player.getNickname() + " landed on GOTO_JAIL.");
@@ -73,6 +91,7 @@ public class RollDiceRequest implements GameRequest {
                     break;
                 case RISK:
                     System.out.println("Player " + player.getNickname() + " landed on a risk tile.");
+                    player.setHasRolledDice(false);
                     break;
                 case TAX:
                     System.out.println("Player " + player.getNickname() + " landed on a tax tile.");
@@ -81,8 +100,6 @@ public class RollDiceRequest implements GameRequest {
                     System.out.println("Player " + player.getNickname() + " landed on an unknown tile type.");
             }
 
-
-            player.setHasRolledDice(true);
 
 
             extraMessages.add(new GameMessage(

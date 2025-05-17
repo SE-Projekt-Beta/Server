@@ -1,6 +1,8 @@
 package at.aau.serg.websocketdemoserver.model.board;
 
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,13 +10,20 @@ import java.util.List;
 
 public class StreetTile extends Tile {
 
+    @Getter
     private final int price;
+    @Getter
     private final int baseRent;
+    @Getter
     private final StreetLevel level;
+    @Getter
     private final int houseCost;
+    @Getter
     private final int hotelCost;
 
     private final List<BuildingType> buildings = new ArrayList<>();
+    @Setter
+    @Getter
     private Player owner;
 
     public StreetTile(int index, String label, int price, int baseRent, StreetLevel level, int houseCost) {
@@ -109,14 +118,6 @@ public class StreetTile extends Tile {
         return owner != null && owner.getId() == player.getId();
     }
 
-    public Player getOwner() {
-        return owner;
-    }
-
-    public void setOwner(Player owner) {
-        this.owner = owner;
-    }
-
     public int getOwnerId() {
         return (owner != null) ? owner.getId() : -1;
     }
@@ -128,26 +129,6 @@ public class StreetTile extends Tile {
     // --------------------------------------------
     // Meta-Infos
     // --------------------------------------------
-
-    public int getPrice() {
-        return price;
-    }
-
-    public int getBaseRent() {
-        return baseRent;
-    }
-
-    public StreetLevel getLevel() {
-        return level;
-    }
-
-    public int getHouseCost() {
-        return houseCost;
-    }
-
-    public int getHotelCost() {
-        return hotelCost;
-    }
 
     public List<BuildingType> getBuildings() {
         return new ArrayList<>(buildings);

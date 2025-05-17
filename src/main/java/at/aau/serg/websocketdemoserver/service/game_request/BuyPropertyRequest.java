@@ -23,8 +23,15 @@ public class BuyPropertyRequest implements GameRequest {
 
             int playerId = obj.getInt("playerId");
             int tilePos = obj.getInt("tilePos");
-
             Player player = gameState.getPlayer(playerId);
+
+            if (tilePos == -1) {
+                System.out.println("Didnt want to buy a property.");
+                gameState.advanceTurn();
+                player.setHasRolledDice(false);
+                return MessageFactory.gameState(lobbyId, gameState);
+            }
+
             if (player == null || !player.isAlive()) {
                 return MessageFactory.error(lobbyId, "Spieler ungültig oder bereits ausgeschieden.");
             }
@@ -40,7 +47,7 @@ public class BuyPropertyRequest implements GameRequest {
 
             boolean success = player.purchaseStreet(tilePos);
             if (!success) {
-                return MessageFactory.error(lobbyId, "Kauf fehlgeschlagen (z. B. nicht genug Geld).");
+                return MessageFactory.error(lobbyId, "Kauf fehlgeschlagen (z.B. nicht genug Geld).");
             }
             street.setOwner(player);
 
@@ -49,6 +56,7 @@ public class BuyPropertyRequest implements GameRequest {
             }
 
             gameState.advanceTurn();
+            player.setHasRolledDice(false);
             return MessageFactory.gameState(lobbyId, gameState);
 
         } catch (Exception e) {

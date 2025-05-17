@@ -28,6 +28,7 @@ public class MessageFactory {
                 .collect(Collectors.toList());
 
         Map<String, Object> payload = new HashMap<>();
+        System.out.println("Current player name: " + gameState.getCurrentPlayer().getNickname() + " ID: " + gameState.getCurrentPlayerId());
         payload.put("currentPlayerId", gameState.getCurrentPlayerId());
 
         Player current = gameState.getCurrentPlayer();
