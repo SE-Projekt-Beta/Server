@@ -66,12 +66,13 @@ public class RollDiceRequest implements GameRequest {
                     // check if the street is owned
                     if (streetTile.getOwner() != null) {
                         System.out.println("Player " + player.getNickname() + " landed on a street owned by " + streetTile.getOwner().getNickname());
-                        // send a message to pay rent
-                        extraMessages.add(new GameMessage(
-                                lobbyId,
-                                MessageType.PAY_RENT,
-                                new JSONObject().put("playerId", playerId).put("fieldIndex", newTile.getIndex()).toMap()
-                        ));
+
+                        // transfer rent
+                        Player owner = streetTile.getOwner();
+                        int rent = streetTile.calculateRent();
+                        player.transferCash(owner, rent);
+                        System.out.println("Player " + player.getNickname() + " paid rent of " + rent + " to " + owner.getNickname());
+
                     } else {
                         System.out.println("Player " + player.getNickname() + " landed on an unowned street.");
                     }
