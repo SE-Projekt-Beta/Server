@@ -30,6 +30,7 @@ public class GameHandler {
         // Mapping aller MessageTypes zu den zugehörigen Requests
         requestMap.put(ROLL_DICE, new RollDiceRequest(new Dice(1,6)));
         requestMap.put(BUY_PROPERTY, new BuyPropertyRequest());
+        requestMap.put(PAY_PRISON, new PayPrisonRequest());
         requestMap.put(DRAW_BANK_CARD, new DrawBankCardRequest(BankCardDeck.get()));
         requestMap.put(DRAW_RISK_CARD, new DrawRiskCardRequest(RiskCardDeck.get(), jailTile));
         requestMap.put(PAY_TAX, new PayTaxRequest());

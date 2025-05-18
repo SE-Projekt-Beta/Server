@@ -23,10 +23,14 @@ public class Player implements Comparable<Player> {
     private Tile currentTile;
     @Getter
     private int cash;
+    @Getter
     private boolean alive;
     private final List<StreetTile> ownedStreets = new ArrayList<>();
     @Getter
+    @Setter
     private int suspensionRounds;
+    @Getter
+    @Setter
     private boolean hasEscapeCard;
     @Getter
     @Setter
@@ -75,10 +79,6 @@ public class Player implements Comparable<Player> {
             return true;
         }
         return false;
-    }
-
-    public boolean isAlive() {
-        return alive;
     }
 
     public void eliminate() {
@@ -149,6 +149,7 @@ public class Player implements Comparable<Player> {
     }
 
     public void moveSteps(int steps) {
+        System.out.println("Moving " + steps + " steps from " + currentTile);
         if (!isSuspended()) {
             int currentIndex = (currentTile != null) ? currentTile.getIndex() : -1;
             int totalTiles = board.getTiles().size();

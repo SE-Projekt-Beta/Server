@@ -70,6 +70,7 @@ public class MessageFactory {
         m.put("alive",      p.isAlive());
         m.put("position",   (p.getCurrentTile() != null ? p.getCurrentTile().getIndex() : -1));
         m.put("suspended",  p.isSuspended());
+        m.put("suspendedRounds", p.getSuspensionRounds());
         m.put("escapeCard", p.hasEscapeCard());
         return m;
     }
