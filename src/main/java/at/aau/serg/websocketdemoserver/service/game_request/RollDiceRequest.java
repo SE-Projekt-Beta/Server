@@ -2,6 +2,8 @@ package at.aau.serg.websocketdemoserver.service.game_request;
 
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
+import at.aau.serg.websocketdemoserver.dto.RiskCardDrawnPayload;
+import at.aau.serg.websocketdemoserver.dto.WentToJailPayload;
 import at.aau.serg.websocketdemoserver.model.board.StreetTile;
 import at.aau.serg.websocketdemoserver.model.board.Tile;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
@@ -45,9 +47,26 @@ public class RollDiceRequest implements GameRequest {
                 return MessageFactory.error(lobbyId, "Du hast bereits geworfen.");
             }
 
+            if (!player.isAlive()) {
+                return MessageFactory.error(lobbyId, "Spieler ungültig oder ausgeschieden.");
+            }
+
             // get current tile
             Tile currentTile = player.getCurrentTile();
             System.out.println("Player " + player.getNickname() + " is on tile: " + (currentTile != null ? currentTile.getType() : "null"));
+
+            if (player.isSuspended()) {
+                System.out.println("Player " + player.getNickname() + " is suspended for " + player.getSuspensionRounds() + " rounds.");
+                // ask for payment
+
+                extraMessages.add(new GameMessage(
+                        lobbyId,
+                        MessageType.ASK_PAY_PRISON,
+                        new JSONObject().put("playerId", playerId).put("suspensionRounds", player.getSuspensionRounds()).toMap()
+                ));
+
+                return MessageFactory.gameState(lobbyId, gameState);
+            }
 
             int steps = dice.roll();
             System.out.println("Player " + player.getNickname() + " rolled a " + steps);
@@ -83,10 +102,42 @@ public class RollDiceRequest implements GameRequest {
                     }
 
                     break;
-//                case GOTO_JAIL:
-//                    System.out.println("Player " + player.getNickname() + " landed on GOTO_JAIL.");
-//                    player.setHasRolledDice(false);
-//                    break;
+                case GOTO_JAIL:
+
+                    Tile jailTile = gameState.getBoard().getTile(31);
+
+                        player.setCurrentTile(jailTile);
+                        player.suspendForRounds(3);
+                        extraMessages.add(new GameMessage(
+                                lobbyId,
+                                MessageType.GO_TO_JAIL,
+                                new WentToJailPayload(playerId)
+                        ));
+
+//                    if (player.hasEscapeCard()) {
+//                        player.setEscapeCard(false);
+//                        extraMessages.add(new GameMessage(
+//                                lobbyId,
+//                                MessageType.DRAW_RISK_CARD,
+//                                new RiskCardDrawnPayload(playerId, 0, player.getCash(),
+//                                        "Freiheitskarte verwendet",
+//                                        "Du hast eine Freiheitskarte genutzt und musst nicht ins Gefängnis.")
+//                        ));
+//                    } else {
+//                        player.setCurrentTile(jailTile);
+//                        player.suspendForRounds(3);
+//                        extraMessages.add(new GameMessage(
+//                                lobbyId,
+//                                MessageType.GO_TO_JAIL,
+//                                new RiskCardDrawnPayload(playerId, 0, player.getCash(),
+//                                        "Gefängnis", "Du wurdest ins Gefängnis geschickt und setzt 3 Runden aus.")
+//                        ));
+//                    }
+
+                    gameState.advanceTurn();
+
+                    System.out.println("Player " + player.getNickname() + " landed on GOTO_JAIL.");
+                    break;
 //                case BANK:
 //                    System.out.println("Player " + player.getNickname() + " landed on a bank tile.");
 //                    player.setHasRolledDice(false);
@@ -109,7 +160,7 @@ public class RollDiceRequest implements GameRequest {
             extraMessages.add(new GameMessage(
                     lobbyId,
                     MessageType.DICE_ROLLED,
-                    new JSONObject().put("playerId", playerId).put("steps", steps).toMap()
+                    new JSONObject().put("playerId", playerId).put("steps", steps).put("fieldIndex", newTile.getIndex()).toMap()
             ));
 
             return MessageFactory.gameState(lobbyId, gameState);
