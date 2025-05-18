@@ -143,7 +143,7 @@ public class Player implements Comparable<Player> {
 
     public void moveToTile(int index) {
         if (!isSuspended()) {
-            Tile destination = board.getTile(index % board.getTiles().size());
+            Tile destination = board.getTile(index);
             this.currentTile = destination;
         }
     }
@@ -151,11 +151,21 @@ public class Player implements Comparable<Player> {
     public void moveSteps(int steps) {
         System.out.println("Moving " + steps + " steps from " + currentTile);
         if (!isSuspended()) {
-            int currentIndex = (currentTile != null) ? currentTile.getIndex() : -1;
-            int totalTiles = board.getTiles().size();
-            int newIndex = (currentIndex + steps) % totalTiles;
+            int currentIndex = (currentTile != null)
+                    ? currentTile.getIndex()
+                    : 1;            // or whatever your “start” tile is
+
+            int totalTiles   = board.getTiles().size();  // 40
+            // step 1: shift into 0-based by subtracting 1
+            int zeroBased    = currentIndex - 1;
+            // step 2: add steps and wrap around with % totalTiles
+            int wrapped      = (zeroBased + steps) % totalTiles;
+            // step 3: shift back into 1-based by adding 1
+            int newIndex     = wrapped + 1;
+
             moveToTile(newIndex);
-            setHasRolledDice(true);
+
+            System.out.println("Now on tile: " + newIndex);
         }
     }
 
