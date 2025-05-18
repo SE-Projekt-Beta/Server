@@ -53,7 +53,8 @@ public class RollDiceRequest implements GameRequest {
 
             // get current tile
             Tile currentTile = player.getCurrentTile();
-            System.out.println("Player " + player.getNickname() + " is on tile: " + (currentTile != null ? currentTile.getType() : "null"));
+            // print name of street if street
+            System.out.println("Player " + player.getNickname() + " is on tile: " + currentTile.getIndex() + " " + currentTile.getType() + " " + (currentTile instanceof StreetTile ? ((StreetTile) currentTile).getLabel() : ""));
 
             if (player.isSuspended()) {
                 System.out.println("Player " + player.getNickname() + " is suspended for " + player.getSuspensionRounds() + " rounds.");
