@@ -6,6 +6,9 @@ public enum MessageType {
     ASK_BUY_PROPERTY,
     ASK_PAY_PRISON,
     PAY_PRISON,
+    ROLL_PRISON,
+    ROLLED_PRISON,
+
     BUY_PROPERTY,
     GO_TO_JAIL,
     PAY_RENT,

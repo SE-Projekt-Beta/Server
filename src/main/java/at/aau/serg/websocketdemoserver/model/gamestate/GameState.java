@@ -95,6 +95,11 @@ public class GameState {
                 return;
             }
 
+            if (!current.isAlive()) {
+                // set money to -1
+                current.setCash(-1);
+            }
+
             loopCounter++;
         } while (loopCounter < turnOrder.size());
     }
