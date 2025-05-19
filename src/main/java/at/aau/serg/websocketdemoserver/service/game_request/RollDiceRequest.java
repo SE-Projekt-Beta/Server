@@ -6,11 +6,13 @@ import at.aau.serg.websocketdemoserver.dto.RiskCardDrawnPayload;
 import at.aau.serg.websocketdemoserver.dto.WentToJailPayload;
 import at.aau.serg.websocketdemoserver.model.board.StreetTile;
 import at.aau.serg.websocketdemoserver.model.board.Tile;
+import at.aau.serg.websocketdemoserver.model.cards.RiskCardDeck;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.model.util.Dice;
 import at.aau.serg.websocketdemoserver.service.GameRequest;
 import at.aau.serg.websocketdemoserver.service.MessageFactory;
+import at.aau.serg.websocketdemoserver.model.cards.BankCardDeck;
 import org.json.JSONObject;
 
 import java.util.List;
@@ -59,7 +61,6 @@ public class RollDiceRequest implements GameRequest {
             if (player.isSuspended()) {
                 System.out.println("Player " + player.getNickname() + " is suspended for " + player.getSuspensionRounds() + " rounds.");
                 // ask for payment
-
                 extraMessages.add(new GameMessage(
                         lobbyId,
                         MessageType.ASK_PAY_PRISON,
@@ -69,12 +70,34 @@ public class RollDiceRequest implements GameRequest {
                 return MessageFactory.gameState(lobbyId, gameState);
             }
 
+            // save previous index for start check
+            int prevIndex = currentTile.getIndex();
+
             int steps = dice.roll();
             System.out.println("Player " + player.getNickname() + " rolled a " + steps);
             player.moveSteps(steps);
 
             // check what the player has landed on
             Tile newTile = player.getCurrentTile();
+            int newIndex = newTile.getIndex();
+
+            // check if passed or landed on START (field 1)
+            if (prevIndex > newIndex || newIndex == 1) {
+                System.out.println("Player " + player.getNickname() + " passed or landed on START.");
+                GameRequest passedStart = new PassedStartRequest();
+                GameMessage result = passedStart.execute(lobbyId, payload, gameState, extraMessages);
+
+                // if player landed exactly on START, turn already ended there
+                if (newIndex == 1) {
+                    System.out.println("Player " + player.getNickname() + " landed directly on START.");
+                    extraMessages.add(new GameMessage(
+                            lobbyId,
+                            MessageType.DICE_ROLLED,
+                            new JSONObject().put("playerId", playerId).put("steps", steps).put("fieldIndex", newIndex).toMap()
+                    ));
+                    return result;
+                }
+            }
 
             switch (newTile.getType()) {
                 case STREET:
@@ -107,6 +130,19 @@ public class RollDiceRequest implements GameRequest {
 
                     Tile jailTile = gameState.getBoard().getTile(31);
 
+                    if (player.hasEscapeCard()) {
+                        player.setEscapeCard(false);
+                        extraMessages.add(new GameMessage(
+                                lobbyId,
+                                MessageType.DRAW_RISK_CARD,
+                                new RiskCardDrawnPayload(
+                                        player.getId(),
+                                        0,
+                                        player.getCash(),
+                                        "Freiheitskarte verwendet",
+                                        "Du hast eine Freiheitskarte genutzt und musst nicht ins Gefängnis.")
+                        ));
+                    } else {
                         player.setCurrentTile(jailTile);
                         player.suspendForRounds(3);
                         extraMessages.add(new GameMessage(
@@ -114,49 +150,26 @@ public class RollDiceRequest implements GameRequest {
                                 MessageType.GO_TO_JAIL,
                                 new WentToJailPayload(playerId)
                         ));
-
-//                    if (player.hasEscapeCard()) {
-//                        player.setEscapeCard(false);
-//                        extraMessages.add(new GameMessage(
-//                                lobbyId,
-//                                MessageType.DRAW_RISK_CARD,
-//                                new RiskCardDrawnPayload(playerId, 0, player.getCash(),
-//                                        "Freiheitskarte verwendet",
-//                                        "Du hast eine Freiheitskarte genutzt und musst nicht ins Gefängnis.")
-//                        ));
-//                    } else {
-//                        player.setCurrentTile(jailTile);
-//                        player.suspendForRounds(3);
-//                        extraMessages.add(new GameMessage(
-//                                lobbyId,
-//                                MessageType.GO_TO_JAIL,
-//                                new RiskCardDrawnPayload(playerId, 0, player.getCash(),
-//                                        "Gefängnis", "Du wurdest ins Gefängnis geschickt und setzt 3 Runden aus.")
-//                        ));
-//                    }
+                    }
 
                     gameState.advanceTurn();
-
                     System.out.println("Player " + player.getNickname() + " landed on GOTO_JAIL.");
                     break;
-//                case BANK:
-//                    System.out.println("Player " + player.getNickname() + " landed on a bank tile.");
-//                    player.setHasRolledDice(false);
-//                    break;
-//                case RISK:
-//                    System.out.println("Player " + player.getNickname() + " landed on a risk tile.");
-//                    player.setHasRolledDice(false);
-//                    break;
-//                case TAX:
-//                    System.out.println("Player " + player.getNickname() + " landed on a tax tile.");
-//                    player.setHasRolledDice(false);
-//                    break;
+                case BANK:
+                    System.out.println("Player " + player.getNickname() + " landed on a bank tile.");
+                    DrawBankCardRequest drawBankCard = new DrawBankCardRequest(BankCardDeck.get());
+                    return drawBankCard.execute(lobbyId, payload, gameState, extraMessages);
+                case RISK:
+                    System.out.println("Player " + player.getNickname() + " landed on a risk tile.");
+                    DrawRiskCardRequest drawRiskCard = new DrawRiskCardRequest(RiskCardDeck.get());
+                    return drawRiskCard.execute(lobbyId, payload, gameState, extraMessages);
+                case TAX:
+                    System.out.println("Player " + player.getNickname() + " landed on a tax tile.");
+                    return new PayTaxRequest().execute(lobbyId, payload, gameState, extraMessages);
                 default:
                     System.out.println("Player " + player.getNickname() + " landed on an unknown tile type: " + newTile.getType());
                     gameState.advanceTurn();
             }
-
-
 
             extraMessages.add(new GameMessage(
                     lobbyId,

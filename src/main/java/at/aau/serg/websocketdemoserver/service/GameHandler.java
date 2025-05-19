@@ -33,7 +33,7 @@ public class GameHandler {
         requestMap.put(PAY_PRISON, new PayPrisonRequest());
         requestMap.put(ROLL_PRISON, new RollPrisonRequest(new Dice(1,6)));
         requestMap.put(DRAW_BANK_CARD, new DrawBankCardRequest(BankCardDeck.get()));
-        requestMap.put(DRAW_RISK_CARD, new DrawRiskCardRequest(RiskCardDeck.get(), jailTile));
+        requestMap.put(DRAW_RISK_CARD, new DrawRiskCardRequest(RiskCardDeck.get()));
         requestMap.put(PAY_TAX, new PayTaxRequest());
         requestMap.put(GO_TO_JAIL, new GoToJailRequest(jailTile));
         requestMap.put(PAY_RENT, new PayRentRequest());

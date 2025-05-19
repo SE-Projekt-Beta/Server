@@ -1,6 +1,8 @@
 package at.aau.serg.websocketdemoserver.service.game_request;
 
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
+import at.aau.serg.websocketdemoserver.dto.MessageType;
+import at.aau.serg.websocketdemoserver.dto.PayTaxPayload;
 import at.aau.serg.websocketdemoserver.model.board.SpecialTile;
 import at.aau.serg.websocketdemoserver.model.board.Tile;
 import at.aau.serg.websocketdemoserver.model.board.TileType;
@@ -25,13 +27,8 @@ public class PayTaxRequest implements GameRequest {
             int playerId = obj.getInt("playerId");
 
             Player player = gameState.getPlayer(playerId);
-            if (player == null) {
-                return MessageFactory.error(lobbyId, "Spieler nicht gefunden.");
-            }
-
-            if (playerId != gameState.getCurrentPlayerId()) {
-                return MessageFactory.error(lobbyId, "Nicht dein Zug.");
-            }
+            if (player == null) return MessageFactory.error(lobbyId, "Spieler nicht gefunden.");
+            if (playerId != gameState.getCurrentPlayerId()) return MessageFactory.error(lobbyId, "Nicht dein Zug.");
 
             Tile tile = player.getCurrentTile();
             if (!(tile instanceof SpecialTile specialTile) || specialTile.getType() != TileType.TAX) {
@@ -40,20 +37,33 @@ public class PayTaxRequest implements GameRequest {
 
             int position = tile.getIndex();
             int taxAmount;
+            String tileName;
 
-            // Steuerbetrag dynamisch aus Position bestimmen
-            if (position == 21) {
-                taxAmount = 200; // Sondersteuer
-            } else if (position == 33) {
-                taxAmount = 400; // Vermögensabgabe
-            } else {
-                return MessageFactory.error(lobbyId, "Unbekanntes Steuerfeld.");
+            switch (position) {
+                case 21 -> {
+                    taxAmount = 200;
+                    tileName = "Sondersteuer";
+                }
+                case 33 -> {
+                    taxAmount = 400;
+                    tileName = "Vermögensabgabe";
+                }
+                default -> {
+                    return MessageFactory.error(lobbyId, "Unbekanntes Steuerfeld.");
+                }
             }
 
             boolean isBankrupt = player.adjustCash(-taxAmount);
             if (isBankrupt) {
-                extraMessages.add(MessageFactory.playerLost(lobbyId, player.getId()));
+                extraMessages.add(MessageFactory.playerLost(lobbyId, playerId));
             }
+
+            // Nachricht mit Steuern an Client
+            extraMessages.add(new GameMessage(
+                    lobbyId,
+                    MessageType.PAY_TAX,
+                    new PayTaxPayload(playerId, taxAmount, player.getCash(), tileName)
+            ));
 
             gameState.advanceTurn();
             return MessageFactory.gameState(lobbyId, gameState);

@@ -14,9 +14,9 @@ import java.util.Map;
 
 public class PassedStartRequest implements GameRequest {
 
-    private static final int START_CASH = 200;
-    private static final int EXACT_START_CASH = 400;
     private static final int START_TILE_INDEX = 1;
+    private static final int CASH_FOR_PASSING = 200;
+    private static final int CASH_FOR_LANDING = 400;
 
     @Override
     public GameMessage execute(int lobbyId, Object payload, GameState gameState, List<GameMessage> extraMessages) {
@@ -32,16 +32,33 @@ public class PassedStartRequest implements GameRequest {
                 return MessageFactory.error(lobbyId, "Spieler ungültig oder ausgeschieden.");
             }
 
-            int bonus = (player.getCurrentTile().getIndex() == START_TILE_INDEX) ? EXACT_START_CASH : START_CASH;
+            boolean landedOnStart = player.getCurrentTile().getIndex() == START_TILE_INDEX;
+            int bonus = landedOnStart ? CASH_FOR_LANDING : CASH_FOR_PASSING;
+
             player.addCash(bonus);
 
-            extraMessages.add(new GameMessage(
-                    lobbyId,
-                    MessageType.CASH_TASK,
-                    new CashTaskPayload(player.getId(), bonus, player.getCash())
-            ));
+            if (landedOnStart) {
+                // Nur wenn der Spieler direkt auf Start landet → Dialog + Turn-Ende
+                extraMessages.add(new GameMessage(
+                        lobbyId,
+                        MessageType.PASS_START,
+                        Map.of(
+                                "playerId", playerId,
+                                "amount", bonus,
+                                "landed", true
+                        )
+                ));
+                gameState.advanceTurn();
+            } else {
+                // Wenn er nur über Start kommt → stiller Bonus
+                extraMessages.add(new GameMessage(
+                        lobbyId,
+                        MessageType.CASH_TASK,
+                        new CashTaskPayload(playerId, bonus, player.getCash())
+                ));
+                // kein advanceTurn – restliche Feldlogik wird danach ausgeführt
+            }
 
-            gameState.advanceTurn();
             return MessageFactory.gameState(lobbyId, gameState);
 
         } catch (Exception e) {
@@ -50,4 +67,3 @@ public class PassedStartRequest implements GameRequest {
         }
     }
 }
-
