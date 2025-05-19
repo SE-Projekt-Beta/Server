@@ -2,19 +2,15 @@ package at.aau.serg.websocketdemoserver.model.gamestate;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import lombok.Getter;
 import org.springframework.stereotype.Component;
 
 @Component
 public class GameState {
 
-    @Getter
     private final GameBoard board;
     private final List<Player> turnOrder;
     private final Map<Integer, Player> playersById;
     private int currentPlayerIndex;
-    @Getter
     private int currentRound;
     private final List<Player> rankingList;
 
@@ -66,6 +62,10 @@ public class GameState {
                 .toList(); // Java 16+
     }
 
+    public GameBoard getBoard() {
+        return board;
+    }
+
     /**
      * Führt den Rundenwechsel durch – überspringt gesperrte oder ausgeschiedene Spieler.
      */
@@ -87,7 +87,7 @@ public class GameState {
             if (current.isAlive() && current.getSuspensionRounds() > 0) {
                 current.decreaseSuspension();
                 loopCounter++;
-                return;
+                continue;
             }
 
             // Nur lebende und nicht gesperrte Spieler dürfen spielen
@@ -95,15 +95,14 @@ public class GameState {
                 return;
             }
 
-            if (!current.isAlive()) {
-                // set money to -1
-                current.setCash(-1);
-            }
-
             loopCounter++;
         } while (loopCounter < turnOrder.size());
     }
 
+
+    public int getCurrentRound() {
+        return currentRound;
+    }
 
     /**
      * Liefert das Ranking (nach Reichtum) zurück.
