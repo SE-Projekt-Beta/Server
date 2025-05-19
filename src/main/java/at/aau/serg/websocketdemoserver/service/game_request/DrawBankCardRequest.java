@@ -44,7 +44,7 @@ public class DrawBankCardRequest implements GameRequest {
             // Geld anwenden
             boolean isBankrupt = player.adjustCash(amount);
 
-            // Spezifische Nachricht mit vollständigem Payload
+            // Nachricht
             BankCardDrawnPayload payloadToSend = new BankCardDrawnPayload(
                     player.getId(),
                     amount,
