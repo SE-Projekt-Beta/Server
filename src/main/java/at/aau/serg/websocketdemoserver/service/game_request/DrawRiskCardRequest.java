@@ -15,80 +15,75 @@ import java.util.Map;
 public class DrawRiskCardRequest implements GameRequest {
 
     private final RiskCardDeck deck;
-    private final Tile jailTile;
 
-    public DrawRiskCardRequest(RiskCardDeck deck, Tile jailTile) {
+    public DrawRiskCardRequest(RiskCardDeck deck) {
         this.deck = deck;
-        this.jailTile = jailTile;
     }
 
     @Override
     public GameMessage execute(int lobbyId, Object payload, GameState gameState, List<GameMessage> extraMessages) {
         try {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> map = (Map<String, Object>) payload;
-            JSONObject obj = new JSONObject(map);
-
+            JSONObject obj = new JSONObject((Map<?, ?>) payload);
             int playerId = obj.getInt("playerId");
 
             Player player = gameState.getPlayer(playerId);
             if (player == null || !player.isAlive()) {
-                return MessageFactory.error(lobbyId, "Spieler ungültig oder ausgeschieden.");
+                return MessageFactory.error(lobbyId, "Ungültiger Spieler oder Spieler bereits ausgeschieden.");
             }
 
             RiskCard card = deck.drawCard();
-            String title = card.getTitle();
-            String description = card.getDescription();
+            RiskCardEffect effect = card.getEffect();
 
-            if (card instanceof CashRiskCard cashCard) {
-                int amount = cashCard.getAmount();
-                boolean isBankrupt = player.adjustCash(amount);
+            switch (effect) {
+                case CASH:
+                    int amount = ((CashRiskCard) card).getAmount();
+                    boolean isBankrupt = player.adjustCash(amount);
 
-                extraMessages.add(new GameMessage(
-                        lobbyId,
-                        MessageType.DRAW_RISK_CARD,
-                        new RiskCardDrawnPayload(player.getId(), amount, player.getCash(), title, description)
-                ));
-
-                if (isBankrupt) {
-                    extraMessages.add(MessageFactory.playerLost(lobbyId, player.getId()));
-                }
-
-            } else if (card instanceof EscapeRiskCard) {
-                player.setEscapeCard(true);
-
-                extraMessages.add(new GameMessage(
-                        lobbyId,
-                        MessageType.DRAW_RISK_CARD,
-                        new RiskCardDrawnPayload(player.getId(), 0, player.getCash(), title, description)
-                ));
-
-                extraMessages.add(new GameMessage(
-                        lobbyId,
-                        MessageType.PLAYER_OUT_OF_JAIL_CARD,
-                        new PlayerOutOfJailCardPayload(player.getId(), player.getNickname())
-                ));
-
-            } else if (card instanceof GoToJailRiskCard) {
-                if (player.hasEscapeCard()) {
-                    player.setEscapeCard(false);
                     extraMessages.add(new GameMessage(
                             lobbyId,
                             MessageType.DRAW_RISK_CARD,
-                            new RiskCardDrawnPayload(player.getId(), 0, player.getCash(),
-                                    "Freiheitskarte verwendet",
-                                    "Du hast eine Freiheitskarte eingesetzt und musst nicht ins Gefängnis.")
+                            new RiskCardDrawnPayload(
+                                    playerId,
+                                    amount,
+                                    player.getCash(),
+                                    card.getTitle(),
+                                    card.getDescription()
+                            )
                     ));
-                } else {
+
+                    if (isBankrupt) {
+                        extraMessages.add(MessageFactory.playerLost(lobbyId, playerId));
+                    }
+
+                    break;
+
+                case GOTO_JAIL:
+                    Tile jailTile = gameState.getBoard().getTile(31);
                     player.setCurrentTile(jailTile);
                     player.suspendForRounds(3);
 
                     extraMessages.add(new GameMessage(
                             lobbyId,
-                            MessageType.DRAW_RISK_CARD,
-                            new RiskCardDrawnPayload(player.getId(), 0, player.getCash(), title, description)
+                            MessageType.GO_TO_JAIL,
+                            new WentToJailPayload(playerId)
                     ));
-                }
+
+                    break;
+
+                case ESCAPE_CARD:
+                    player.setEscapeCard(true);
+                    extraMessages.add(new GameMessage(
+                            lobbyId,
+                            MessageType.DRAW_RISK_CARD,
+                            new RiskCardDrawnPayload(
+                                    playerId,
+                                    0,
+                                    player.getCash(),
+                                    card.getTitle(),
+                                    card.getDescription()
+                            )
+                    ));
+                    break;
             }
 
             gameState.advanceTurn();
@@ -96,7 +91,7 @@ public class DrawRiskCardRequest implements GameRequest {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return MessageFactory.error(lobbyId, "Fehler beim Ziehen der Risiko-Karte: " + e.getMessage());
+            return MessageFactory.error(lobbyId, "Fehler beim Ziehen der Risikokarte: " + e.getMessage());
         }
     }
 }
