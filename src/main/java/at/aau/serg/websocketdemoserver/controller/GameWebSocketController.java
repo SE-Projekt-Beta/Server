@@ -34,10 +34,18 @@ public class GameWebSocketController {
     @MessageMapping("/dkt/{lobbyId}")
     public void handleGameMessage(@DestinationVariable int lobbyId,
                                   @Payload GameMessage message) {
+        if (lobbyId < 0) {
+            System.err.println("Ungültige Lobby-ID: " + lobbyId);
+            return;
+        }
         logger.info("Game {}: {}", lobbyId, message.getType());
         message.setLobbyId(lobbyId);
 
         var handler = GameManager.getInstance().getHandler(lobbyId);
+        if (handler == null) {
+            System.err.println("Kein GameHandler für ID: " + lobbyId);
+            return;
+        }
         GameMessage result = handler.handle(message);
         logger.info("Sending result: {} to {}", message.getType(), lobbyId);
         if (result != null) {
