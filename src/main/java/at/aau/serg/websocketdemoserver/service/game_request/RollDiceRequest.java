@@ -158,13 +158,16 @@ public class RollDiceRequest implements GameRequest {
                 case BANK:
                     System.out.println("Player " + player.getNickname() + " landed on a bank tile.");
                     DrawBankCardRequest drawBankCard = new DrawBankCardRequest(BankCardDeck.get());
+                    gameState.advanceTurn();
                     return drawBankCard.execute(lobbyId, payload, gameState, extraMessages);
                 case RISK:
                     System.out.println("Player " + player.getNickname() + " landed on a risk tile.");
                     DrawRiskCardRequest drawRiskCard = new DrawRiskCardRequest(RiskCardDeck.get());
+                    gameState.advanceTurn();
                     return drawRiskCard.execute(lobbyId, payload, gameState, extraMessages);
                 case TAX:
                     System.out.println("Player " + player.getNickname() + " landed on a tax tile.");
+                    gameState.advanceTurn();
                     return new PayTaxRequest().execute(lobbyId, payload, gameState, extraMessages);
                 default:
                     System.out.println("Player " + player.getNickname() + " landed on an unknown tile type: " + newTile.getType());
