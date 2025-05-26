@@ -73,9 +73,11 @@ public class RollDiceRequest implements GameRequest {
             // save previous index for start check
             int prevIndex = currentTile.getIndex();
 
-            int steps = dice.roll();
-            System.out.println("Player " + player.getNickname() + " rolled a " + steps);
-            player.moveSteps(steps);
+            int steps1 = dice.roll();
+            int steps2 = dice.roll();
+            int totalSteps = steps1 + steps2;
+            System.out.println("Player " + player.getNickname() + " rolled a " + totalSteps);
+            player.moveSteps(totalSteps);
 
             // check what the player has landed on
             Tile newTile = player.getCurrentTile();
@@ -93,7 +95,7 @@ public class RollDiceRequest implements GameRequest {
                     extraMessages.add(new GameMessage(
                             lobbyId,
                             MessageType.DICE_ROLLED,
-                            new JSONObject().put("playerId", playerId).put("steps", steps).put("fieldIndex", newIndex).toMap()
+                            new JSONObject().put("playerId", playerId).put("steps1", steps1).put("steps2", steps2).put("fieldIndex", newIndex).toMap()
                     ));
                     return result;
                 }
@@ -177,7 +179,7 @@ public class RollDiceRequest implements GameRequest {
             extraMessages.add(new GameMessage(
                     lobbyId,
                     MessageType.DICE_ROLLED,
-                    new JSONObject().put("playerId", playerId).put("steps", steps).put("fieldIndex", newTile.getIndex()).toMap()
+                    new JSONObject().put("playerId", playerId).put("steps1", steps1).put("steps2", steps2).put("fieldIndex", newTile.getIndex()).toMap()
             ));
 
             return MessageFactory.gameState(lobbyId, gameState);
