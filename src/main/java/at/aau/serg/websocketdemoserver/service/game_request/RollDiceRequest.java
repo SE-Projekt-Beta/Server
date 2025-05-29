@@ -10,6 +10,7 @@ import at.aau.serg.websocketdemoserver.model.cards.RiskCardDeck;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.model.util.Dice;
+import at.aau.serg.websocketdemoserver.model.util.DicePair;
 import at.aau.serg.websocketdemoserver.service.GameRequest;
 import at.aau.serg.websocketdemoserver.service.MessageFactory;
 import at.aau.serg.websocketdemoserver.model.cards.BankCardDeck;
@@ -20,10 +21,10 @@ import java.util.Map;
 
 public class RollDiceRequest implements GameRequest {
 
-    private final Dice dice;
+    private final DicePair dicePair;
 
-    public RollDiceRequest(Dice dice) {
-        this.dice = dice;
+    public RollDiceRequest(DicePair dicePair) {
+        this.dicePair = dicePair;
     }
 
     @Override
@@ -73,8 +74,9 @@ public class RollDiceRequest implements GameRequest {
             // save previous index for start check
             int prevIndex = currentTile.getIndex();
 
-            int steps1 = dice.roll();
-            int steps2 = dice.roll();
+            int[] rolls = dicePair.roll();
+            int steps1 = rolls[0];
+            int steps2 = rolls[1];
             int totalSteps = steps1 + steps2;
             System.out.println("Player " + player.getNickname() + " rolled a " + totalSteps);
             player.moveSteps(totalSteps);
