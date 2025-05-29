@@ -5,6 +5,7 @@ import at.aau.serg.websocketdemoserver.dto.MessageType;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.model.util.Dice;
+import at.aau.serg.websocketdemoserver.model.util.DicePair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +18,7 @@ class RollDiceRequestTest {
 
     private GameState gameState;
     private Player player;
-    private Dice dice;
+    private DicePair dicePair;
     private RollDiceRequest request;
     private int lobbyId = 1;
 
@@ -32,11 +33,11 @@ class RollDiceRequestTest {
         List<Player> players = new ArrayList<>(List.of(player, player2));
         gameState.startGame(players);
 
-        // Mock-Dice
-        dice = mock(Dice.class);
-        when(dice.roll()).thenReturn(3); // deterministischer Wurf
+        // Mock-DicePair
+        dicePair = mock(DicePair.class);
+        when(dicePair.roll()).thenReturn(new int[]{3, 3}); // deterministischer Wurf
 
-        request = new RollDiceRequest(dice);
+        request = new RollDiceRequest(dicePair);
     }
 
     @Test
@@ -62,5 +63,18 @@ class RollDiceRequestTest {
         assertEquals(MessageType.ERROR, result.getType());
         assertTrue(result.getPayload().toString().contains("Spieler nicht gefunden"));
         assertTrue(extras.isEmpty());
+    }
+
+    @Test
+    void testExecuteValidTurnWithDouble() {
+        Map<String, Object> payload = Map.of("playerId", player.getId());
+        List<GameMessage> extras = new ArrayList<>();
+
+        GameMessage result = request.execute(lobbyId, payload, gameState, extras);
+
+        assertEquals(MessageType.ROLL_DICE, result.getType());
+        assertEquals(player.getId(), result.getPayload().toString().contains("playerId"));
+        assertEquals(6, result.getPayload().toString().contains("steps")); // 3+3
+        assertTrue((Boolean) result.getPayload().toString().contains("double"));
     }
 }
