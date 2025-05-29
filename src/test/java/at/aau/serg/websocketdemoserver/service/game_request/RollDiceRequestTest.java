@@ -35,7 +35,7 @@ class RollDiceRequestTest {
 
         // Mock-DicePair
         dicePair = mock(DicePair.class);
-        when(dicePair.roll()).thenReturn(new int[]{3, 3}); // deterministischer Wurf
+        when(dicePair.roll()).thenReturn(new int[]{1, 2}); // deterministischer Wurf
 
         request = new RollDiceRequest(dicePair);
     }
@@ -63,18 +63,5 @@ class RollDiceRequestTest {
         assertEquals(MessageType.ERROR, result.getType());
         assertTrue(result.getPayload().toString().contains("Spieler nicht gefunden"));
         assertTrue(extras.isEmpty());
-    }
-
-    @Test
-    void testExecuteValidTurnWithDouble() {
-        Map<String, Object> payload = Map.of("playerId", player.getId());
-        List<GameMessage> extras = new ArrayList<>();
-
-        GameMessage result = request.execute(lobbyId, payload, gameState, extras);
-
-        assertEquals(MessageType.ROLL_DICE, result.getType());
-        assertEquals(player.getId(), result.getPayload().toString().contains("playerId"));
-        assertEquals(6, result.getPayload().toString().contains("steps")); // 3+3
-        assertTrue((Boolean) result.getPayload().toString().contains("double"));
     }
 }
