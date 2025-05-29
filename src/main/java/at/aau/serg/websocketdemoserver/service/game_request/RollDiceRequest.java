@@ -49,6 +49,8 @@ public class RollDiceRequest implements GameRequest {
                 System.out.println("Player " + player.getNickname() + " has already rolled the dice.");
                 return MessageFactory.error(lobbyId, "Du hast bereits geworfen.");
             }
+            // Merken, dass Spieler gerade gewürfelt hat
+            player.setHasRolledDice(true);
 
             if (!player.isAlive()) {
                 return MessageFactory.error(lobbyId, "Spieler ungültig oder ausgeschieden.");
@@ -97,7 +99,7 @@ public class RollDiceRequest implements GameRequest {
                     extraMessages.add(new GameMessage(
                             lobbyId,
                             MessageType.DICE_ROLLED,
-                            new JSONObject().put("playerId", playerId).put("steps1", steps1).put("steps2", steps2).put("fieldIndex", newIndex).toMap()
+                            new JSONObject().put("playerId", playerId).put("roll1", steps1).put("roll2", steps2).put("fieldIndex", newIndex).toMap()
                     ));
                     return result;
                 }
@@ -181,7 +183,7 @@ public class RollDiceRequest implements GameRequest {
             extraMessages.add(new GameMessage(
                     lobbyId,
                     MessageType.DICE_ROLLED,
-                    new JSONObject().put("playerId", playerId).put("steps1", steps1).put("steps2", steps2).put("fieldIndex", newTile.getIndex()).toMap()
+                    new JSONObject().put("playerId", playerId).put("roll1", steps1).put("roll2", steps2).put("fieldIndex", newTile.getIndex()).toMap()
             ));
 
             return MessageFactory.gameState(lobbyId, gameState);
