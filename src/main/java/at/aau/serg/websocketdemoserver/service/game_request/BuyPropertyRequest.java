@@ -49,7 +49,11 @@ public class BuyPropertyRequest implements GameRequest {
             if (!success) {
                 return MessageFactory.error(lobbyId, "Kauf fehlgeschlagen (z.B. nicht genug Geld).");
             }
+
             street.setOwner(player);
+
+            // NEU: Markiere das Feld als frisch gekauft für diese Runde
+            gameState.markTileBoughtThisTurn(tilePos);
 
             if (!player.isAlive()) {
                 extraMessages.add(MessageFactory.playerLost(lobbyId, player.getId()));
