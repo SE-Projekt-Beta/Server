@@ -10,6 +10,7 @@ import at.aau.serg.websocketdemoserver.model.cards.RiskCardDeck;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.model.util.Dice;
+import at.aau.serg.websocketdemoserver.model.util.DicePair;
 import at.aau.serg.websocketdemoserver.service.GameRequest;
 import at.aau.serg.websocketdemoserver.service.MessageFactory;
 import at.aau.serg.websocketdemoserver.model.cards.BankCardDeck;
@@ -20,10 +21,10 @@ import java.util.Map;
 
 public class RollDiceRequest implements GameRequest {
 
-    private final Dice dice;
+    private final DicePair dicePair;
 
-    public RollDiceRequest(Dice dice) {
-        this.dice = dice;
+    public RollDiceRequest(DicePair dicePair) {
+        this.dicePair = dicePair;
     }
 
     @Override
@@ -48,6 +49,8 @@ public class RollDiceRequest implements GameRequest {
                 System.out.println("Player " + player.getNickname() + " has already rolled the dice.");
                 return MessageFactory.error(lobbyId, "Du hast bereits geworfen.");
             }
+            // Merken, dass Spieler gerade gewürfelt hat
+            player.setHasRolledDice(true);
 
             if (!player.isAlive()) {
                 return MessageFactory.error(lobbyId, "Spieler ungültig oder ausgeschieden.");
@@ -73,9 +76,12 @@ public class RollDiceRequest implements GameRequest {
             // save previous index for start check
             int prevIndex = currentTile.getIndex();
 
-            int steps = dice.roll();
-            System.out.println("Player " + player.getNickname() + " rolled a " + steps);
-            player.moveSteps(steps);
+            int[] rolls = dicePair.roll();
+            int steps1 = rolls[0];
+            int steps2 = rolls[1];
+            int totalSteps = steps1 + steps2;
+            System.out.println("Player " + player.getNickname() + " rolled a " + totalSteps);
+            player.moveSteps(totalSteps);
 
             // check what the player has landed on
             Tile newTile = player.getCurrentTile();
@@ -93,7 +99,7 @@ public class RollDiceRequest implements GameRequest {
                     extraMessages.add(new GameMessage(
                             lobbyId,
                             MessageType.DICE_ROLLED,
-                            new JSONObject().put("playerId", playerId).put("steps", steps).put("fieldIndex", newIndex).toMap()
+                            new JSONObject().put("playerId", playerId).put("roll1", steps1).put("roll2", steps2).put("fieldIndex", newIndex).toMap()
                     ));
                     return result;
                 }
@@ -177,7 +183,7 @@ public class RollDiceRequest implements GameRequest {
             extraMessages.add(new GameMessage(
                     lobbyId,
                     MessageType.DICE_ROLLED,
-                    new JSONObject().put("playerId", playerId).put("steps", steps).put("fieldIndex", newTile.getIndex()).toMap()
+                    new JSONObject().put("playerId", playerId).put("roll1", steps1).put("roll2", steps2).put("fieldIndex", newTile.getIndex()).toMap()
             ));
 
             return MessageFactory.gameState(lobbyId, gameState);

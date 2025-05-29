@@ -9,6 +9,7 @@ import at.aau.serg.websocketdemoserver.model.board.Tile;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.model.util.Dice;
+import at.aau.serg.websocketdemoserver.model.util.DicePair;
 import at.aau.serg.websocketdemoserver.service.GameRequest;
 import at.aau.serg.websocketdemoserver.service.MessageFactory;
 import org.json.JSONObject;
@@ -18,10 +19,10 @@ import java.util.Map;
 
 public class RollPrisonRequest implements GameRequest {
 
-    private final Dice dice;
+    private final DicePair dicePair;
 
-    public RollPrisonRequest(Dice dice) {
-        this.dice = dice;
+    public RollPrisonRequest(DicePair dicePair) {
+        this.dicePair = dicePair;
     }
 
     @Override
@@ -38,8 +39,9 @@ public class RollPrisonRequest implements GameRequest {
                 return MessageFactory.error(lobbyId, "Spieler ungültig oder bereits ausgeschieden.");
             }
 
-            int roll1 = dice.roll();
-            int roll2 = dice.roll();
+            int[] rolls = dicePair.roll();
+            int roll1 = rolls[0];
+            int roll2 = rolls[1];
 
             System.out.println("Prison roll: " + player.getNickname() + " rolled " + roll1 + " and " + roll2);
 
