@@ -9,6 +9,7 @@ import at.aau.serg.websocketdemoserver.model.cards.RiskCardDeck;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.model.util.Dice;
+import at.aau.serg.websocketdemoserver.model.util.DicePair;
 import at.aau.serg.websocketdemoserver.service.game_request.*;
 import org.springframework.stereotype.Service;
 
@@ -22,16 +23,18 @@ public class GameHandler {
     private final GameState gameState;
     private final Map<MessageType, GameRequest> requestMap = new HashMap<>();
     private final List<GameMessage> extraMessages = new ArrayList<>();
+    private final DicePair dicePair;
 
     public GameHandler(GameState gameState) {
         this.gameState = gameState;
         Tile jailTile = gameState.getBoard().getTile(31);
+        this.dicePair = new DicePair(new Dice(1, 6), new Dice(1, 6));
 
         // Mapping aller MessageTypes zu den zugehörigen Requests
-        requestMap.put(ROLL_DICE, new RollDiceRequest(new Dice(1,6)));
+        requestMap.put(ROLL_DICE, new RollDiceRequest(dicePair));
         requestMap.put(BUY_PROPERTY, new BuyPropertyRequest());
         requestMap.put(PAY_PRISON, new PayPrisonRequest());
-        requestMap.put(ROLL_PRISON, new RollPrisonRequest(new Dice(1,6)));
+        requestMap.put(ROLL_PRISON, new RollPrisonRequest(dicePair));
         requestMap.put(DRAW_BANK_CARD, new DrawBankCardRequest(BankCardDeck.get()));
         requestMap.put(DRAW_RISK_CARD, new DrawRiskCardRequest(RiskCardDeck.get()));
         requestMap.put(PAY_TAX, new PayTaxRequest());
