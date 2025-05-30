@@ -3,6 +3,7 @@ package at.aau.serg.websocketdemoserver.model.gamestate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,12 @@ public class GameState {
     @Getter
     private int currentRound;
     private final List<Player> rankingList;
+
+    @JsonIgnore
+    private final Set<Integer> tilesBoughtThisTurn = new HashSet<>();
+
+    @JsonIgnore
+    private final Set<Integer> tilesBuiltThisTurn = new HashSet<>();
 
     public GameState() {
         this.board = new GameBoard();
@@ -38,9 +45,6 @@ public class GameState {
         }
     }
 
-    /**
-     * Gibt den aktuellen Spieler.
-     */
     public Player getCurrentPlayer() {
         if (turnOrder.isEmpty()) return null;
         return turnOrder.get(currentPlayerIndex);
@@ -62,38 +66,38 @@ public class GameState {
     public List<Player> getAlivePlayers() {
         return turnOrder.stream()
                 .filter(Player::isAlive)
-                .toList(); // Java 16+
+                .toList();
     }
 
     public GameBoard getBoard() {
         return board;
     }
 
-    /**
-     * Führt den Rundenwechsel durch – überspringt gesperrte oder ausgeschiedene Spieler.
-     */
     public void advanceTurn() {
         if (turnOrder.isEmpty()) return;
 
         int initialIndex = currentPlayerIndex;
         int loopCounter = 0;
 
+        // Felder zurücksetzen
+        tilesBoughtThisTurn.clear();
+        tilesBuiltThisTurn.clear();
+
         do {
             currentPlayerIndex = (currentPlayerIndex + 1) % turnOrder.size();
             if (currentPlayerIndex == 0 && currentPlayerIndex != initialIndex) {
                 currentRound++;
             }
+
             Player current = getCurrentPlayer();
             current.setHasRolledDice(false);
 
-            // Wenn Spieler im Gefängnis: Runde runterzählen, überspringen
             if (current.isAlive() && current.getSuspensionRounds() > 0) {
                 current.decreaseSuspension();
                 loopCounter++;
                 return;
             }
 
-            // Nur lebende und nicht gesperrte Spieler dürfen spielen
             if (current.isAlive() && current.getSuspensionRounds() == 0) {
                 return;
             }
@@ -102,10 +106,6 @@ public class GameState {
         } while (loopCounter < turnOrder.size());
     }
 
-
-    /**
-     * Liefert das Ranking (nach Reichtum) zurück.
-     */
     public List<Player> getRankingList() {
         rankingList.clear();
         rankingList.addAll(playersById.values());
@@ -113,9 +113,6 @@ public class GameState {
         return rankingList;
     }
 
-    /**
-     * Überprüft, ob das Spiel beendet ist (nur bei aktiviertem Rundensystem).
-     */
     public boolean isGameOver(int maxRounds, boolean roundsModeEnabled) {
         return roundsModeEnabled && currentRound > maxRounds;
     }
@@ -126,12 +123,29 @@ public class GameState {
         playersById.clear();
         currentPlayerIndex = 0;
         currentRound = 1;
+        tilesBoughtThisTurn.clear();
+        tilesBuiltThisTurn.clear();
     }
 
-    /**
-     * Nützlich für Clients: Prüft, ob der angegebene Spieler an der Reihe ist.
-     */
     public boolean isPlayersTurn(int playerId) {
         return getCurrentPlayerId() == playerId;
+    }
+
+    // ==== Hausbau-Logik ====
+
+    public void markTileBoughtThisTurn(int tilePos) {
+        tilesBoughtThisTurn.add(tilePos);
+    }
+
+    public boolean wasTileBoughtThisTurn(int tilePos) {
+        return tilesBoughtThisTurn.contains(tilePos);
+    }
+
+    public void markTileBuiltThisTurn(int tilePos) {
+        tilesBuiltThisTurn.add(tilePos);
+    }
+
+    public boolean wasTileBuiltThisTurn(int tilePos) {
+        return tilesBuiltThisTurn.contains(tilePos);
     }
 }
