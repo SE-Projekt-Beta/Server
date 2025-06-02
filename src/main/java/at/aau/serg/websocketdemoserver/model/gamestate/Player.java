@@ -41,7 +41,7 @@ public class Player implements Comparable<Player> {
         this.id = idCounter++;
         this.currentTile = new SpecialTile(1, "START", TileType.START);
         this.nickname = nickname;
-        this.cash = 3000;
+        this.cash = 500;
         this.alive = true;
         this.board = board;
     }
@@ -50,7 +50,7 @@ public class Player implements Comparable<Player> {
         this.id = id;
         this.currentTile = new SpecialTile(1, "START", TileType.START);
         this.nickname = nickname;
-        this.cash = 3000;
+        this.cash = 500;
         this.alive = true;
         this.board = board;
         if (id >= idCounter) {

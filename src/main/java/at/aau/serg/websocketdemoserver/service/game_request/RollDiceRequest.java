@@ -44,9 +44,18 @@ public class RollDiceRequest implements GameRequest {
                 return MessageFactory.error(lobbyId, "Nicht dein Zug.");
             }
 
+            // check how many players are alive
+            if (gameState.getAlivePlayers().size() <= 1) {
+                System.out.println("Game over, only one player left.");
+                return MessageFactory.gameOver(lobbyId, gameState.getCurrentPlayer());
+            }
+
+
             // check if already rolled dice
             if (player.isHasRolledDice()) {
                 System.out.println("Player " + player.getNickname() + " has already rolled the dice.");
+                // check current player
+                System.out.println("Current player: " + gameState.getCurrentPlayer().getNickname());
                 return MessageFactory.error(lobbyId, "Du hast bereits geworfen.");
             }
             // Merken, dass Spieler gerade gewürfelt hat
@@ -123,6 +132,19 @@ public class RollDiceRequest implements GameRequest {
                         System.out.println("Player " + player.getNickname() + " paid rent of " + rent + " to " + owner.getNickname());
                         gameState.advanceTurn();
                     } else {
+
+                        // check if the player can buy the street
+                        if (player.getCash() < streetTile.getPrice()) {
+                            System.out.println("Player " + player.getNickname() + " cannot afford the street.");
+                            extraMessages.add(new GameMessage(
+                                    lobbyId,
+                                    MessageType.EXTRA_MESSAGE,
+                                    new JSONObject().put("playerId", playerId).put("title", "Straße kaufen").put("message", "Du kannst dir diese Straße nicht leisten.").toMap()
+                            ));
+                            gameState.advanceTurn();
+                            break;
+                        }
+
                         System.out.println("Player " + player.getNickname() + " landed on an unowned street.");
                         extraMessages.add(new GameMessage(
                                 lobbyId,

@@ -52,9 +52,10 @@ public class MessageFactory {
         return new GameMessage(lobbyId, MessageType.PLAYER_LOST, payload);
     }
 
-    public static GameMessage gameOver(int lobbyId, List<Integer> ranking) {
+    public static GameMessage gameOver(int lobbyId, Player player) {
         Map<String, Object> payload = new HashMap<>();
-        payload.put("ranking", ranking);
+        payload.put("winnerId", player.getId());
+        payload.put("winnerName", player.getNickname());
         return new GameMessage(lobbyId, MessageType.GAME_OVER, payload);
     }
 
