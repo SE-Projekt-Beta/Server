@@ -5,6 +5,7 @@ import at.aau.serg.websocketdemoserver.service.Lobby;
 import at.aau.serg.websocketdemoserver.service.LobbyManager;
 import at.aau.serg.websocketdemoserver.service.LobbyRequest;
 import at.aau.serg.websocketdemoserver.service.UserManager;
+import at.aau.serg.websocketdemoserver.service.helper.LobbyHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.*;
@@ -38,16 +39,7 @@ public class JoinLobbyRequest implements LobbyRequest {
 
             lobby.addPlayer(player);
 
-            List<Map<String, Object>> lobbyList = lobbyManager.getLobbyIds().stream()
-                    .map(id -> {
-                        Lobby l = lobbyManager.getLobby(id);
-                        Map<String, Object> map = new HashMap<>();
-                        map.put("lobbyId", id);
-                        map.put("lobbyName", l != null ? l.getLobbyName() : "Unknown");
-                        map.put("playerCount", l != null ? l.getPlayers().size() : 0);
-                        return map;
-                    })
-                    .toList();
+            List<Map<String, Object>> lobbyList = LobbyHelper.getLobbyList(lobbyManager);
 
             return List.of(
                     new LobbyMessage(lobbyId, LobbyMessageType.LOBBY_UPDATE,
