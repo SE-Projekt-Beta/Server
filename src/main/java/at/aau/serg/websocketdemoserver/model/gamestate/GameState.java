@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class GameState {
 
+    @Getter
     private final GameBoard board;
     private final List<Player> turnOrder;
     private final Map<Integer, Player> playersById;
@@ -69,22 +70,21 @@ public class GameState {
                 .toList();
     }
 
-    public GameBoard getBoard() {
-        return board;
-    }
-
     public void advanceTurn() {
         if (turnOrder.isEmpty()) return;
 
+        int size = turnOrder.size();
         int initialIndex = currentPlayerIndex;
-        int loopCounter = 0;
 
-        // Felder zurücksetzen
+        // Reset per‐turn fields
         tilesBoughtThisTurn.clear();
         tilesBuiltThisTurn.clear();
 
-        do {
-            currentPlayerIndex = (currentPlayerIndex + 1) % turnOrder.size();
+        // Try each of the next “size” slots; exit as soon as we find an alive (& possibly suspended) player.
+        for (int i = 0; i < size; i++) {
+            currentPlayerIndex = (currentPlayerIndex + 1) % size;
+
+            // If we’ve wrapped around back to 0 (and that wasn’t our starting spot), bump the round.
             if (currentPlayerIndex == 0 && currentPlayerIndex != initialIndex) {
                 currentRound++;
             }
@@ -92,19 +92,25 @@ public class GameState {
             Player current = getCurrentPlayer();
             current.setHasRolledDice(false);
 
-            if (current.isAlive() && current.getSuspensionRounds() > 0) {
+            // If the player is dead, skip them and continue the loop.
+            if (!current.isAlive()) {
+                continue;
+            }
+
+            // If they’re alive but suspended, decrease suspension and end here (their turn is skipped).
+            if (current.getSuspensionRounds() > 0) {
                 current.decreaseSuspension();
-                loopCounter++;
                 return;
             }
 
-            if (current.isAlive() && current.getSuspensionRounds() == 0) {
-                return;
-            }
+            // Alive and no suspension ⇒ this is the next player to act.
+            return;
+        }
 
-            loopCounter++;
-        } while (loopCounter < turnOrder.size());
+        // If we fall out of the loop, it means we checked all “size” slots without finding an alive player.
+        // In that case, nobody’s turn advances further.
     }
+
 
     public List<Player> getRankingList() {
         rankingList.clear();
