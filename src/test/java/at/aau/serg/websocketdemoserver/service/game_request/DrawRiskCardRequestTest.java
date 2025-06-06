@@ -2,6 +2,7 @@ package at.aau.serg.websocketdemoserver.service.game_request;
 
 import at.aau.serg.websocketdemoserver.dto.*;
 import at.aau.serg.websocketdemoserver.model.board.JailTile;
+import at.aau.serg.websocketdemoserver.model.board.Tile;
 import at.aau.serg.websocketdemoserver.model.cards.*;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
@@ -37,14 +38,13 @@ class DrawRiskCardRequestTest {
         payload.put("playerId", player.getId());
     }
 
-
     @Test
     void testCashCardPositive() {
         CashRiskCard card = new CashRiskCard(1, "Bonus", "Du bekommst Geld", 200);
         RiskCardDeck deck = mock(RiskCardDeck.class);
         when(deck.drawCard()).thenReturn(card);
 
-        DrawRiskCardRequest request = new DrawRiskCardRequest(deck, jailTile);
+        DrawRiskCardRequest request = new DrawRiskCardRequest(deck);
         GameMessage result = request.execute(1, payload, gameState, extraMessages);
 
         assertEquals(700, player.getCash());
@@ -59,7 +59,7 @@ class DrawRiskCardRequestTest {
         RiskCardDeck deck = mock(RiskCardDeck.class);
         when(deck.drawCard()).thenReturn(card);
 
-        DrawRiskCardRequest request = new DrawRiskCardRequest(deck, jailTile);
+        DrawRiskCardRequest request = new DrawRiskCardRequest(deck);
         request.execute(1, payload, gameState, extraMessages);
 
         assertFalse(player.isAlive());
@@ -73,13 +73,12 @@ class DrawRiskCardRequestTest {
         RiskCardDeck deck = mock(RiskCardDeck.class);
         when(deck.drawCard()).thenReturn(card);
 
-        DrawRiskCardRequest request = new DrawRiskCardRequest(deck, jailTile);
+        DrawRiskCardRequest request = new DrawRiskCardRequest(deck);
         request.execute(1, payload, gameState, extraMessages);
 
         assertTrue(player.hasEscapeCard());
-        assertTrue(extraMessages.stream().anyMatch(m -> m.getType() == MessageType.PLAYER_OUT_OF_JAIL_CARD));
+        assertTrue(extraMessages.stream().anyMatch(m -> m.getType() == MessageType.DRAW_RISK_CARD));
     }
-
 
     @Test
     void testGoToJailWithEscapeCard() {
@@ -88,7 +87,7 @@ class DrawRiskCardRequestTest {
         RiskCardDeck deck = mock(RiskCardDeck.class);
         when(deck.drawCard()).thenReturn(card);
 
-        DrawRiskCardRequest request = new DrawRiskCardRequest(deck, jailTile);
+        DrawRiskCardRequest request = new DrawRiskCardRequest(deck);
         request.execute(1, payload, gameState, extraMessages);
 
         assertFalse(player.hasEscapeCard());
@@ -97,15 +96,44 @@ class DrawRiskCardRequestTest {
     }
 
     @Test
+    void testGoToJailWithoutEscapeCard() {
+        player.setEscapeCard(false);
+        GoToJailRiskCard card = new GoToJailRiskCard(6, "Ab ins Gefängnis", "Du musst rein");
+        RiskCardDeck deck = mock(RiskCardDeck.class);
+        when(deck.drawCard()).thenReturn(card);
+
+        DrawRiskCardRequest request = new DrawRiskCardRequest(deck);
+        request.execute(1, payload, gameState, extraMessages);
+
+        // KORREKT: ECHTES TILE AUS DEM BOARD:
+        Tile jailTile = gameState.getBoard().getTile(31);
+
+        assertEquals(jailTile, player.getCurrentTile());
+        assertEquals(2, player.getSuspensionRounds());
+        assertTrue(extraMessages.stream().anyMatch(m -> m.getType() == MessageType.GO_TO_JAIL));
+    }
+
+    @Test
     void testInvalidPlayerId() {
         Map<String, Object> invalidPayload = new HashMap<>();
         invalidPayload.put("playerId", 999);  // Nicht existierender Spieler
 
         RiskCardDeck deck = mock(RiskCardDeck.class);
-        when(deck.drawCard()).thenReturn(new CashRiskCard(6, "Dummy", "irrelevant", 50));
+        when(deck.drawCard()).thenReturn(new CashRiskCard(7, "Dummy", "irrelevant", 50));
 
-        DrawRiskCardRequest request = new DrawRiskCardRequest(deck, jailTile);
+        DrawRiskCardRequest request = new DrawRiskCardRequest(deck);
         GameMessage result = request.execute(1, invalidPayload, gameState, extraMessages);
+
+        assertEquals(MessageType.ERROR, result.getType());
+    }
+
+    @Test
+    void testNullCard() {
+        RiskCardDeck deck = mock(RiskCardDeck.class);
+        when(deck.drawCard()).thenReturn(null);
+
+        DrawRiskCardRequest request = new DrawRiskCardRequest(deck);
+        GameMessage result = request.execute(1, payload, gameState, extraMessages);
 
         assertEquals(MessageType.ERROR, result.getType());
     }

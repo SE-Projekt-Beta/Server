@@ -56,6 +56,16 @@ class GameHandlerTest {
 
     @Test
     void handle_withRequestGameState_returnsGameStateMessage() {
+        Player mockPlayer = Mockito.mock(Player.class);
+        Mockito.when(mockPlayer.getId()).thenReturn(1);
+        Mockito.when(mockPlayer.getNickname()).thenReturn("Tester");
+
+        Mockito.when(mockGameState.getCurrentPlayer()).thenReturn(mockPlayer);
+        Mockito.when(mockGameState.getCurrentPlayerId()).thenReturn(1);
+        Mockito.when(mockGameState.getCurrentRound()).thenReturn(1);
+        Mockito.when(mockGameState.getAllPlayers()).thenReturn(List.of(mockPlayer));
+        Mockito.when(mockGameState.getBoard()).thenReturn(Mockito.mock(GameBoard.class));
+
         GameMessage msg = new GameMessage(1, MessageType.REQUEST_GAME_STATE, null);
 
         GameMessage result = gameHandler.handle(msg);
@@ -63,6 +73,7 @@ class GameHandlerTest {
         assertEquals(MessageType.GAME_STATE, result.getType());
         assertEquals(1, result.getLobbyId());
     }
+
 
     @Test
     void handle_withUnsupportedMessageType_returnsError() {

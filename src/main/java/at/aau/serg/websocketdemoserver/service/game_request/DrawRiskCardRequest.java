@@ -59,15 +59,27 @@ public class DrawRiskCardRequest implements GameRequest {
 
                 case GOTO_JAIL:
                     Tile jailTile = gameState.getBoard().getTile(31);
-                    player.setCurrentTile(jailTile);
-                    player.suspendForRounds(3);
 
-                    extraMessages.add(new GameMessage(
-                            lobbyId,
-                            MessageType.GO_TO_JAIL,
-                            new WentToJailPayload(playerId)
-                    ));
+                    if (player.hasEscapeCard()) {
+                        player.setEscapeCard(false);
+                        player.setCurrentTile(null);
+                        player.setSuspensionRounds(0);
 
+                        extraMessages.add(new GameMessage(
+                                lobbyId,
+                                MessageType.PLAYER_OUT_OF_JAIL_CARD,
+                                new PlayerOutOfJailCardPayload(playerId, "Spieler nutzt Aus-dem-Gefängnis-frei-Karte")
+                        ));
+                    } else {
+                        player.setCurrentTile(jailTile);
+                        player.suspendForRounds(3);
+
+                        extraMessages.add(new GameMessage(
+                                lobbyId,
+                                MessageType.GO_TO_JAIL,
+                                new WentToJailPayload(playerId)
+                        ));
+                    }
                     break;
 
                 case ESCAPE_CARD:
