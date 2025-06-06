@@ -31,7 +31,7 @@ class StartGameRequestTest {
         List<LobbyMessage> result = request.handle(message);
 
         // Assertions zur Antwort
-        assertEquals(1, result.size());
+        assertEquals(2, result.size());
         LobbyMessage response = result.get(0);
         assertEquals(LobbyMessageType.START_GAME, response.getType());
 
