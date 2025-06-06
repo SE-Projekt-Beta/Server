@@ -3,6 +3,7 @@ package at.aau.serg.websocketdemoserver.service.game_request;
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
 import at.aau.serg.websocketdemoserver.model.board.SpecialTile;
+import at.aau.serg.websocketdemoserver.model.board.Tile;
 import at.aau.serg.websocketdemoserver.model.board.TileType;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
@@ -40,8 +41,8 @@ class PayTaxRequestTest {
 
     @Test
     void testPaySondersteuer() {
-        SpecialTile tile = createTaxTile(21, "Sondersteuer");
-        player.setCurrentTile(tile);
+        Tile taxTile = gameState.getBoard().getTile(21);
+        player.setCurrentTile(taxTile);
         player.setCash(500);
 
         List<GameMessage> extras = new ArrayList<>();
@@ -49,13 +50,14 @@ class PayTaxRequestTest {
 
         assertEquals(300, player.getCash());
         assertEquals(MessageType.GAME_STATE, result.getType());
-        assertTrue(extras.isEmpty());
+        assertEquals(1, extras.size());
+        assertEquals(MessageType.PAY_TAX, extras.get(0).getType());
     }
 
     @Test
     void testPayVermoegensabgabe() {
-        SpecialTile tile = createTaxTile(33, "Vermögensabgabe");
-        player.setCurrentTile(tile);
+        Tile taxTile = gameState.getBoard().getTile(33);
+        player.setCurrentTile(taxTile);
         player.setCash(1000);
 
         List<GameMessage> extras = new ArrayList<>();
@@ -63,7 +65,8 @@ class PayTaxRequestTest {
 
         assertEquals(600, player.getCash());
         assertEquals(MessageType.GAME_STATE, result.getType());
-        assertTrue(extras.isEmpty());
+        assertEquals(1, extras.size());
+        assertEquals(MessageType.PAY_TAX, extras.get(0).getType());
     }
 
     @Test

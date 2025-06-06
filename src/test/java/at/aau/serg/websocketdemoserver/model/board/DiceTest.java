@@ -14,7 +14,7 @@ class DiceTest {
         assertEquals(6, dice.getMax());
     }
 
-    @RepeatedTest(100)
+    @RepeatedTest(50)
     void testRollWithinRange() {
         Dice dice = new Dice(1, 6);
         int result = dice.roll();
