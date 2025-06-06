@@ -3,9 +3,12 @@ package at.aau.serg.websocketdemoserver.service.lobby_request;
 import at.aau.serg.websocketdemoserver.dto.*;
 import at.aau.serg.websocketdemoserver.model.gamestate.*;
 import at.aau.serg.websocketdemoserver.service.*;
+import at.aau.serg.websocketdemoserver.service.helper.LobbyHelper;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class StartGameRequest implements LobbyRequest {
@@ -50,11 +53,16 @@ public class StartGameRequest implements LobbyRequest {
         GameStartPayload payload = new GameStartPayload(orderedDtos);
         LobbyMessage response = new LobbyMessage(lobbyId, LobbyMessageType.START_GAME, payload);
 
+        // remove lobby after game start
+        lobbyManager.removeLobby(lobbyId);
+        // send lobby list update new LobbyMessage(LobbyMessageType.LOBBY_LIST, lobbyList)
+        LobbyMessage lobbyListMessage = new LobbyMessage(LobbyMessageType.LOBBY_LIST, LobbyHelper.getLobbyList(lobbyManager));
+
         // ✉️ Nachrichten an alle Spieler
         sendGameStartedOrder(lobbyId, payload);
         sendCurrentPlayer(lobbyId, gameState.getCurrentPlayerId());
 
-        return List.of(response);
+        return List.of(response, lobbyListMessage);
     }
 
     private void sendCurrentPlayer(int lobbyId, int playerId) {

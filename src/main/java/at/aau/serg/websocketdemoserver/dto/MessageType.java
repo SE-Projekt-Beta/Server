@@ -13,6 +13,7 @@ public enum MessageType {
     GO_TO_JAIL,
     PAY_RENT,
     REQUEST_GAME_STATE,
+    EXTRA_MESSAGE,
 
     DRAW_BANK_CARD,
     DRAW_RISK_CARD,

@@ -5,6 +5,7 @@ import at.aau.serg.websocketdemoserver.dto.LobbyMessageType;
 import at.aau.serg.websocketdemoserver.service.Lobby;
 import at.aau.serg.websocketdemoserver.service.LobbyManager;
 import at.aau.serg.websocketdemoserver.service.LobbyRequest;
+import at.aau.serg.websocketdemoserver.service.helper.LobbyHelper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,15 +21,7 @@ public class ListLobbiesRequest implements LobbyRequest {
 
     @Override
     public List<LobbyMessage> handle(LobbyMessage message) {
-        List<Map<String, Object>> lobbyList = lobbyManager.getLobbyIds().stream()
-                .map(id -> {
-                    Lobby lobby = lobbyManager.getLobby(id);
-                    Map<String, Object> entry = new HashMap<>();
-                    entry.put("lobbyId", id);
-                    entry.put("lobbyName", lobby != null ? lobby.getLobbyName() : "Unknown");
-                    entry.put("playerCount", lobby != null ? lobby.getPlayers().size() : 0);
-                    return entry;
-                }).toList();
+        List<Map<String, Object>> lobbyList =  LobbyHelper.getLobbyList(lobbyManager);
 
         return List.of(new LobbyMessage(LobbyMessageType.LOBBY_LIST, lobbyList));
     }
