@@ -103,9 +103,10 @@ class PlayerTest {
 
     @Test
     void testSuspendedNoMovement() {
+        Tile initialTile = player.getCurrentTile();
         player.suspendForRounds(1);
         player.moveSteps(4);
-        assertNull(player.getCurrentTile());
+        assertEquals(initialTile, player.getCurrentTile());
     }
 
 
