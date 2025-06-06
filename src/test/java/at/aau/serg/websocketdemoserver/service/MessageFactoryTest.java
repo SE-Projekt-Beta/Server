@@ -2,6 +2,7 @@ package at.aau.serg.websocketdemoserver.service;
 
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
+import at.aau.serg.websocketdemoserver.model.gamestate.GameBoard;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,13 +60,17 @@ class MessageFactoryTest {
 
     @Test
     void testGameOver() {
-        List<Integer> ranking = List.of(1, 2, 3);
-        GameMessage msg = MessageFactory.gameOver(7, ranking);
+        Player player = new Player(1, "Alice", new GameBoard());
+
+        GameMessage msg = MessageFactory.gameOver(7, player);
+
         assertEquals(7, msg.getLobbyId());
         assertEquals(MessageType.GAME_OVER, msg.getType());
 
         @SuppressWarnings("unchecked")
         Map<String, Object> payload = (Map<String, Object>) msg.getPayload();
-        assertEquals(ranking, payload.get("ranking"));
+
+        assertEquals(player.getId(), payload.get("winnerId"));
+        assertEquals(player.getNickname(), payload.get("winnerName"));
     }
 }
