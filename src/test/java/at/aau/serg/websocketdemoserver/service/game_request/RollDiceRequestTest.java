@@ -478,6 +478,24 @@ class RollDiceRequestTest {
     }
 
     @Test
+    void testLandDirectlyOnStartFrom39() {
+        // Place player on tile 39
+        player.moveToTile(39);
+        player.setHasRolledDice(false);
+        int initialCash = player.getCash();
+        // Roll 2 to land on START (tile 1)
+        when(dicePair.roll()).thenReturn(new int[]{2, 0});
+        Map<String, Object> payload = Map.of("playerId", player.getId());
+        List<GameMessage> extras = new ArrayList<>();
+        GameMessage result = request.execute(lobbyId, payload, gameState, extras);
+        assertEquals(MessageType.GAME_STATE, result.getType());
+        assertEquals(1, player.getCurrentTile().getIndex()); // Should land on START
+        assertTrue(player.getCash() > initialCash); // Should have received START bonus
+        boolean hasDiceRolled = extras.stream().anyMatch(msg -> msg.getType() == MessageType.DICE_ROLLED);
+        assertTrue(hasDiceRolled);
+    }
+
+    @Test
     void testLandOnUnknownTileType() {
         // Create a tile with a null type for testing
         Tile unknownTile = mock(Tile.class);
