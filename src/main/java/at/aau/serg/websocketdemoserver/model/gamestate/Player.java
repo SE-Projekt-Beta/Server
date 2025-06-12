@@ -8,32 +8,20 @@ import java.util.ArrayList;
 import java.util.List;
 // tile factory import
 
-
+@Getter
+@Setter
 public class Player implements Comparable<Player> {
 
     private static int idCounter = 1;
 
-    @Getter
     private final int id;
-    @Setter
-    @Getter
     private String nickname;
-    @Setter
-    @Getter
     private Tile currentTile;
-    @Getter
     private int cash;
-    @Getter
     private boolean alive;
     private final List<StreetTile> ownedStreets = new ArrayList<>();
-    @Getter
-    @Setter
     private int suspensionRounds;
-    @Getter
-    @Setter
     private boolean hasEscapeCard;
-    @Getter
-    @Setter
     private boolean hasRolledDice = false;
     private final GameBoard board;
 

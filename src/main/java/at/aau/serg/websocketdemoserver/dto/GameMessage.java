@@ -22,10 +22,4 @@ public class GameMessage {
         this.payload = payload;
     }
 
-    /** Legacy ctor (no lobbyId) – avoid and prefer the above */
-    public GameMessage(MessageType type, Object payload) {
-        this.type    = type;
-        this.payload = payload;
-    }
-
 }

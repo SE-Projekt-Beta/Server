@@ -9,10 +9,6 @@ public class PlayerDTO {
     private int id;
     private String nickname;
 
-    public PlayerDTO() {
-        // Leerer Konstruktor für Deserialisierung (z. B. Gson oder Jackson)
-    }
-
     public PlayerDTO(int id, String nickname) {
         this.id = id;
         this.nickname = nickname;
