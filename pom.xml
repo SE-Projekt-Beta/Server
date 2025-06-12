@@ -20,6 +20,7 @@
         <sonar.coverage.jacoco.xmlReportPaths>
             ${project.build.directory}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
         </sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.exclusions>**/WebSocketBrokerConfig.java</sonar.exclusions>
     </properties>
 
     <dependencyManagement>

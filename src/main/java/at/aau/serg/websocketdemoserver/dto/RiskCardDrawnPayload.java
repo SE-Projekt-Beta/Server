@@ -1,5 +1,8 @@
 package at.aau.serg.websocketdemoserver.dto;
 
+import lombok.Getter;
+
+@Getter
 public class RiskCardDrawnPayload {
     private int playerId;
     private int amount;
@@ -15,23 +18,4 @@ public class RiskCardDrawnPayload {
         this.description = description;
     }
 
-    public int getPlayerId() {
-        return playerId;
-    }
-
-    public int getAmount() {
-        return amount;
-    }
-
-    public int getNewCash() {
-        return newCash;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
 }

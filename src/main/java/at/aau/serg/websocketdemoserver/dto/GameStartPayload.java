@@ -1,24 +1,17 @@
 package at.aau.serg.websocketdemoserver.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 
 public class GameStartPayload {
 
+    @Getter
+    @Setter
     private List<PlayerDTO> playerOrder;
 
-    public GameStartPayload() {
-        // leerer Standard-Konstruktor für JSON
-    }
-
     public GameStartPayload(List<PlayerDTO> playerOrder) {
-        this.playerOrder = playerOrder;
-    }
-
-    public List<PlayerDTO> getPlayerOrder() {
-        return playerOrder;
-    }
-
-    public void setPlayerOrder(List<PlayerDTO> playerOrder) {
         this.playerOrder = playerOrder;
     }
 

@@ -9,7 +9,6 @@ import at.aau.serg.websocketdemoserver.model.board.Tile;
 import at.aau.serg.websocketdemoserver.model.cards.RiskCardDeck;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
-import at.aau.serg.websocketdemoserver.model.util.Dice;
 import at.aau.serg.websocketdemoserver.model.util.DicePair;
 import at.aau.serg.websocketdemoserver.service.GameRequest;
 import at.aau.serg.websocketdemoserver.service.MessageFactory;
@@ -76,7 +75,10 @@ public class RollDiceRequest implements GameRequest {
                 extraMessages.add(new GameMessage(
                         lobbyId,
                         MessageType.ASK_PAY_PRISON,
-                        new JSONObject().put("playerId", playerId).put("suspensionRounds", player.getSuspensionRounds()).toMap()
+                        Map.of(
+                            "playerId", playerId,
+                            "suspensionRounds", player.getSuspensionRounds()
+                        )
                 ));
 
                 return MessageFactory.gameState(lobbyId, gameState);
@@ -108,7 +110,12 @@ public class RollDiceRequest implements GameRequest {
                     extraMessages.add(new GameMessage(
                             lobbyId,
                             MessageType.DICE_ROLLED,
-                            new JSONObject().put("playerId", playerId).put("roll1", steps1).put("roll2", steps2).put("fieldIndex", newIndex).toMap()
+                            Map.of(
+                                "playerId", playerId,
+                                "roll1", steps1,
+                                "roll2", steps2,
+                                "fieldIndex", newIndex
+                            )
                     ));
                     return result;
                 }
@@ -139,7 +146,11 @@ public class RollDiceRequest implements GameRequest {
                             extraMessages.add(new GameMessage(
                                     lobbyId,
                                     MessageType.EXTRA_MESSAGE,
-                                    new JSONObject().put("playerId", playerId).put("title", "Straße kaufen").put("message", "Du kannst dir diese Straße nicht leisten.").toMap()
+                                    Map.of(
+                                        "playerId", playerId,
+                                        "title", "Straße kaufen",
+                                        "message", "Du kannst dir diese Straße nicht leisten."
+                                    )
                             ));
                             gameState.advanceTurn();
                             break;
@@ -149,7 +160,10 @@ public class RollDiceRequest implements GameRequest {
                         extraMessages.add(new GameMessage(
                                 lobbyId,
                                 MessageType.ASK_BUY_PROPERTY,
-                                new JSONObject().put("playerId", playerId).put("fieldIndex", newTile.getIndex()).toMap()
+                                Map.of(
+                                    "playerId", playerId,
+                                    "fieldIndex", newTile.getIndex()
+                                )
                         ));
                     }
 
@@ -202,13 +216,17 @@ public class RollDiceRequest implements GameRequest {
             extraMessages.add(new GameMessage(
                     lobbyId,
                     MessageType.DICE_ROLLED,
-                    new JSONObject().put("playerId", playerId).put("roll1", steps1).put("roll2", steps2).put("fieldIndex", newTile.getIndex()).toMap()
+                    Map.of(
+                        "playerId", playerId,
+                        "roll1", steps1,
+                        "roll2", steps2,
+                        "fieldIndex", newTile.getIndex()
+                    )
             ));
 
             return MessageFactory.gameState(lobbyId, gameState);
 
         } catch (Exception e) {
-            e.printStackTrace();
             return MessageFactory.error(lobbyId, "Fehler beim Würfeln: " + e.getMessage());
         }
     }

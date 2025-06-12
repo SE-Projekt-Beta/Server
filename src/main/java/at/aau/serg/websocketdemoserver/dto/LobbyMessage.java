@@ -1,8 +1,13 @@
 package at.aau.serg.websocketdemoserver.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * A message about lobby‐level events, now carrying lobbyId.
  */
+@Setter
+@Getter
 public class LobbyMessage {
     private int lobbyId;
     private LobbyMessageType type;
@@ -23,12 +28,4 @@ public class LobbyMessage {
         this.payload = payload;
     }
 
-    public int getLobbyId() { return lobbyId; }
-    public void setLobbyId(int lobbyId) { this.lobbyId = lobbyId; }
-
-    public LobbyMessageType getType() { return type; }
-    public void setType(LobbyMessageType type) { this.type = type; }
-
-    public Object getPayload() { return payload; }
-    public void setPayload(Object payload) { this.payload = payload; }
 }

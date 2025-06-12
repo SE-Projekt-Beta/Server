@@ -1,5 +1,8 @@
 package at.aau.serg.websocketdemoserver.dto;
 
+import lombok.Getter;
+
+@Getter
 public class WentToJailPayload {
     private int playerId;
 
@@ -7,7 +10,4 @@ public class WentToJailPayload {
         this.playerId = playerId;
     }
 
-    public int getPlayerId() {
-        return playerId;
-    }
 }

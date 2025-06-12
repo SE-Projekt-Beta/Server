@@ -5,17 +5,18 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.stereotype.Component;
 
 @Component
+@Getter
+@Setter
 public class GameState {
 
-    @Getter
     private final GameBoard board;
-    private final List<Player> turnOrder;
+    private List<Player> turnOrder;
     private final Map<Integer, Player> playersById;
     private int currentPlayerIndex;
-    @Getter
     private int currentRound;
     private final List<Player> rankingList;
 
@@ -154,4 +155,5 @@ public class GameState {
     public boolean wasTileBuiltThisTurn(int tilePos) {
         return tilesBuiltThisTurn.contains(tilePos);
     }
+
 }
