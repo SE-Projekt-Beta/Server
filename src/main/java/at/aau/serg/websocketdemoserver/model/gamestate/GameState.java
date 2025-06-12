@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 public class GameState {
 
     private final GameBoard board;
-    private final List<Player> turnOrder;
+    private List<Player> turnOrder;
     private final Map<Integer, Player> playersById;
     private int currentPlayerIndex;
     private int currentRound;
