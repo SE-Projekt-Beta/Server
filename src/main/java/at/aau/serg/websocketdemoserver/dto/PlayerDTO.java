@@ -1,8 +1,15 @@
 package at.aau.serg.websocketdemoserver.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
 public class PlayerDTO {
 
+    @Getter
+    @Setter
     private int id;
+    @Getter
+    @Setter
     private String nickname;
 
     public PlayerDTO() {
@@ -11,22 +18,6 @@ public class PlayerDTO {
 
     public PlayerDTO(int id, String nickname) {
         this.id = id;
-        this.nickname = nickname;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getNickname() {
-        return nickname;
-    }
-
-    public void setNickname(String nickname) {
         this.nickname = nickname;
     }
 
