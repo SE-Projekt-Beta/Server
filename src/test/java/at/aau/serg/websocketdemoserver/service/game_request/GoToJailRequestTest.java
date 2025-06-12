@@ -42,25 +42,37 @@ class GoToJailRequestTest {
     }
 
     @Test
-    void testPlayerHasEscapeCard() throws JSONException {
+    void testPlayerHasEscapeCard() {
         player.setEscapeCard(true);
-
-        JSONObject payload = new JSONObject();
+        var payload = new java.util.HashMap<String, Object>();
         payload.put("playerId", player.getId());
-
         request.execute(1, payload, gameState, extraMessages);
-
         assertNotEquals(jailTile, player.getCurrentTile());
         assertEquals(0, player.getSuspensionRounds());
     }
 
     @Test
-    void testInvalidPlayer() throws JSONException {
-        JSONObject payload = new JSONObject();
+    void testInvalidPlayer() {
+        var payload = new java.util.HashMap<String, Object>();
         payload.put("playerId", 999); // Nicht existierend
-
         GameMessage result = request.execute(1, payload, gameState, extraMessages);
-
         assertEquals(MessageType.ERROR, result.getType());
+    }
+
+    @Test
+    void testPlayerNotAlive() {
+        player.setAlive(false);
+        var payload = new java.util.HashMap<String, Object>();
+        payload.put("playerId", player.getId());
+        GameMessage result = request.execute(1, payload, gameState, extraMessages);
+        assertEquals(MessageType.ERROR, result.getType());
+        assertTrue(result.getPayload().toString().contains("ausgeschieden"));
+    }
+
+    @Test
+    void testExceptionHandling() {
+        GameMessage result = request.execute(1, "invalid", gameState, extraMessages);
+        assertEquals(MessageType.ERROR, result.getType());
+        assertTrue(result.getPayload().toString().contains("Fehler bei Gefängnisanweisung"));
     }
 }

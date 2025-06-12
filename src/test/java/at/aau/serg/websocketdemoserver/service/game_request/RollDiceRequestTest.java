@@ -4,7 +4,6 @@ import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
-import at.aau.serg.websocketdemoserver.model.util.Dice;
 import at.aau.serg.websocketdemoserver.model.util.DicePair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,4 +63,21 @@ class RollDiceRequestTest {
         assertTrue(result.getPayload().toString().contains("Spieler nicht gefunden"));
         assertTrue(extras.isEmpty());
     }
+
+    @Test
+    void testExecuteAlreadyRolledDice() {
+        // Ensure it's Alice's turn
+        gameState.setCurrentPlayerIndex(0);
+        player.setHasRolledDice(true);
+        Map<String, Object> payload = Map.of("playerId", player.getId());
+        List<GameMessage> extras = new ArrayList<>();
+
+        GameMessage result = request.execute(lobbyId, payload, gameState, extras);
+
+        assertEquals(MessageType.ERROR, result.getType());
+        assertTrue(extras.isEmpty());
+    }
+
+
+
 }

@@ -31,12 +31,6 @@ public class TileFactory {
             }
         }
 
-        for (Tile tile : tiles) {
-            // print tile pos and type and title
-            System.out.println("Tile: " + tile.getIndex() + " " + tile.getType() + " " + (tile instanceof StreetTile ? ((StreetTile) tile).getLabel() : ""));
-
-        }
-
         return tiles;
     }
 }
