@@ -98,6 +98,7 @@ public class StreetTile extends Tile {
         return true;
     }
 
+
     // --------------------------------------------
     // Zugriff und Utility
     // --------------------------------------------

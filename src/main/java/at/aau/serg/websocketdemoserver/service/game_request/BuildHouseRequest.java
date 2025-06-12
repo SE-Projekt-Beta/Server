@@ -54,7 +54,7 @@ public class BuildHouseRequest implements GameRequest {
 
             boolean success = street.buildHouse(player);
             if (!success) {
-                return MessageFactory.error(lobbyId, "Hausbau nicht möglich (z. B. max. Häuserzahl oder zu wenig Geld).");
+                return MessageFactory.error(lobbyId, "Hausbau nicht möglich (max. Häuserzahl oder zu wenig Geld).");
             }
 
             // Feld als „in dieser Runde bebaut“ markieren

@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 public class BuildHotelRequest implements GameRequest {
-
     @Override
     public GameMessage execute(int lobbyId, Object payload, GameState gameState, List<GameMessage> extraMessages) {
         try {
@@ -29,6 +28,20 @@ public class BuildHotelRequest implements GameRequest {
                 return MessageFactory.error(lobbyId, "Spieler ungültig oder ausgeschieden.");
             }
 
+            if (!gameState.isPlayersTurn(playerId)) {
+                return MessageFactory.error(lobbyId, "Du bist nicht an der Reihe.");
+            }
+
+            // Check: bereits gebaut in dieser Runde?
+            if (gameState.wasTileBuiltThisTurn(tilePos)) {
+                return MessageFactory.error(lobbyId, "Auf diesem Feld wurde in dieser Runde bereits gebaut.");
+            }
+
+            // Check: Feld wurde in dieser Runde gekauft?
+            if (gameState.wasTileBoughtThisTurn(tilePos)) {
+                return MessageFactory.error(lobbyId, "Auf neu gekauften Feldern darf in derselben Runde nicht gebaut werden.");
+            }
+
             Tile tile = gameState.getBoard().getTile(tilePos);
             if (!(tile instanceof StreetTile street)) {
                 return MessageFactory.error(lobbyId, "Kein baubares Feld.");
@@ -40,10 +53,10 @@ public class BuildHotelRequest implements GameRequest {
 
             boolean success = street.buildHotel(player);
             if (!success) {
-                return MessageFactory.error(lobbyId, "Hotelbau nicht möglich (nicht genug Geld oder weniger als 4 Häuser).");
+                return MessageFactory.error(lobbyId, "Hotelbau nicht möglich (kein Geld, kein Platz oder Bedingungen nicht erfüllt).");
             }
-            gameState.advanceTurn();
 
+            gameState.markTileBuiltThisTurn(tilePos);
             return MessageFactory.gameState(lobbyId, gameState);
 
         } catch (Exception e) {
