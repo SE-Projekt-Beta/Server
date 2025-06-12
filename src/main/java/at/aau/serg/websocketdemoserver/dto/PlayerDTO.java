@@ -3,13 +3,10 @@ package at.aau.serg.websocketdemoserver.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+@Getter
+@Setter
 public class PlayerDTO {
-
-    @Getter
-    @Setter
     private int id;
-    @Getter
-    @Setter
     private String nickname;
 
     public PlayerDTO() {

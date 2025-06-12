@@ -1,5 +1,10 @@
 package at.aau.serg.websocketdemoserver.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class PayTaxPayload {
     private final int playerId;
     private final int amount;
@@ -13,19 +18,4 @@ public class PayTaxPayload {
         this.tileName = tileName;
     }
 
-    public int getPlayerId() {
-        return playerId;
-    }
-
-    public int getAmount() {
-        return amount;
-    }
-
-    public int getNewCash() {
-        return newCash;
-    }
-
-    public String getTileName() {
-        return tileName;
-    }
 }
