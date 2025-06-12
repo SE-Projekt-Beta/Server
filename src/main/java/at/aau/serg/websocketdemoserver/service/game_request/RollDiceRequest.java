@@ -9,7 +9,6 @@ import at.aau.serg.websocketdemoserver.model.board.Tile;
 import at.aau.serg.websocketdemoserver.model.cards.RiskCardDeck;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
-import at.aau.serg.websocketdemoserver.model.util.Dice;
 import at.aau.serg.websocketdemoserver.model.util.DicePair;
 import at.aau.serg.websocketdemoserver.service.GameRequest;
 import at.aau.serg.websocketdemoserver.service.MessageFactory;
@@ -228,7 +227,6 @@ public class RollDiceRequest implements GameRequest {
             return MessageFactory.gameState(lobbyId, gameState);
 
         } catch (Exception e) {
-            e.printStackTrace();
             return MessageFactory.error(lobbyId, "Fehler beim Würfeln: " + e.getMessage());
         }
     }
