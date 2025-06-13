@@ -60,10 +60,6 @@ public class StreetTile extends Tile {
         return (int) (baseRent + baseRent * buildings.size() * factor);
     }
 
-    public int calculateRawValue() {
-        return price + getHouseCount() * houseCost + getHotelCount() * hotelCost;
-    }
-
     public int calculateSellValue() {
         double value = price * 0.5;
         value += getHouseCount() * houseCost * 0.25;
@@ -83,18 +79,6 @@ public class StreetTile extends Tile {
 
         buildings.add(BuildingType.HOUSE);
         player.setCash(player.getCash() - houseCost);
-        return true;
-    }
-
-    public boolean buildHotel(Player player) {
-        if (!isOwner(player)) return false;
-        if (buildings.contains(BuildingType.HOTEL)) return false;
-        if (getHouseCount() < 4) return false;
-        if (player.getCash() < hotelCost) return false;
-
-        buildings.clear();
-        buildings.add(BuildingType.HOTEL);
-        player.setCash(player.getCash() - hotelCost);
         return true;
     }
 
