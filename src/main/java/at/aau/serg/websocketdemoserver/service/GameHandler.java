@@ -11,6 +11,7 @@ import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.model.util.Dice;
 import at.aau.serg.websocketdemoserver.model.util.DicePair;
 import at.aau.serg.websocketdemoserver.service.game_request.*;
+import lombok.Getter;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -20,6 +21,7 @@ import static at.aau.serg.websocketdemoserver.dto.MessageType.*;
 @Service
 public class GameHandler {
 
+    @Getter
     private final GameState gameState;
     private final Map<MessageType, GameRequest> requestMap = new HashMap<>();
     private final List<GameMessage> extraMessages = new ArrayList<>();
