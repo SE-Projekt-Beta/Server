@@ -43,25 +43,4 @@ public class LobbyWebSocketController {
                 messagingTemplate.convertAndSend("/topic/lobby", resp)
         );
     }
-
-    /**
-     * Handles JOIN_LOBBY and START_GAME for a specific lobby.
-     * Clients send to /app/lobby/{lobbyId}, subscribe to /topic/lobby/{lobbyId}.
-     */
-    @MessageMapping("/lobby/{lobbyId}")
-    public void handleByLobby(@DestinationVariable int lobbyId,
-                              @Payload LobbyMessage message) {
-        logger.info("Lobby {}: {}", lobbyId, message.getType());
-        message.setLobbyId(lobbyId);
-        List<LobbyMessage> responses = lobbyService.handle(message);
-        for (var resp : responses) {
-            if (resp.getType() == LobbyMessageType.LOBBY_LIST) {
-                // still broadcast lobby list globally
-                messagingTemplate.convertAndSend("/topic/lobby", resp);
-            } else {
-                // per‐lobby updates
-                messagingTemplate.convertAndSend("/topic/lobby/" + lobbyId, resp);
-            }
-        }
-    }
 }
