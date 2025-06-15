@@ -9,6 +9,7 @@ import java.util.Map;
 public class GameManager {
     @Getter
     private static final GameManager instance = new GameManager();
+    @Getter
     private final Map<Integer, GameHandler> handlers = new HashMap<>();
 
     private GameManager() {}
