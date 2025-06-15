@@ -25,7 +25,7 @@ public class GameStateBroadcaster {
         this.messagingTemplate = messagingTemplate;
     }
 
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 2000)
     public void broadcastGameStates() {
         Map<Integer, GameHandler> handlers = GameManager.getInstance().getHandlers();
         for (Map.Entry<Integer, GameHandler> entry : handlers.entrySet()) {
@@ -35,7 +35,7 @@ public class GameStateBroadcaster {
             if (gameState != null) {
                 GameMessage gameStateMsg = MessageFactory.gameState(lobbyId, gameState);
                 messagingTemplate.convertAndSend("/topic/dkt/" + lobbyId, gameStateMsg);
-                logger.info("Broadcasted game state to lobby {}", lobbyId);
+                logger.debug("Broadcasted game state to lobby {}", lobbyId);
             }
         }
     }
