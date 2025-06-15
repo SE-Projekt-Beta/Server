@@ -3,6 +3,7 @@ package at.aau.serg.websocketdemoserver.service;
 import at.aau.serg.websocketdemoserver.dto.*;
 import at.aau.serg.websocketdemoserver.service.lobby_request.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,7 @@ import java.util.Map;
 @Service
 public class LobbyService {
 
+    @Getter
     private final LobbyManager lobbyManager = new LobbyManager();
     private final UserManager userManager = new UserManager();
     private final ObjectMapper objectMapper = new ObjectMapper();
