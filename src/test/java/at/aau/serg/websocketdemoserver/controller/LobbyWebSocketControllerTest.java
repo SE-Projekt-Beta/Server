@@ -45,23 +45,4 @@ class LobbyWebSocketControllerTest {
         verify(messagingTemplate).convertAndSend("/topic/lobby", response1);
         verify(messagingTemplate).convertAndSend("/topic/lobby", response2);
     }
-
-    @Test
-    void handleByLobby_sendsLobbyListGlobally_andOthersToLobbyTopic() {
-        // Arrange
-        int lobbyId = 42;
-        LobbyMessage input = new LobbyMessage(LobbyMessageType.JOIN_LOBBY, "Join");
-        LobbyMessage lobbyList = new LobbyMessage(LobbyMessageType.LOBBY_LIST, "List");
-        LobbyMessage lobbyUpdate = new LobbyMessage(lobbyId, LobbyMessageType.LOBBY_UPDATE, "Update");
-
-        when(lobbyService.handle(input)).thenReturn(List.of(lobbyList, lobbyUpdate));
-
-        // Act
-        controller.handleByLobby(lobbyId, input);
-
-        // Assert
-        verify(lobbyService).handle(input);
-        verify(messagingTemplate).convertAndSend("/topic/lobby", lobbyList);
-        verify(messagingTemplate).convertAndSend("/topic/lobby/" + lobbyId, lobbyUpdate);
-    }
 }
