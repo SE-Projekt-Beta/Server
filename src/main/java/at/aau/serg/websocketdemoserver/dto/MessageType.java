@@ -29,6 +29,6 @@ public enum MessageType {
     CASH_TASK,
     PLAYER_OUT_OF_JAIL_CARD,
     DICE_ROLLED,
-    END_GAME_REQUEST,
+    END_GAME,
     GAME_ENDED,
 }
