@@ -42,6 +42,7 @@ public class GameHandler {
         requestMap.put(PAY_RENT, new PayRentRequest());
         requestMap.put(BUILD_HOUSE, new BuildHouseRequest());
         requestMap.put(BUILD_HOTEL, new BuildHotelRequest());
+        requestMap.put(END_GAME_REQUEST, new EndGameRequest());
 //        requestMap.put(PASS_START, new PassedStartRequest());
     }
 
