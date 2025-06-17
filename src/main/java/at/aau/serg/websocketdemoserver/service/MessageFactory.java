@@ -31,7 +31,18 @@ public class MessageFactory {
         System.out.println("Current player name: " + gameState.getCurrentPlayer().getNickname() + " ID: " + gameState.getCurrentPlayerId());
         payload.put("currentPlayerId", gameState.getCurrentPlayerId());
 
+        // Check if the current player is not alive, advance the turn until an alive player is found
         Player current = gameState.getCurrentPlayer();
+        if (current == null || !current.isAlive()) {
+            System.out.println("Current player is not alive. Advancing turn.");
+            int safety = 0;
+            while ((current == null || !current.isAlive()) && safety < 100) {
+                gameState.advanceTurn();
+                current = gameState.getCurrentPlayer();
+                safety++;
+            }
+        }
+
         if (current != null) {
             payload.put("currentPlayerName", current.getNickname());
         } else {
