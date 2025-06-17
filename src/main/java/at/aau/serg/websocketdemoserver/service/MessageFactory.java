@@ -39,6 +39,12 @@ public class MessageFactory {
         }
 
         payload.put("players", players);
+        // just print the list of alive players
+        List<Map<String, Object>> alivePlayers = players.stream()
+                .filter(p -> (boolean) p.get("alive"))
+                .toList();
+        System.out.println(alivePlayers);
+
         payload.put("currentRound", gameState.getCurrentRound());
         payload.put("board", boardTiles);
 
