@@ -1,5 +1,6 @@
 package at.aau.serg.websocketdemoserver.websocket;
 
+import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.service.GameManager;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -16,6 +17,11 @@ public class WebSocketEventListener {
         Integer userId = SessionUserRegistry.getUserId(sessionId);
         Integer gameId = SessionUserRegistry.getGameId(sessionId);
         if (userId != null) {
+
+            // get player from id
+            Player player = GameManager.getInstance().getHandler(gameId).getGameState().getPlayer(userId);
+            player.eliminate();
+
             // Optionally, you can log or handle the user ID if needed
             System.out.println("User ID for session " + sessionId + ": " + userId +
                                " in game " + gameId);

@@ -43,6 +43,14 @@ public class MessageFactory {
             }
         }
 
+        for (Player player : gameState.getAllPlayers()) {
+            if (player.isAlive()) {
+                System.out.println("Alive player: " + player.getNickname() + " ID: " + player.getId());
+            } else {
+                System.out.println("Dead player: " + player.getNickname() + " ID: " + player.getId());
+            }
+        }
+
         if (current != null) {
             payload.put("currentPlayerName", current.getNickname());
         } else {
