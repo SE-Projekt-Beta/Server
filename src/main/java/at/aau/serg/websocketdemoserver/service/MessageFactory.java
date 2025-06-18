@@ -31,7 +31,26 @@ public class MessageFactory {
         System.out.println("Current player name: " + gameState.getCurrentPlayer().getNickname() + " ID: " + gameState.getCurrentPlayerId());
         payload.put("currentPlayerId", gameState.getCurrentPlayerId());
 
+        // Check if the current player is not alive, advance the turn until an alive player is found
         Player current = gameState.getCurrentPlayer();
+        if (current == null || !current.isAlive()) {
+            System.out.println("Current player is not alive. Advancing turn.");
+            int safety = 0;
+            while ((current == null || !current.isAlive()) && safety < 100) {
+                gameState.advanceTurn();
+                current = gameState.getCurrentPlayer();
+                safety++;
+            }
+        }
+
+        for (Player player : gameState.getAllPlayers()) {
+            if (player.isAlive()) {
+                System.out.println("Alive player: " + player.getNickname() + " ID: " + player.getId());
+            } else {
+                System.out.println("Dead player: " + player.getNickname() + " ID: " + player.getId());
+            }
+        }
+
         if (current != null) {
             payload.put("currentPlayerName", current.getNickname());
         } else {
@@ -39,6 +58,12 @@ public class MessageFactory {
         }
 
         payload.put("players", players);
+        // just print the list of alive players
+        List<Map<String, Object>> alivePlayers = players.stream()
+                .filter(p -> (boolean) p.get("alive"))
+                .toList();
+        System.out.println(alivePlayers);
+
         payload.put("currentRound", gameState.getCurrentRound());
         payload.put("board", boardTiles);
 
