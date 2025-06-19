@@ -2,7 +2,6 @@ package at.aau.serg.websocketdemoserver.controller;
 
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.service.GameManager;
-import at.aau.serg.websocketdemoserver.service.LobbyService;
 import at.aau.serg.websocketdemoserver.websocket.SessionUserRegistry;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -25,8 +24,7 @@ public class GameWebSocketController {
 
     private final SimpMessagingTemplate messagingTemplate;
 
-    public GameWebSocketController(SimpMessagingTemplate messagingTemplate,
-                                   LobbyService lobbyService) {
+    public GameWebSocketController(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
     }
 
@@ -48,14 +46,14 @@ public class GameWebSocketController {
         }
 
         if (lobbyId < 0) {
-            System.err.println("Ungültige Lobby-ID: " + lobbyId);
+            logger.info("Ungültige Lobby-ID: " + lobbyId);
             return;
         }
         logger.info("Game {}: {} (session {} user {})", lobbyId, message.getType(), sessionId, userId);
         message.setLobbyId(lobbyId);
         var handler = GameManager.getInstance().getHandler(lobbyId);
         if (handler == null) {
-            System.err.println("Kein GameHandler für ID: " + lobbyId);
+            logger.info("Kein GameHandler für ID: " + lobbyId);
             return;
         }
         GameMessage result = handler.handle(message);
