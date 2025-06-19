@@ -15,7 +15,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class GameWebSocketControllerTest {
+class GameWebSocketControllerTest {
 
     @Mock
     private SimpMessagingTemplate messagingTemplate;
