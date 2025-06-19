@@ -30,6 +30,7 @@ public class GameWebSocketControllerTest {
     private GameWebSocketController controller;
 
     private  final int lobbyId = 42;
+    String sessionId = "test-session-id";
 
     @BeforeEach
     void setUp() {
@@ -58,7 +59,7 @@ public class GameWebSocketControllerTest {
         when(mockHandler.getExtraMessages()).thenReturn(java.util.List.of(extra1));
 
         // Act
-        controller.handleGameMessage(lobbyId, input);
+        controller.handleGameMessage(lobbyId, input, sessionId);
 
         // Assert
         verify(mockHandler).handle(input);
