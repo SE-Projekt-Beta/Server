@@ -4,6 +4,7 @@ import at.aau.serg.websocketdemoserver.dto.*;
 import at.aau.serg.websocketdemoserver.model.gamestate.GameState;
 import at.aau.serg.websocketdemoserver.model.gamestate.Player;
 import at.aau.serg.websocketdemoserver.service.GameRequest;
+import at.aau.serg.websocketdemoserver.service.MessageFactory;
 
 import java.util.List;
 
@@ -19,10 +20,7 @@ public class EndGameRequest implements GameRequest {
 
         // 2. Nachricht mit Rangliste zurückgeben
         GameEndPayload endPayload = new GameEndPayload(rankedDtos);
-        return new GameMessage(
-                lobbyId,
-                MessageType.GAME_ENDED,
-                endPayload
-        );
+        return MessageFactory.gameEnded(lobbyId, endPayload);
+
     }
 }

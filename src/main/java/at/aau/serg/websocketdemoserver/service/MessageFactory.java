@@ -1,5 +1,6 @@
 package at.aau.serg.websocketdemoserver.service;
 
+import at.aau.serg.websocketdemoserver.dto.GameEndPayload;
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.dto.MessageType;
 import at.aau.serg.websocketdemoserver.model.board.StreetTile;
@@ -28,7 +29,7 @@ public class MessageFactory {
                 .collect(Collectors.toList());
 
         Map<String, Object> payload = new HashMap<>();
-        System.out.println("Current player name: " + gameState.getCurrentPlayer().getNickname() + " ID: " + gameState.getCurrentPlayerId());
+        out.println("Current player name: " + gameState.getCurrentPlayer().getNickname() + " ID: " + gameState.getCurrentPlayerId());
         payload.put("currentPlayerId", gameState.getCurrentPlayerId());
 
         Player current = gameState.getCurrentPlayer();
@@ -57,6 +58,10 @@ public class MessageFactory {
         payload.put("winnerId", player.getId());
         payload.put("winnerName", player.getNickname());
         return new GameMessage(lobbyId, MessageType.GAME_OVER, payload);
+    }
+
+    public static GameMessage gameEnded(int lobbyId, GameEndPayload gameEndPayload) {
+        return new GameMessage(lobbyId, MessageType.GAME_ENDED, gameEndPayload);
     }
 
     // ---------------------
