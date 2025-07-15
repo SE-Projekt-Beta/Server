@@ -1,5 +1,6 @@
 package at.aau.serg.websocketdemoserver.controller;
 
+import at.aau.serg.websocketdemoserver.dto.EmoteMessagePayload;
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.service.GameManager;
 import at.aau.serg.websocketdemoserver.websocket.SessionUserRegistry;
@@ -9,6 +10,8 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import java.security.Principal;
+import at.aau.serg.websocketdemoserver.service.EmoteRateLimiter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +26,8 @@ public class GameWebSocketController {
     private static final Logger logger = LoggerFactory.getLogger(GameWebSocketController.class);
 
     private final SimpMessagingTemplate messagingTemplate;
+
+    private final EmoteRateLimiter rateLimiter = new EmoteRateLimiter();
 
     public GameWebSocketController(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
@@ -65,4 +70,22 @@ public class GameWebSocketController {
                 messagingTemplate.convertAndSend("/topic/dkt/" + lobbyId, extra)
         );
     }
+
+    @MessageMapping("/dkt/{lobbyId}/emote")
+    public void handleEmoteMessage(@DestinationVariable int lobbyId,
+                                   @Payload EmoteMessagePayload payload,
+                                   Principal user) {
+        String sender = user.getName();
+
+        if (!rateLimiter.canSend(sender)) {
+            messagingTemplate.convertAndSendToUser(
+                    sender, "/queue/errors", "Emote-Limit überschritten (max. 3 Emotes in 10 Sekunden)");
+            return;
+        }
+
+        payload.setSender(sender); // falls noch nicht gesetzt
+
+        messagingTemplate.convertAndSend("/topic/dkt/" + lobbyId + "/emotes", payload);
+    }
+
 }
