@@ -71,7 +71,7 @@ public class GameWebSocketController {
         );
     }
 
-    @MessageMapping("/dkt/{lobbyId}/emote")
+    /*@MessageMapping("/dkt/{lobbyId}/emote")
     public void handleEmoteMessage(@DestinationVariable int lobbyId,
                                    @Payload EmoteMessagePayload payload,
                                    Principal user) {
@@ -86,6 +86,6 @@ public class GameWebSocketController {
         payload.setSender(sender); // falls noch nicht gesetzt
 
         messagingTemplate.convertAndSend("/topic/dkt/" + lobbyId + "/emotes", payload);
-    }
+    }*/
 
 }
