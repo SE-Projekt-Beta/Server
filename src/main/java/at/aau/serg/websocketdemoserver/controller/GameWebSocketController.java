@@ -70,22 +70,4 @@ public class GameWebSocketController {
                 messagingTemplate.convertAndSend("/topic/dkt/" + lobbyId, extra)
         );
     }
-
-    /*@MessageMapping("/dkt/{lobbyId}/emote")
-    public void handleEmoteMessage(@DestinationVariable int lobbyId,
-                                   @Payload EmoteMessagePayload payload,
-                                   Principal user) {
-        String sender = user.getName();
-
-        if (!rateLimiter.canSend(sender)) {
-            messagingTemplate.convertAndSendToUser(
-                    sender, "/queue/errors", "Emote-Limit überschritten (max. 3 Emotes in 10 Sekunden)");
-            return;
-        }
-
-        payload.setSender(sender); // falls noch nicht gesetzt
-
-        messagingTemplate.convertAndSend("/topic/dkt/" + lobbyId + "/emotes", payload);
-    }*/
-
 }
