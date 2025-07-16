@@ -4,10 +4,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-/**
- * Begrenzt, wie viele Emotes ein Spieler in einem bestimmten Zeitraum senden darf.
- * Aktuell: max. 3 Emotes pro 10 Sekunden.
- */
+// legt fest, wie viele Emotes ein Spieler in einem bestimmten Zeitraum senden darf (max. 3 Emotes pro Minute)
+
 public class EmoteRateLimiter {
     private static final int MAX_EMOTES = 3;
     private static final long TIME_WINDOW_MS = 60_000;
