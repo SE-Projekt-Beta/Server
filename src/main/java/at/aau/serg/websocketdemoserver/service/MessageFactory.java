@@ -95,10 +95,12 @@ public class MessageFactory {
         return new GameMessage(lobbyId, MessageType.EMOTE, payload);
     }
 
-    public static GameMessage emoteError(int lobbyId, String reason) {
+    public static GameMessage emoteError(int lobbyId, int playerId, String reason) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("reason", reason);
-        return new GameMessage(lobbyId, MessageType.EMOTE_ERROR, payload);
+        GameMessage msg = new GameMessage(lobbyId, MessageType.EMOTE_ERROR, payload);
+        msg.setReceiverId(playerId); // Emote error message soll nur einem Spieler angezeigt werden; hier wird versucht, der GameMessage ein neues Attribut für den Empfänger hinzuzufügen
+        return msg;
     }
 
     // ---------------------

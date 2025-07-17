@@ -25,8 +25,6 @@ public class GameWebSocketController {
 
     private final SimpMessagingTemplate messagingTemplate;
 
-    private final EmoteRateLimiter rateLimiter = new EmoteRateLimiter();
-
     public GameWebSocketController(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
     }

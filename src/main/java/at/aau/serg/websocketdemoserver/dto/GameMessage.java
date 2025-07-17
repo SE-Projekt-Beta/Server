@@ -12,6 +12,7 @@ public class GameMessage {
     private int lobbyId;
     private MessageType type;
     private Object payload;
+    private Integer receiverId;
 
     public GameMessage() { }
 
