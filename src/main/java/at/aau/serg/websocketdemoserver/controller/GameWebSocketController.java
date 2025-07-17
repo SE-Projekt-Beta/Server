@@ -1,6 +1,5 @@
 package at.aau.serg.websocketdemoserver.controller;
 
-import at.aau.serg.websocketdemoserver.dto.EmoteMessagePayload;
 import at.aau.serg.websocketdemoserver.dto.GameMessage;
 import at.aau.serg.websocketdemoserver.service.GameManager;
 import at.aau.serg.websocketdemoserver.websocket.SessionUserRegistry;
@@ -10,7 +9,6 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-import java.security.Principal;
 import at.aau.serg.websocketdemoserver.service.EmoteRateLimiter;
 
 import org.slf4j.Logger;
