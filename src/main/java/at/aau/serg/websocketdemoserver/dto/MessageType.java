@@ -29,5 +29,6 @@ public enum MessageType {
     CASH_TASK,
     PLAYER_OUT_OF_JAIL_CARD,
     DICE_ROLLED,
-    EMOTE
+    EMOTE,
+    EMOTE_ERROR
 }
