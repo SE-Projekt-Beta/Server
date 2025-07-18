@@ -27,8 +27,14 @@ public class EmoteRequest implements GameRequest {
         }
 
         if (!rateLimiter.canSend(sender)) {
-            Player player = gameState.getCurrentPlayer();
-            int senderId = player.getId();
+            //Player player = gameState.getCurrentPlayer();
+            //int senderId = player.getId();
+
+            Player senderPlayer = gameState.findPlayerByName(sender);
+            if (senderPlayer == null) {
+                return MessageFactory.error(lobbyId, "Unbekannter Spieler: " + sender);
+            }
+            int senderId = senderPlayer.getId();
 
             // Fehlernachricht nur an den einen Spieler senden, also über extraMessages
             extraMessages.add(MessageFactory.emoteError(lobbyId, senderId, "Emote-Limit erreicht – bitte warte kurz"));
