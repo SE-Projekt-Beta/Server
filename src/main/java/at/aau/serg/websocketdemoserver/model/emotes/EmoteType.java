@@ -12,4 +12,4 @@ public enum EmoteType {
 
     EmoteType(String message) { this.message = message; }
     public String getMessage() { return message; }
-}
+} //TODO: write documentation
