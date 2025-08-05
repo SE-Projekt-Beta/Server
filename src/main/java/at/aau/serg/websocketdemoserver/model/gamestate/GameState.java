@@ -70,6 +70,16 @@ public class GameState {
                 .toList();
     }
 
+    public Player findPlayerByName(String name) {
+        for (Player player : getAllPlayers()) {
+            if (player.getNickname().equals(name)) {
+                return player;
+            }
+        }
+        return null;
+    }
+
+
     public void advanceTurn() {
         if (turnOrder.isEmpty()) return;
 

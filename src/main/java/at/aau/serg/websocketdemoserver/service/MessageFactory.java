@@ -88,6 +88,21 @@ public class MessageFactory {
         return new GameMessage(lobbyId, MessageType.GAME_OVER, payload);
     }
 
+    public static GameMessage emote(int lobbyId, String sender, String emoteType) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("sender", sender);
+        payload.put("emote", emoteType);
+        return new GameMessage(lobbyId, MessageType.EMOTE, payload);
+    }
+
+    public static GameMessage emoteError(int lobbyId, int playerId, String reason) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("reason", reason);
+        payload.put("playerId", playerId);
+
+        return new GameMessage(lobbyId, MessageType.EMOTE_ERROR, payload);
+    }
+
     // ---------------------
     // Hilfsmethoden
     // ---------------------

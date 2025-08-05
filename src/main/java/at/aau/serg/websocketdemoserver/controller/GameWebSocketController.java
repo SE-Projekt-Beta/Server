@@ -9,6 +9,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import at.aau.serg.websocketdemoserver.service.EmoteRateLimiter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -89,4 +89,16 @@ class GameStateTest {
         assertEquals(0, gameState.getAllPlayers().size());
         assertEquals(1, gameState.getCurrentRound());
     }
+
+    @Test
+    void testFindPlayerByNameFound() {
+        Player found = gameState.findPlayerByName("Alice");
+        assertEquals(player1, found);
+    }
+
+    @Test
+    void testFindPlayerByNameNotFound() {
+        Player found = gameState.findPlayerByName("Charlie");
+        assertNull(found);
+    }
 }

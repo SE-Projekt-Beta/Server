@@ -73,4 +73,32 @@ class MessageFactoryTest {
         assertEquals(player.getId(), payload.get("winnerId"));
         assertEquals(player.getNickname(), payload.get("winnerName"));
     }
+
+    @Test
+    void testEmoteMessage() {
+        GameMessage msg = MessageFactory.emote(2, "Alice", "laugh");
+
+        assertEquals(2, msg.getLobbyId());
+        assertEquals(MessageType.EMOTE, msg.getType());
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> payload = (Map<String, Object>) msg.getPayload();
+
+        assertEquals("Alice", payload.get("sender"));
+        assertEquals("laugh", payload.get("emote"));
+    }
+
+    @Test
+    void testEmoteErrorMessage() {
+        GameMessage msg = MessageFactory.emoteError(4, 101, "Emote not allowed");
+
+        assertEquals(4, msg.getLobbyId());
+        assertEquals(MessageType.EMOTE_ERROR, msg.getType());
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> payload = (Map<String, Object>) msg.getPayload();
+
+        assertEquals(101, payload.get("playerId"));
+        assertEquals("Emote not allowed", payload.get("reason"));
+    }
 }
