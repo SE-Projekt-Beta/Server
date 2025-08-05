@@ -15,7 +15,7 @@ public class EmoteRequest implements GameRequest {
 
     @Override
     public GameMessage execute(int lobbyId, Object payload, GameState gameState, List<GameMessage> extraMessages) {
-        if (!(payload instanceof Map payloadMap)) {
+        if (!(payload instanceof Map<?, ?> payloadMap)) {
             return MessageFactory.error(lobbyId, "Ungültiges Emote-Payload.");
         }
 

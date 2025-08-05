@@ -11,7 +11,7 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class EmoteRequestTest {
+class EmoteRequestTest {
     private EmoteRequest emoteRequest;
     private GameState gameState;
     private List<GameMessage> extraMessages;

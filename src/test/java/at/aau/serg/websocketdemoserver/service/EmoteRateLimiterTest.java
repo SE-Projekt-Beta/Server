@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class EmoteRateLimiterTest {
+class EmoteRateLimiterTest {
     private EmoteRateLimiter rateLimiter;
 
     @BeforeEach
@@ -35,6 +35,7 @@ public class EmoteRateLimiterTest {
         assertFalse(rateLimiter.canSend(player));
     }
 
+    @SuppressWarnings("java:S2925")
     @Test
     void testCanSend_AfterTimeWindow_AllowsAgain() throws InterruptedException {
         String player = "Charlie";

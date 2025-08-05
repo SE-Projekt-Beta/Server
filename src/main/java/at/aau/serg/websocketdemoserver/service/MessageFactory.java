@@ -101,10 +101,6 @@ public class MessageFactory {
         payload.put("playerId", playerId);
 
         return new GameMessage(lobbyId, MessageType.EMOTE_ERROR, payload);
-
-        /*GameMessage msg = new GameMessage(lobbyId, MessageType.EMOTE_ERROR, payload);
-        msg.setReceiverId(playerId); // Emote error message soll nur einem Spieler angezeigt werden; hier wird versucht, der GameMessage ein neues Attribut für den Empfänger hinzuzufügen
-        return msg;*/
     }
 
     // ---------------------
